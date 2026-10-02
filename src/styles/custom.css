@@ -1,0 +1,60 @@
+/* Shared tokens for interactive note components. Starlight sets data-theme on <html>. */
+:root {
+	--viz-raw: #c2410c;
+	--viz-raw-bg: #ffedd5;
+	--viz-war: #a16207;
+	--viz-war-bg: #fef3c7;
+	--viz-waw: #7c3aed;
+	--viz-waw-bg: #ede9fe;
+	--viz-ok: #15803d;
+	--viz-ok-bg: #dcfce7;
+	--viz-front: rgba(59, 130, 246, 0.1);
+	--viz-back: rgba(139, 92, 246, 0.1);
+	--viz-surface: var(--sl-color-gray-7, #f6f6f6);
+	--viz-border: var(--sl-color-gray-5);
+	--viz-mono: var(--__sl-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+:root[data-theme='dark'] {
+	--viz-raw: #fb923c;
+	--viz-raw-bg: rgba(251, 146, 60, 0.16);
+	--viz-war: #facc15;
+	--viz-war-bg: rgba(250, 204, 21, 0.14);
+	--viz-waw: #a78bfa;
+	--viz-waw-bg: rgba(167, 139, 250, 0.18);
+	--viz-ok: #4ade80;
+	--viz-ok-bg: rgba(74, 222, 128, 0.14);
+	--viz-front: rgba(96, 165, 250, 0.12);
+	--viz-back: rgba(167, 139, 250, 0.12);
+	--viz-surface: hsl(260, 8%, 6%);
+}
+
+/* Shared button style for component controls. */
+.viz-controls button,
+.not-content button.viz-btn {
+	font: inherit;
+	font-size: 0.85rem;
+	padding: 0.3rem 0.7rem;
+	border-radius: 0.4rem;
+	border: 1px solid var(--viz-border);
+	background: var(--sl-color-bg);
+	color: var(--sl-color-text);
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	line-height: 1.2;
+	font-weight: 600;
+}
+.viz-controls button:hover:not(:disabled) {
+	border-color: var(--sl-color-accent);
+}
+.viz-controls button:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+.viz-controls button.viz-primary {
+	background: var(--sl-color-accent);
+	border-color: var(--sl-color-accent);
+	color: var(--sl-color-black);
+}

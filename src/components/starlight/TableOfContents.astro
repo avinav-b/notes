@@ -1,0 +1,18 @@
+---
+import Default from '@astrojs/starlight/components/TableOfContents.astro';
+import KeyHint from './KeyHint.astro';
+---
+
+<Default />
+<KeyHint keyName="]" action="to hide the table of contents" class="toc-hint" />
+
+<style>
+	/* Positioned against the fixed .right-sidebar (which overflows the viewport), so span the
+	   visible column width explicitly to centre it. */
+	.toc-hint {
+		position: absolute;
+		bottom: 1rem;
+		inset-inline-start: 0;
+		width: var(--sl-sidebar-width);
+	}
+</style>

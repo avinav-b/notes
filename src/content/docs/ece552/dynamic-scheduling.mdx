@@ -1,0 +1,127 @@
+---
+title: Dynamic Scheduling
+description: Static vs. dynamic instruction scheduling, the instruction buffer, Tomasulo, and register renaming.
+lastUpdated: 2026-10-01
+---
+
+import InsnBufferPipeline from '../../../components/InsnBufferPipeline.tsx';
+import RenameDemo from '../../../components/RenameDemo.tsx';
+
+## Static Instruction Scheduling
+
+| Term | Meaning |
+| --- | --- |
+| **Issue** | The time an instruction begins to execute, i.e. when it is 'issued' into the pipeline |
+| **Schedule** | The order in which instructions execute |
+| **Scheduling** | Re-arranging instructions to enable rapid issuing |
+
+Scheduling can be done **statically**, i.e. by the compiler. This requires:
+- knowledge of pipeline and program dependencies
+- a large scheduling instruction scope full of independent instructions
+
+:::tip
+Compilers can give themselves a large instruction scope by doing things such as **loop unrolling**.
+:::
+
+## Motivation: Dynamic Scheduling
+
+Dynamic scheduling executes instructions in non-sequential order, to:
+- reduce RAW stalls
+- increase functional unit (FU) utilization
+  - original motivation was for the FP unit, back when that was the largest bottleneck
+- expose more opportunities for parallel issue (ILP)
+
+:::caution[Correctness]
+It MUST still *appear* as if instructions are executing in order. Otherwise, the scheduling runs the program incorrectly and the CPU is useless.
+:::
+
+### Why do it in hardware?
+
+If the compiler can schedule, why build complex hardware for it?
+
+- **Performance portability**: no need to recompile for a new machine
+- **More information**: the hardware knows things the compiler cannot possibly know at build time, e.g. memory addresses, branch directions, cache misses
+- **More registers**: the hardware can have more physical registers than the ISA exposes to the compiler (via renaming)
+- **Easier speculation**: recovering from mis-speculation means flushing, instead of recovery code
+
+:::note[Division of labour]
+The compiler has a much larger scope and does as much as it can. Hardware does whatever the compiler could not.
+:::
+
+## Instruction Buffer
+
+The instruction buffer is conceptually a bunch of latches for instructions. It gives us our scheduling scope.
+
+Split **D** into two pieces:
+
+| Stage | Job | Order |
+| --- | --- | --- |
+| **D1** | Accumulates decoded instructions into the buffer | In order |
+| **D2** | Sends instructions from the buffer down the rest of the pipeline | *Out of order* |
+
+<InsnBufferPipeline client:visible />
+
+## Scheduling Algorithm I: Tomasulo
+
+Tomasulo's algorithm has three parts:
+
+| Component | Role |
+| --- | --- |
+| **Register renaming** | Removes WAR/WAW hazards |
+| **Reservation stations (RS)** | The instruction buffer |
+| **Common data bus (CDB)** | Broadcasts results to the RS |
+
+:::note
+Our example is "Simple Tomasulo": dynamic scheduling for everything, including loads and stores.
+:::
+
+## Recall: Dependences
+
+:::tip[Dependence vs. hazard]
+Dependences are a property of **programs**. Whether a dependence results in a hazard/stall is a property of **pipeline organization**.
+:::
+
+**True (data) dependence**
+- insn *i* produces a result that may be used by insn *j*
+- insn *j* is data dependent on insn *k*, and insn *k* is data dependent on insn *i*
+- data dependent insns cannot execute simultaneously or be completely overlapped
+
+## Register Renaming
+
+**Idea:** change register names to eliminate WAR/WAW hazards.
+
+> Think of registers (`r1`, `f0`, ...) as **names**, not **storage locations**. So:
+> - there can be more locations than names
+> - there can be multiple active versions of the same name
+
+### Implementation: the map table
+
+A **map table** maps each name to its most recent location. It is an SRAM indexed by name.
+
+| On a... | Do |
+| --- | --- |
+| **Write** | Allocate a new location, and note the mapping in the table |
+| **Read** | Find the location of the most recent write via a map table lookup |
+
+:::note[Assumption: infinite resources]
+Locations must be de-allocated at some point, since resources are finite. For now, assume we have infinite resources.
+:::
+
+### Example
+
+- Names: `r1`, `r2`, `r3`, `r4`
+- Locations: `p1` to `p8`
+- Original mapping: `r1→p1`, `r2→p2`, `r3→p3`, `r4→p4`; `p5` to `p8` are free
+
+<RenameDemo
+	client:visible
+	program={['div r2,r3 -> r1', 'add r2,r1 -> r3', 'subi r4,4 -> r2', 'add r4,r2 -> r1']}
+	archRegs={4}
+	physRegs={8}
+/>
+
+:::tip[Takeaway]
+Renaming:
+- **removes** WAW and WAR dependences
+- **leaves RAW dependences intact**
+:::

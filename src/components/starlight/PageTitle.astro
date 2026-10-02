@@ -1,0 +1,31 @@
+---
+// Page title with the last-updated date underneath (instead of Starlight's footer placement).
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+import { CalendarClock } from 'lucide-react';
+
+const { lang, lastUpdated } = Astro.locals.starlightRoute;
+---
+
+<Default />
+{
+	lastUpdated && (
+		<p class="updated">
+			<CalendarClock size={14} />
+			Updated{' '}
+			<time datetime={lastUpdated.toISOString()}>
+				{lastUpdated.toLocaleDateString(lang, { dateStyle: 'medium', timeZone: 'UTC' })}
+			</time>
+		</p>
+	)
+}
+
+<style>
+	.updated {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin-top: 0.5rem;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+</style>

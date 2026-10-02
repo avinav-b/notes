@@ -1,0 +1,284 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+
+.message {
+	min-height: 3.3em;
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.5rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.phaseTag {
+	display: inline-block;
+	margin-right: 0.5rem;
+	padding: 0 0.45rem;
+	border-radius: 0.3rem;
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	vertical-align: 0.08em;
+}
+.tagLookup {
+	background: var(--sl-color-accent-low);
+	color: var(--sl-color-accent-high);
+}
+.tagAlloc {
+	background: var(--viz-ok-bg);
+	color: var(--viz-ok);
+}
+
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+
+.section {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+.sectionSub {
+	font-weight: 500;
+	text-transform: none;
+	letter-spacing: 0;
+	fill: var(--sl-color-gray-3);
+}
+
+/* ---- Map table: name tags and arrows ---- */
+.name rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.5;
+	transition: fill 250ms, stroke 250ms;
+}
+.name text {
+	font-size: 14px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.nameLookup rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.nameAlloc rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+}
+
+.mapArrow {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.6;
+	transition: stroke 250ms, stroke-width 250ms;
+}
+.mapLookup {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.6;
+}
+.mapAlloc {
+	stroke: var(--viz-ok);
+	stroke-width: 2.6;
+}
+.headDefault {
+	fill: var(--sl-color-gray-4);
+}
+
+/* ---- Physical registers ---- */
+.phys rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.5;
+	transition: fill 250ms, stroke 250ms;
+}
+.physName {
+	font-size: 14px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.physHolder {
+	font-family: var(--__sl-font);
+	font-size: 10.5px;
+	fill: var(--sl-color-gray-3);
+}
+.physFree rect {
+	fill: none;
+	stroke-dasharray: 4 3;
+	stroke: var(--sl-color-gray-5);
+}
+.physFree .physName {
+	fill: var(--sl-color-gray-4);
+}
+.physNext rect {
+	stroke: var(--viz-ok);
+}
+.physNext .physHolder {
+	fill: var(--viz-ok);
+	font-weight: 700;
+}
+.physStale rect {
+	fill: none;
+}
+.physStale .physName,
+.physStale .physHolder {
+	fill: var(--sl-color-gray-3);
+}
+.physLookup rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-dasharray: none;
+}
+.physAlloc rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+	stroke-dasharray: none;
+}
+.physAlloc .physHolder {
+	fill: var(--viz-ok);
+	font-weight: 700;
+}
+
+/* ---- Program listings ---- */
+.code {
+	font-size: 13px;
+	fill: var(--sl-color-text);
+}
+.op {
+	font-weight: 700;
+}
+.arrowGlyph {
+	fill: var(--sl-color-gray-3);
+}
+.placeholder {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	fill: var(--sl-color-gray-4);
+	font-style: italic;
+}
+.idx {
+	font-size: 11px;
+	fill: var(--sl-color-gray-4);
+}
+.curRow {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-accent);
+	stroke-width: 1.2;
+}
+
+.hlLookup {
+	fill: var(--sl-color-accent);
+	font-weight: 700;
+}
+.hlAlloc {
+	fill: var(--viz-ok);
+	font-weight: 700;
+}
+.hlRAW {
+	fill: var(--viz-raw);
+	font-weight: 700;
+}
+.hlWAR {
+	fill: var(--viz-war);
+	font-weight: 700;
+}
+.hlWAW {
+	fill: var(--viz-waw);
+	font-weight: 700;
+}
+
+/* ---- Dependence arcs ---- */
+.arc {
+	transition: opacity 200ms;
+}
+.arcLine {
+	fill: none;
+	stroke-width: 1.8;
+}
+.arcHit {
+	fill: none;
+	stroke: transparent;
+	stroke-width: 10;
+}
+.arcPick {
+	cursor: pointer;
+}
+.arcPick:hover .arcLine {
+	stroke-width: 3;
+}
+.arcDim {
+	opacity: 0.25;
+}
+.arcRAW .arcLine {
+	stroke: var(--viz-raw);
+}
+.arcWAR .arcLine {
+	stroke: var(--viz-war);
+	stroke-dasharray: 5 3;
+}
+.arcWAW .arcLine {
+	stroke: var(--viz-waw);
+	stroke-dasharray: 2 3;
+}
+.headRAW {
+	fill: var(--viz-raw);
+}
+.headWAR {
+	fill: var(--viz-war);
+}
+.headWAW {
+	fill: var(--viz-waw);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem 1.1rem;
+	margin-top: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span::before {
+	content: '';
+	display: inline-block;
+	width: 1.4rem;
+	margin-right: 0.4rem;
+	vertical-align: 0.25em;
+	border-top: 2px solid;
+}
+.lgRAW::before {
+	border-color: var(--viz-raw);
+}
+.lgWAR::before {
+	border-top-style: dashed !important;
+	border-color: var(--viz-war);
+}
+.lgWAW::before {
+	border-top-style: dotted !important;
+	border-color: var(--viz-waw);
+}
+
+.detail {
+	min-height: 3em;
+	margin: 0.5rem 0 0;
+	font-size: 0.85rem;
+	line-height: 1.5;
+	color: var(--sl-color-gray-2);
+}

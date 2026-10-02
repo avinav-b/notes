@@ -1,0 +1,92 @@
+---
+// Header button that shows/hides the left sidebar or the right-hand table of contents.
+// State lives in a data attribute on <html> (set before paint by the inline script in astro.config.mjs).
+import { PanelLeft, PanelRight } from 'lucide-react';
+
+interface Props {
+	panel: 'sidebar' | 'toc';
+}
+const { panel } = Astro.props;
+const label = panel === 'sidebar' ? 'file explorer' : 'table of contents';
+const key = panel === 'sidebar' ? '[' : ']';
+const Icon = panel === 'sidebar' ? PanelLeft : PanelRight;
+---
+
+<button
+	type="button"
+	class={`panel-toggle panel-toggle--${panel}`}
+	data-panel={panel}
+	data-key={key}
+	aria-keyshortcuts={key}
+	aria-label={`Toggle ${label}`}
+	title={`Toggle ${label} (${key})`}
+>
+	<Icon size={18} />
+</button>
+
+<script>
+	// ThemeSelect renders twice (header + mobile menu), so several buttons can share a panel.
+	const buttons = [...document.querySelectorAll<HTMLButtonElement>('.panel-toggle')];
+	const attrFor = (panel: string) => `data-hide-${panel}`;
+	const sync = () => {
+		for (const b of buttons) {
+			b.setAttribute('aria-pressed', String(!document.documentElement.hasAttribute(attrFor(b.dataset.panel!))));
+		}
+	};
+	const toggle = (panel: string) => {
+		const hidden = document.documentElement.toggleAttribute(attrFor(panel));
+		try {
+			localStorage.setItem(`notes:hide-${panel}`, hidden ? '1' : '');
+		} catch {}
+		sync();
+	};
+
+	for (const b of buttons) b.addEventListener('click', () => toggle(b.dataset.panel!));
+	sync();
+
+	// "[" toggles the file explorer, "]" the table of contents, when that panel's button is on screen.
+	document.addEventListener('keydown', (e) => {
+		if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
+		const t = e.target as HTMLElement | null;
+		if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+		const btn = buttons.find((b) => b.dataset.key === e.key && b.offsetParent !== null);
+		if (!btn) return;
+		e.preventDefault();
+		toggle(btn.dataset.panel!);
+	});
+</script>
+
+<style>
+	.panel-toggle {
+		display: none;
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		padding: 0;
+		border: 0;
+		border-radius: 0.4rem;
+		background: transparent;
+		color: var(--sl-color-gray-3);
+		cursor: pointer;
+		flex-shrink: 0;
+	}
+	.panel-toggle:hover {
+		color: var(--sl-color-white);
+		background: var(--sl-color-gray-6);
+	}
+	.panel-toggle[aria-pressed='false'] {
+		color: var(--sl-color-gray-4);
+	}
+	/* Only offer the toggle where the panel is a fixed column (not the mobile menu / dropdown). */
+	@media (min-width: 50rem) {
+		:global([data-has-sidebar]) .panel-toggle--sidebar {
+			display: inline-flex;
+		}
+	}
+	@media (min-width: 72rem) {
+		:global([data-has-toc]) .panel-toggle--toc {
+			display: inline-flex;
+		}
+	}
+</style>

@@ -1,0 +1,66 @@
+.bar {
+	container-type: inline-size;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 0.75rem;
+}
+.extra,
+.group {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+.extra {
+	flex-basis: 100%;
+}
+.group button {
+	padding: 0.35rem 0.6rem 0.35rem 0.5rem;
+}
+.label {
+	font-size: 0.8rem;
+}
+/* Labels always stay visible; on narrow screens tighten up and let the bar wrap. */
+@container (max-width: 24rem) {
+	.group button {
+		padding: 0.3rem 0.45rem;
+		gap: 0.25rem;
+	}
+	.label {
+		font-size: 0.75rem;
+	}
+}
+.active {
+	border-color: var(--sl-color-accent) !important;
+	color: var(--sl-color-accent-high) !important;
+}
+
+.speed {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	color: var(--sl-color-gray-3);
+	font-size: 0.8rem;
+}
+.speed input {
+	width: 5.5rem;
+	accent-color: var(--sl-color-accent);
+	cursor: pointer;
+}
+.speedValue {
+	min-width: 2.6em;
+	font-family: var(--viz-mono);
+	color: var(--sl-color-gray-2);
+}
+
+.counter {
+	margin-left: auto;
+	font-family: var(--viz-mono);
+	font-size: 0.85rem;
+	padding: 0.2rem 0.5rem;
+	border-radius: 0.3rem;
+	background: var(--sl-color-bg);
+	border: 1px solid var(--viz-border);
+	color: var(--sl-color-gray-2);
+	white-space: nowrap;
+}

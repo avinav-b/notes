@@ -1,0 +1,211 @@
+.root {
+	outline: none;
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+
+.root:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.toggle {
+	display: inline-flex;
+	gap: 0.25rem;
+}
+
+.caption {
+	margin: 0.75rem 0 0;
+	min-height: 3em;
+	font-size: 0.85rem;
+	line-height: 1.5;
+	color: var(--sl-color-gray-2);
+}
+
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	margin-top: 0.5rem;
+	font-family: var(--viz-mono);
+	overflow: visible;
+}
+
+/* Every positioned group slides when the layout changes between in-order and out-of-order. */
+.move {
+	transition:
+		transform 700ms cubic-bezier(0.65, 0, 0.35, 1),
+		opacity 500ms;
+}
+
+.stage {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.5;
+}
+.fuSlot {
+	fill: none;
+	stroke: var(--sl-color-gray-5);
+	stroke-width: 1.2;
+	stroke-dasharray: 3 3;
+}
+.fuLabel {
+	font-size: 11px;
+	fill: var(--sl-color-gray-4);
+}
+.divNote {
+	font-size: 9.5px;
+	fill: var(--sl-color-gray-3);
+}
+.divBar {
+	fill: var(--sl-color-accent);
+	transition: width 300ms;
+}
+.slot {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.5;
+	stroke-dasharray: 4 3;
+}
+.reg {
+	fill: var(--sl-color-accent);
+	opacity: 0.85;
+}
+.regLabel {
+	font-size: 10.5px;
+	font-weight: 700;
+	fill: var(--sl-color-accent-high);
+}
+.stageLabel {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.stageSub {
+	font-size: 10.5px;
+	font-weight: 400;
+	fill: var(--sl-color-gray-3);
+}
+
+.wire {
+	fill: none;
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.5;
+}
+.wireIn,
+.wireOut {
+	stroke: var(--sl-color-accent);
+}
+.arrowHead {
+	fill: var(--sl-color-gray-3);
+}
+
+.token {
+	transition:
+		transform 550ms cubic-bezier(0.4, 0, 0.2, 1),
+		opacity 300ms;
+}
+.token rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 1.5;
+	transition:
+		fill 250ms,
+		stroke 250ms;
+}
+.token text {
+	font-size: 11.5px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.token.ready rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+}
+.token.waiting rect {
+	fill: var(--viz-raw-bg);
+	stroke: var(--viz-raw);
+	stroke-dasharray: 4 3;
+}
+.token.blocked rect {
+	fill: var(--viz-war-bg);
+	stroke: var(--viz-war);
+}
+.token.doneTok rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+}
+.token.doneTok text {
+	fill: var(--sl-color-gray-3);
+}
+.token .waitTag {
+	font-size: 9.5px;
+	font-weight: 400;
+	fill: var(--viz-raw);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem 1rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+	margin-top: 0.25rem;
+}
+.legend i {
+	display: inline-block;
+	width: 0.9rem;
+	height: 0.9rem;
+	border-radius: 0.2rem;
+	vertical-align: -0.15rem;
+	margin-right: 0.3rem;
+	border: 1.5px solid;
+}
+.legendReady {
+	background: var(--viz-ok-bg);
+	border-color: var(--viz-ok) !important;
+}
+.legendWaiting {
+	background: var(--viz-raw-bg);
+	border-color: var(--viz-raw) !important;
+	border-style: dashed !important;
+}
+.legendBlocked {
+	background: var(--viz-war-bg);
+	border-color: var(--viz-war) !important;
+}
+
+.tableWrap {
+	margin-top: 1rem;
+	overflow-x: auto;
+}
+.table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.82rem;
+}
+.table th,
+.table td {
+	padding: 0.25rem 0.5rem;
+	border-bottom: 1px solid var(--viz-border);
+	text-align: left;
+	white-space: nowrap;
+}
+.table th {
+	font-weight: 600;
+	color: var(--sl-color-gray-3);
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+.mono {
+	font-family: var(--viz-mono);
+}
+.summary {
+	margin: 0.75rem 0 0;
+	font-size: 0.85rem;
+}

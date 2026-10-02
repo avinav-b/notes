@@ -1,0 +1,140 @@
+/*
+ * Site theme: Quicksand, near-black dark mode, purple accent.
+ * Starlight's defaults live in a cascade layer, so these unlayered rules win. Every variable set on
+ * :root (dark) must also be set for light mode, or the dark value would leak into light mode.
+ */
+
+:root {
+	--sl-font: 'Quicksand Variable', 'Quicksand';
+
+	/* Dark: neutral greys with a faint violet tint, background close to black. */
+	--sl-color-white: hsl(0, 0%, 100%);
+	--sl-color-gray-1: hsl(260, 12%, 93%);
+	--sl-color-gray-2: hsl(260, 6%, 80%);
+	--sl-color-gray-3: hsl(260, 5%, 58%);
+	--sl-color-gray-4: hsl(260, 5%, 36%);
+	--sl-color-gray-5: hsl(260, 6%, 18%);
+	--sl-color-gray-6: hsl(260, 8%, 8%);
+	--sl-color-black: hsl(260, 10%, 3%);
+
+	--sl-color-accent-low: hsl(265, 45%, 17%);
+	--sl-color-accent: hsl(265, 90%, 68%);
+	--sl-color-accent-high: hsl(265, 100%, 88%);
+
+	/* Panels (top bar, left sidebar, right TOC) sit a hair lighter than the reading area. */
+	--notes-panel-bg: hsl(260, 8%, 6.5%);
+	--sl-color-bg-nav: var(--notes-panel-bg);
+	--sl-color-bg-sidebar: var(--notes-panel-bg);
+	--sl-color-hairline-light: var(--sl-color-gray-5);
+	--sl-color-hairline: hsl(260, 7%, 12%);
+	--sl-color-backdrop-overlay: hsla(260, 10%, 3%, 0.75);
+}
+
+:root[data-theme='light'] {
+	--sl-color-white: hsl(260, 10%, 10%);
+	--sl-color-gray-1: hsl(260, 12%, 16%);
+	--sl-color-gray-2: hsl(260, 8%, 24%);
+	--sl-color-gray-3: hsl(260, 6%, 38%);
+	--sl-color-gray-4: hsl(260, 5%, 58%);
+	--sl-color-gray-5: hsl(260, 6%, 80%);
+	--sl-color-gray-6: hsl(260, 16%, 95%);
+	--sl-color-gray-7: hsl(260, 20%, 98%);
+	--sl-color-black: hsl(0, 0%, 100%);
+
+	--sl-color-accent-low: hsl(265, 90%, 93%);
+	--sl-color-accent: hsl(265, 70%, 54%);
+	--sl-color-accent-high: hsl(265, 70%, 30%);
+
+	--notes-panel-bg: var(--sl-color-gray-7);
+	--sl-color-bg-nav: var(--notes-panel-bg);
+	--sl-color-bg-sidebar: var(--notes-panel-bg);
+
+	/* Starlight's light-mode values for the variables overridden above. */
+	--sl-color-hairline-light: var(--sl-color-gray-6);
+	--sl-color-hairline: var(--sl-color-gray-6);
+	--sl-color-backdrop-overlay: hsla(260, 9%, 36%, 0.66);
+}
+
+/* Starlight leaves the right-hand TOC transparent; give it the panel colour too. */
+.right-sidebar {
+	background-color: var(--notes-panel-bg);
+}
+
+/*
+ * On wide screens Starlight centres the text on the whole viewport, which pushes it against the
+ * TOC. Instead, keep the TOC at sidebar width and centre the text between the two sidebars.
+ */
+@media (min-width: 72rem) {
+	.right-sidebar-container {
+		width: var(--sl-sidebar-width);
+	}
+	[data-has-sidebar][data-has-toc] .main-pane {
+		--sl-content-margin-inline: auto;
+		width: calc(100% - var(--sl-sidebar-width));
+	}
+}
+
+/*
+ * Collapsible panels: toggled from the header (src/components/starlight/PanelToggle.astro).
+ * Panels slide out rather than disappearing; visibility flips after the slide so hidden panels
+ * aren't focusable.
+ */
+:root {
+	--notes-panel-slide: 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@media (min-width: 50rem) {
+	.sidebar-pane {
+		transition:
+			transform var(--notes-panel-slide),
+			visibility 0s;
+	}
+	.main-frame {
+		transition: padding-inline-start var(--notes-panel-slide);
+	}
+	:root[data-hide-sidebar] {
+		--sl-content-inline-start: 0rem;
+	}
+	:root[data-hide-sidebar] .sidebar-pane {
+		transform: translateX(-100%);
+		visibility: hidden;
+		transition:
+			transform var(--notes-panel-slide),
+			visibility 0s 320ms;
+	}
+}
+@media (min-width: 72rem) {
+	/* The TOC is position: fixed at the container's position, so shrinking the container slides it off. */
+	.right-sidebar-container,
+	.main-pane {
+		transition: width var(--notes-panel-slide);
+	}
+	.right-sidebar {
+		transition: visibility 0s;
+	}
+	:root[data-hide-toc] {
+		--__toc-width: 0rem;
+	}
+	:root[data-hide-toc] .right-sidebar-container {
+		width: 0;
+	}
+	:root[data-hide-toc] .right-sidebar {
+		visibility: hidden;
+		transition: visibility 0s 320ms;
+	}
+	:root[data-hide-toc][data-has-sidebar][data-has-toc] .main-pane {
+		width: 100%;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.sidebar-pane,
+	.main-frame,
+	.right-sidebar-container,
+	.main-pane {
+		transition: none !important;
+	}
+}
+
+/* Quicksand is light at 400; nudge body text up so it stays readable on black. */
+body {
+	font-weight: 500;
+}

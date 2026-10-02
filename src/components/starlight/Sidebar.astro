@@ -1,0 +1,23 @@
+---
+import Default from '@astrojs/starlight/components/Sidebar.astro';
+import KeyHint from './KeyHint.astro';
+---
+
+<Default />
+<KeyHint keyName="[" action="to hide the file explorer" class="sidebar-hint" />
+
+<style>
+	/* Pin to the bottom of the sidebar column; stays visible if the list scrolls. */
+	.sidebar-hint {
+		display: none;
+		margin-top: auto;
+		position: sticky;
+		bottom: 0;
+		background: var(--sl-color-bg-sidebar);
+	}
+	@media (min-width: 50rem) {
+		.sidebar-hint {
+			display: flex;
+		}
+	}
+</style>
