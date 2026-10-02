@@ -19,7 +19,7 @@ export default defineConfig({
 	vite: {
 		// Pre-bundle component deps at startup so the dev server doesn't re-optimize mid-session
 		// (which leaves open tabs with stale "Outdated Optimize Dep" imports and dead components).
-		optimizeDeps: { include: ['react', 'react-dom', 'react-dom/client', 'lucide-react'] },
+		optimizeDeps: { include: ['react', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'react-dom', 'react-dom/client', 'lucide-react'] },
 	},
 	integrations: [
 		starlight({
