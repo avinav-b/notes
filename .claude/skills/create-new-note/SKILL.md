@@ -50,6 +50,8 @@ NEVER USE EMOJIS ANYWHERE
 
 You may be asked to update a page because there is new content in the Obsidian doc that is not in the web app doc. In this case, just add on to and/or modify the existing web app doc.
 
+After a writeback (see below), the Obsidian note already contains the cleaned-up version of everything on the site, with iframes where the artifacts are. New lecture notes get added to it as rough text and new `[!claude]` callouts. Compare the Obsidian note against the site page to find what's new; don't reprocess or rewrite the parts that already match.
+
 # Files and frontmatter
 
 - **Source:** Obsidian vault at `~/Documents/Obsidian/personal/`. Each course is a folder named by its course code (e.g. `ece552/`). Pasted images live at the vault root (e.g. `~/Documents/Obsidian/personal/Pasted image 20260930093602.png`).
@@ -85,6 +87,28 @@ Rules for links:
 - Never put links in headings, code, math, or inside components.
 - Adding a link is a formatting change, not a content change, so it doesn't need approval. The wording around it must stay the same.
 - In your final report, list every page you added links to, and what you linked.
+
+# Writeback to Obsidian
+
+After the site page is finished and checked, write the cleaned-up notes back into the Obsidian note, so the vault matches the site.
+
+1. **Back up first.** Copy the current Obsidian note to `<vault>/<course>/.raw/<Note title>.md`, replacing any older backup. Obsidian hides dot-folders, so backups don't clutter the vault.
+2. **Overwrite the note** with the site page's content, converted to Obsidian markdown:
+
+| On the site (MDX) | In Obsidian |
+| --- | --- |
+| Frontmatter and `import` lines | Removed |
+| `:::tip[Title]` ... `:::` | `> [!tip] Title`, with every body line prefixed by `> ` (same for `note`, `caution`, `danger`; no title means just `> [!tip]`) |
+| `<Component client:visible {...rawSim.props} />` | `<iframe src="https://notes.avinav.ca/embed/<course>/<slug>/<id>/" title="<embed title>" width="100%" height="<embed height>" style="border:0"></iframe>` |
+| `[text](/ece552/dynamic-scheduling/#register-renaming)` | `[[Dynamic Scheduling#Register Renaming\|text]]` (the target note's title and the heading's text; drop `\|text` when it's identical to the target) |
+| A link whose text is bold, `[**text**](...)` | `**[[Target\|text]]**` (bold outside the link; Obsidian doesn't render formatting inside link aliases) |
+| A wikilink with alias inside a table row | Escape the alias pipe: `[[Target\\|text]]`, or the table splits |
+| Headings, lists, tables (including `<br />` in cells), `$math$`, code blocks, bold/italic, block quotes | Unchanged |
+
+3. **Claude callouts are gone** in the written-back note: each one has been replaced by the iframe of the artifact it asked for, and the reference images that went with it are removed.
+4. **Any approved content changes** are already on the site page, so they carry over. Proposed changes that haven't been approved don't go into the note either.
+
+The iframes only work once the site, with the new embed pages, is deployed to notes.avinav.ca. Mention this in your report if you added new artifacts.
 
 # Claude callouts
 
@@ -153,7 +177,9 @@ If a new concept needs a new colour, add a token pair (light and dark) to `custo
 ## Interactive artifacts
 
 - **Structure:** React component in `src/components/<Name>.tsx` with a `.module.css` file. Wrap the root in `not-content` so Starlight's prose styles don't leak in, and give it the standard card look (`--viz-surface` background, `--viz-border` border, rounded corners, `1rem` padding).
-- **Embedding:** `<Name client:visible />` so its code only loads when scrolled into view. Make it data-driven through props (e.g. the program to animate) so other pages can reuse it.
+- **Embedding:** every artifact used on a page is registered in `src/embeds/<course>/<slug>.ts` with `embed(component, title, height, props)`, exported under a camelCase name. The page imports it and spreads its props: `<PipelineSim client:visible {...rawSim.props} />`. The same entry also produces a standalone page at `/embed/<course>/<slug>/<kebab-name>/` (e.g. `rawSim` becomes `raw-sim`), which writeback uses for iframes. `client:visible` means the code only loads when scrolled into view. Make components data-driven through props (e.g. the program to animate) so other pages can reuse them.
+- **New component types** must also be added to `EmbedComponent` in `src/embeds/types.ts` and to the component list in `src/pages/embed/[course]/[page]/[id].astro`.
+- **Iframe height:** set `height` to the tallest the embed page gets at 700px wide, across every step and mode, plus about 12px. Measure it: load the embed page in an iframe 700px wide, step through everything, and record `document.body`'s height.
 - **Step-through animations** use the shared `useStepper` + `StepControls` from `src/components/StepControls.tsx`. Don't build custom playback buttons. Keep the button text labels; icons alone confused the user.
 - **Explain as you go:** above the figure, a short message says what the current step is doing and why, in plain language. Add a legend for every colour or line style used.
 - **Motion:** move things with CSS transitions (roughly 300 to 700ms, ease-in-out) so the eye can follow what changed. Elements should slide or swing to their new place, not jump.
@@ -171,5 +197,6 @@ Check all of the following before reporting back:
 4. **Animations and figures are correct.** Check the results they show against the notes and against your own working (e.g. trace the final map table by hand). Reference images in the notes can be wrong. If one is, don't copy the mistake: build the correct version and point out the discrepancy in your report.
 5. **Links resolve.** Every link you added points to a page and anchor that exists in the build.
 6. **No Claude callouts or emojis** remain on any page you touched.
+7. **Embeds and writeback.** Every artifact on the page has a working `/embed/...` page with a measured height, and the Obsidian note was backed up and rewritten with an iframe for each one.
 
-Then report: what you changed, the pages you linked, any discrepancies you found, and the numbered list of proposed content changes.
+Then report: what you changed, the pages you linked, any discrepancies you found, the numbered list of proposed content changes, and that the Obsidian note was written back.
