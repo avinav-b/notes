@@ -1,0 +1,41 @@
+---
+// Every course and its notes, in sidebar order. Used on the homepage.
+import { getCollection } from 'astro:content';
+import { COURSES } from '../../courses';
+
+const docs = await getCollection('docs');
+const courses = COURSES.map((course) => ({
+	...course,
+	notes: docs
+		.filter((d) => d.id.startsWith(`${course.id}/`))
+		.sort((a, b) => (a.data.sidebar.order ?? Infinity) - (b.data.sidebar.order ?? Infinity) || a.data.title.localeCompare(b.data.title)),
+}));
+---
+
+{
+	courses.map((course) => (
+		<section class="course">
+			<h2>{course.name}</h2>
+			<ul>
+				{course.notes.map((note) => (
+					<li>
+						<a href={`/${note.id}/`}>{note.data.title}</a>
+					</li>
+				))}
+			</ul>
+		</section>
+	))
+}
+
+<style>
+	.course h2 {
+		font-size: var(--sl-text-h4);
+	}
+	.course ul {
+		margin-top: 0.5rem;
+		padding-inline-start: 1.25rem;
+	}
+	.course li + li {
+		margin-top: 0.15rem;
+	}
+</style>

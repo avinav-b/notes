@@ -5,6 +5,7 @@ import react from '@astrojs/react';
 import { unified } from '@astrojs/markdown-remark';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import { COURSES } from './src/courses.ts';
 
 // https://astro.build/config
 export default defineConfig({
@@ -46,12 +47,7 @@ export default defineConfig({
 				'./src/styles/theme.css',
 				'./src/styles/custom.css',
 			],
-			sidebar: [
-				{
-					label: 'ECE552: Computer Architecture',
-					items: [{ autogenerate: { directory: 'ece552' } }],
-				},
-			],
+			sidebar: COURSES.map((c) => ({ label: c.name, items: [{ autogenerate: { directory: c.id } }] })),
 		}),
 		react(),
 	],

@@ -56,7 +56,7 @@ After a writeback (see below), the Obsidian note already contains the cleaned-up
 
 - **Source:** Obsidian vault at `~/Documents/Obsidian/personal/`. Each course is a folder named by its course code (e.g. `ece552/`). Pasted images live at the vault root (e.g. `~/Documents/Obsidian/personal/Pasted image 20260930093602.png`).
 - **Destination:** `src/content/docs/<course>/<slug>.mdx`, where `<course>` matches the vault folder name and `<slug>` is the note title in kebab-case (e.g. `Dynamic Scheduling.md` becomes `dynamic-scheduling.mdx`).
-- **New course:** if the course folder doesn't exist yet, also add a sidebar group for it in `astro.config.mjs`, in the same shape as the existing ones (e.g. `{ label: 'ECE552: Computer Architecture', items: [{ autogenerate: { directory: 'ece552' } }] }`). Ask the user for the course's full name if you don't know it.
+- **New course:** if the course folder doesn't exist yet, add it to `COURSES` in `src/courses.ts` (e.g. `{ id: 'ece552', name: 'ECE552: Computer Architecture' }`). That adds it to both the sidebar and the homepage list. Ask the user for the course's full name if you don't know it.
 - **Images** that are not being replaced by an artifact: copy them into `src/assets/<course>/` with a descriptive kebab-case filename, and reference them with normal Markdown image syntax so Astro optimizes them. Keep the width from Obsidian's `|369` suffix if one is given.
 
 Every page starts with this frontmatter:
