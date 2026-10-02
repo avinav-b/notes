@@ -99,7 +99,7 @@ After the site page is finished and checked, write the cleaned-up notes back int
 | --- | --- |
 | Frontmatter and `import` lines | Removed |
 | `:::tip[Title]` ... `:::` | `> [!tip] Title`, with every body line prefixed by `> ` (same for `note`, `caution`, `danger`; no title means just `> [!tip]`) |
-| `<Component client:visible {...rawSim.props} />` | `<iframe src="https://notes.avinav.ca/embed/<course>/<slug>/<id>/" title="<embed title>" width="100%" height="<embed height>" style="border:0"></iframe>` |
+| `<Component client:visible {...rawSim.props} />` | `<iframe src="https://notes.avinav.ca/embed/<course>/<slug>/<id>/?theme=light" title="<embed title>" width="100%" height="<embed height>" style="border:0"></iframe>` (the user's Obsidian uses the light theme, which iframes can't detect, so it's set explicitly) |
 | `[text](/ece552/dynamic-scheduling/#register-renaming)` | `[[Dynamic Scheduling#Register Renaming\|text]]` (the target note's title and the heading's text; drop `\|text` when it's identical to the target) |
 | A link whose text is bold, `[**text**](...)` | `**[[Target\|text]]**` (bold outside the link; Obsidian doesn't render formatting inside link aliases) |
 | A wikilink with alias inside a table row | Escape the alias pipe: `[[Target\\|text]]`, or the table splits |
