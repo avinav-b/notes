@@ -1,0 +1,68 @@
+---
+// A single interactive component on its own page, for embedding as an iframe (e.g. in Obsidian).
+// Theme follows the viewer's system setting; force one with ?theme=dark or ?theme=light.
+import '../../../../../node_modules/@astrojs/starlight/dist/style/props.css';
+import '@fontsource-variable/quicksand';
+import '../../../../styles/theme.css';
+import '../../../../styles/custom.css';
+import BypassPaths from '../../../../components/BypassPaths.tsx';
+import CpuDatapath from '../../../../components/CpuDatapath.tsx';
+import ExecTimeline from '../../../../components/ExecTimeline.tsx';
+import InsnBufferPipeline from '../../../../components/InsnBufferPipeline.tsx';
+import PipelineDiagram from '../../../../components/PipelineDiagram.tsx';
+import PipelineSim from '../../../../components/PipelineSim.tsx';
+import RenameDemo from '../../../../components/RenameDemo.tsx';
+import { embeds, type EmbedEntry } from '../../../../embeds';
+
+export function getStaticPaths() {
+	return embeds.map((e) => ({ params: { course: e.course, page: e.page, id: e.id }, props: { entry: e } }));
+}
+
+const { entry } = Astro.props as { entry: EmbedEntry };
+const { component: c, props, title } = entry.embed;
+const p = props as any;
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex" />
+		<title>{title}</title>
+		<script is:inline>
+			try {
+				const forced = new URLSearchParams(location.search).get('theme');
+				const light = matchMedia('(prefers-color-scheme: light)').matches;
+				document.documentElement.dataset.theme = forced === 'light' || forced === 'dark' ? forced : light ? 'light' : 'dark';
+			} catch {}
+		</script>
+	</head>
+	<body>
+		{c === 'BypassPaths' && <BypassPaths client:load {...p} />}
+		{c === 'CpuDatapath' && <CpuDatapath client:load {...p} />}
+		{c === 'ExecTimeline' && <ExecTimeline client:load {...p} />}
+		{c === 'InsnBufferPipeline' && <InsnBufferPipeline client:load {...p} />}
+		{c === 'PipelineDiagram' && <PipelineDiagram client:load {...p} />}
+		{c === 'PipelineSim' && <PipelineSim client:load {...p} />}
+		{c === 'RenameDemo' && <RenameDemo client:load {...p} />}
+	</body>
+</html>
+
+<style is:global>
+	html,
+	body {
+		margin: 0;
+		background: transparent;
+		color: var(--sl-color-text);
+		font-family: var(--__sl-font);
+		font-size: 16px;
+		line-height: 1.5;
+	}
+	body {
+		padding: 2px;
+	}
+	body .not-content {
+		margin-block: 0 !important;
+	}
+</style>

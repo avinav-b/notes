@@ -11,6 +11,25 @@ import ExecTimeline from '../../../components/ExecTimeline.tsx';
 import PipelineSim from '../../../components/PipelineSim.tsx';
 import PipelineDiagram from '../../../components/PipelineDiagram.tsx';
 import BypassPaths from '../../../components/BypassPaths.tsx';
+import {
+	singleCycle,
+	multiCycle,
+	singleVsMulti,
+	multiVsPipelined,
+	pipelineFlow,
+	pipelinedProcessor,
+	exampleSim,
+	exampleDiagram,
+	rawSim,
+	rawStallDiagram,
+	bypassPaths,
+	mxBypassDiagram,
+	wxBypassDiagram,
+	wmBypassDiagram,
+	loadUseDiagram,
+	loadUseNoWxDiagram,
+	loadUseSim,
+} from '../../../embeds/ece552/pipelining';
 
 ## The Sequential Model
 
@@ -27,7 +46,7 @@ The processor executes a loop:
 
 ## Single Cycle Processor
 
-<CpuDatapath client:visible variant="single" />
+<CpuDatapath client:visible {...singleCycle.props} />
 
 | Part | Contains |
 | --- | --- |
@@ -46,7 +65,7 @@ The processor executes a loop:
 
 ## Multi-Cycle Processor
 
-<CpuDatapath client:visible variant="multi" />
+<CpuDatapath client:visible {...multiCycle.props} />
 
 The multi-cycle processor adds registers to hold temporary data, creating the multi-cycle implementation:
 
@@ -59,7 +78,7 @@ The multi-cycle processor adds registers to hold temporary data, creating the mu
 
 ## Single vs Multi-Cycle Processor
 
-<ExecTimeline client:visible variant="single-vs-multi" />
+<ExecTimeline client:visible {...singleVsMulti.props} />
 
 The basic datapath is: fetch, decode, execute.
 
@@ -79,7 +98,7 @@ We ultimately don't care about latency. We just want programs to go faster. Turn
 
 ## Pipelining
 
-<ExecTimeline client:visible variant="multi-vs-pipelined" />
+<ExecTimeline client:visible {...multiVsPipelined.props} />
 
 :::tip
 Pipelining improves instruction **throughput** (not latency).
@@ -89,13 +108,13 @@ We can think about pipelining by thinking about the multi-cycle design:
 - when one instruction flows from stage 1 to stage 2, allow the next instruction to enter stage 1.
 - the instruction stages themselves take the same amount of time and the instructions still take the same number of stages
 
-<PipelineDiagram client:visible mode="loop" generic={6} relative />
+<PipelineDiagram client:visible {...pipelineFlow.props} />
 
 Some instructions may take longer, but **5 instructions are in-flight concurrently**.
 
 ## 5 Stage Pipelined Processor
 
-<CpuDatapath client:visible variant="pipelined" />
+<CpuDatapath client:visible {...pipelinedProcessor.props} />
 
 The temporary values mentioned earlier (PC, IR, A, B, O, D) are now re-latched at every stage in a pipeline register. This is because every single stage of the processor is now executing a different instruction and will need different values.
 
@@ -126,26 +145,13 @@ In this course, examples use `add r2, r3 -> r1` to be explicit and make the dest
 
 ## Pipeline Example
 
-<PipelineSim
-	client:visible
-	syncId="example"
-	program={['add r1, r2 -> r3', 'lw #0(r5) -> r4', 'sw r6 -> #4(r7)']}
-	regs={{ r1: 10, r2: 20, r5: 100, r6: 7, r7: 200 }}
-	mem={{ 100: 55 }}
-/>
+<PipelineSim client:visible {...exampleSim.props} />
 
 Above, you can step through 7 cycles of a pipelined 5-stage processor executing 3 instructions.
 
 ### Pipeline diagram
 
-<PipelineDiagram
-	client:visible
-	syncId="example"
-	program={['add r1, r2 -> r3', 'lw #0(r5) -> r4', 'sw r6 -> #4(r7)']}
-	regs={{ r1: 10, r2: 20, r5: 100, r6: 7, r7: 200 }}
-	mem={{ 100: 55 }}
-	minCycles={9}
-/>
+<PipelineDiagram client:visible {...exampleDiagram.props} />
 
 Pipeline diagrams are used to describe how instructions go through the processor. The CPU cycles are shown horizontally across, and instructions downwards.
 
@@ -256,15 +262,7 @@ sw r3 -> #0(r7)
 
 The `add` instruction is writing to `r3`, which is needed by the next three instructions. How would this flow through a pipeline?
 
-<PipelineSim
-	client:visible
-	syncId="raw"
-	hazardToggle
-	hazard="none"
-	program={['add r1, r2 -> r3', 'lw #0(r3) -> r4', 'addi r3, #1 -> r6', 'sw r3 -> #0(r7)']}
-	regs={{ r1: 10, r2: 20, r3: 7, r7: 300 }}
-	watch={['r3']}
-/>
+<PipelineSim client:visible {...rawSim.props} />
 
 As you can see in the animation above, the `lw` and `addi` instructions read the wrong value, because the `add` instruction has not finished writing to the register file in time for them to read it.
 
@@ -280,15 +278,7 @@ We will generally assume this to be true unless told otherwise.
 
 In a pipeline diagram, we will denote a stall by writing `d*` for a data stall, and `p*` for a propagated stall.
 
-<PipelineDiagram
-	client:visible
-	syncId="raw"
-	hazardToggle
-	activateHazard="stall"
-	program={['add r1, r2 -> r3', 'lw #0(r3) -> r4', 'addi r3, #1 -> r6', 'sw r3 -> #0(r7)']}
-	regs={{ r1: 10, r2: 20, r3: 7, r7: 300 }}
-	minCycles={10}
-/>
+<PipelineDiagram client:visible {...rawStallDiagram.props} />
 
 Notice something about the stall here:
 - `lw` already gets r3 from the regfile
@@ -312,7 +302,7 @@ The data being written must be written to the register file. But there is no nee
 | **WX** | The beginning of the W phase, i.e. the output of the M/W pipeline register | The ALU input muxes in the X phase |
 | **WM** | The beginning of the W phase, i.e. the output of the M/W pipeline register | The data input mux in the M phase |
 
-<BypassPaths client:visible />
+<BypassPaths client:visible {...bypassPaths.props} />
 
 #### Bypassing in Pipeline Diagrams
 
@@ -324,7 +314,7 @@ add r2, r3 -> r1
 sub r1, r4 -> r2
 ```
 
-<PipelineDiagram client:visible mode="static" bypass={['MX', 'WX', 'WM']} program={['add r2, r3 -> r1', 'sub r1, r4 -> r2']} minCycles={10} />
+<PipelineDiagram client:visible {...mxBypassDiagram.props} />
 
 Here is another example of a RAW dependency between the 1st and 3rd instruction, and a WX bypass:
 ```asm
@@ -333,7 +323,7 @@ lw #0(r7) -> r5
 sub r1, r4 -> r2
 ```
 
-<PipelineDiagram client:visible mode="static" bypass={['MX', 'WX', 'WM']} program={['add r2, r3 -> r1', 'lw #0(r7) -> r5', 'sub r1, r4 -> r2']} minCycles={10} />
+<PipelineDiagram client:visible {...wxBypassDiagram.props} />
 
 Here is an example of a WM bypass:
 ```asm
@@ -341,7 +331,7 @@ lw #0(r2) -> r1
 sw r1 -> #0(r4)
 ```
 
-<PipelineDiagram client:visible mode="static" bypass={['MX', 'WX', 'WM']} program={['lw #0(r2) -> r1', 'sw r1 -> #0(r4)']} minCycles={10} />
+<PipelineDiagram client:visible {...wmBypassDiagram.props} />
 
 #### Load-Use Hazards
 
@@ -364,47 +354,15 @@ lw #4(r3) -> r1
 sub r1, r4 -> r2
 ```
 
-<PipelineDiagram
-	client:visible
-	syncId="loaduse"
-	bypass={['MX', 'WX', 'WM']}
-	program={['lw #4(r3) -> r1', 'sub r1, r4 -> r2']}
-	regs={{ r3: 100, r4: 2 }}
-	mem={{ 104: 42 }}
-	minCycles={10}
-/>
+<PipelineDiagram client:visible {...loadUseDiagram.props} />
 
 Without a WX bypass, the same pair costs 2 stall cycles, since `sub` has to wait until it can read `r1` from the register file in cycle 5:
 
-<PipelineDiagram
-	client:visible
-	mode="static"
-	bypass={['MX', 'WM']}
-	program={['lw #4(r3) -> r1', 'sub r1, r4 -> r2']}
-	regs={{ r3: 100, r4: 2 }}
-	mem={{ 104: 42 }}
-	minCycles={10}
-/>
+<PipelineDiagram client:visible {...loadUseNoWxDiagram.props} />
 
 Additionally, observe how using an MX bypass for a load-use RAW hazard would incorrectly use the effective address instead of the data from the data cache/memory.
 
-<PipelineSim
-	client:visible
-	syncId="loaduse"
-	bypass={['MX', 'WX', 'WM']}
-	program={['lw #4(r3) -> r1', 'sub r1, r4 -> r2']}
-	regs={{ r3: 100, r4: 2 }}
-	mem={{ 104: 42 }}
-	watch={['r1']}
-	notes={[
-		{
-			cycle: 4,
-			bypass: 'MX',
-			tag: '104 = address, not r1',
-			text: 'In cycle 4 the MX bypass is holding 104: the effective address #4(r3) that lw computed in the ALU, not the value of r1. lw only gets r1 = 42 out of the data cache during M, so sub cannot take r1 from MX. It stalls for a cycle and gets r1 through the WX bypass in cycle 5.',
-		},
-	]}
-/>
+<PipelineSim client:visible {...loadUseSim.props} />
 
 ## Write-after-write (WAW) Hazards
 

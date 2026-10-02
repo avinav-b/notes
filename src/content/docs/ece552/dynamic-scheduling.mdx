@@ -8,6 +8,7 @@ sidebar:
 
 import InsnBufferPipeline from '../../../components/InsnBufferPipeline.tsx';
 import RenameDemo from '../../../components/RenameDemo.tsx';
+import { insnBuffer, registerRenaming } from '../../../embeds/ece552/dynamic-scheduling';
 
 ## Static Instruction Scheduling
 
@@ -61,7 +62,7 @@ Split **D** into two pieces:
 | **D1** | Accumulates decoded instructions into the buffer | In order |
 | **D2** | Sends instructions from the buffer down the rest of the pipeline | *Out of order* |
 
-<InsnBufferPipeline client:visible />
+<InsnBufferPipeline client:visible {...insnBuffer.props} />
 
 ## Scheduling Algorithm I: Tomasulo
 
@@ -115,12 +116,7 @@ Locations must be de-allocated at some point, since resources are finite. For no
 - Locations: `p1` to `p8`
 - Original mapping: `r1→p1`, `r2→p2`, `r3→p3`, `r4→p4`; `p5` to `p8` are free
 
-<RenameDemo
-	client:visible
-	program={['div r2,r3 -> r1', 'add r2,r1 -> r3', 'subi r4,4 -> r2', 'add r4,r2 -> r1']}
-	archRegs={4}
-	physRegs={8}
-/>
+<RenameDemo client:visible {...registerRenaming.props} />
 
 :::tip[Takeaway]
 Renaming:
