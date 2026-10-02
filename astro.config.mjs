@@ -21,7 +21,7 @@ export default defineConfig({
 	},
 	integrations: [
 		starlight({
-			title: 'i mean ye',
+			title: 'hello',
 			components: {
 				SiteTitle: './src/components/starlight/SiteTitle.astro',
 				ThemeSelect: './src/components/starlight/ThemeSelect.astro',
