@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { StepControls, useStepper } from './StepControls';
 import { isReg, parseInsn } from './isa';
-import { simulate, type Mode, type PipeState, type Unit } from './pipelineSim';
+import { simulate, type Mode, type PipeState, type Unit } from './bufferPipelineSim';
 import s from './InsnBufferPipeline.module.css';
 
 interface Props {

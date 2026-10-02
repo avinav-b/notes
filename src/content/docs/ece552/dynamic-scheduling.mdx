@@ -2,6 +2,8 @@
 title: Dynamic Scheduling
 description: Static vs. dynamic instruction scheduling, the instruction buffer, Tomasulo, and register renaming.
 lastUpdated: 2026-10-01
+sidebar:
+  order: 2
 ---
 
 import InsnBufferPipeline from '../../../components/InsnBufferPipeline.tsx';
@@ -26,7 +28,7 @@ Compilers can give themselves a large instruction scope by doing things such as 
 ## Motivation: Dynamic Scheduling
 
 Dynamic scheduling executes instructions in non-sequential order, to:
-- reduce RAW stalls
+- reduce [RAW stalls](/ece552/pipelining/#detecting-and-stalling-a-raw)
 - increase functional unit (FU) utilization
   - original motivation was for the FP unit, back when that was the largest bottleneck
 - expose more opportunities for parallel issue (ILP)
@@ -67,7 +69,7 @@ Tomasulo's algorithm has three parts:
 
 | Component | Role |
 | --- | --- |
-| **Register renaming** | Removes WAR/WAW hazards |
+| **Register renaming** | Removes [WAR](/ece552/pipelining/#write-after-read-war-hazards)/[WAW](/ece552/pipelining/#write-after-write-waw-hazards) hazards |
 | **Reservation stations (RS)** | The instruction buffer |
 | **Common data bus (CDB)** | Broadcasts results to the RS |
 
@@ -78,17 +80,17 @@ Our example is "Simple Tomasulo": dynamic scheduling for everything, including l
 ## Recall: Dependences
 
 :::tip[Dependence vs. hazard]
-Dependences are a property of **programs**. Whether a dependence results in a hazard/stall is a property of **pipeline organization**.
+Dependences are a property of **programs**. Whether a dependence results in a [hazard](/ece552/pipelining/#dependence-and-hazards)/stall is a property of **pipeline organization**.
 :::
 
-**True (data) dependence**
+[**True (data) dependence**](/ece552/pipelining/#read-after-write-raw-hazards)
 - insn *i* produces a result that may be used by insn *j*
 - insn *j* is data dependent on insn *k*, and insn *k* is data dependent on insn *i*
 - data dependent insns cannot execute simultaneously or be completely overlapped
 
 ## Register Renaming
 
-**Idea:** change register names to eliminate WAR/WAW hazards.
+**Idea:** change register names to eliminate [WAR](/ece552/pipelining/#write-after-read-war-hazards)/[WAW](/ece552/pipelining/#write-after-write-waw-hazards) hazards.
 
 > Think of registers (`r1`, `f0`, ...) as **names**, not **storage locations**. So:
 > - there can be more locations than names

@@ -7,11 +7,58 @@
 //   </div>
 //
 // Every button is optional: <StepControls stepper={stepper} finish={false} speed={false} />.
-import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
+// Components on the same page that pass the same `syncId` share one timeline (e.g. a datapath
+// animation and its pipeline diagram), even though they are separate islands.
+import { useEffect, useRef, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
 import { ChevronLeft, ChevronRight, Gauge, Pause, Play, RotateCcw, SkipForward } from 'lucide-react';
 import s from './StepControls.module.css';
 
 const SPEEDS = [0.25, 0.5, 1, 1.5, 2, 3, 4];
+
+interface StepState {
+	step: number;
+	playing: boolean;
+	speed: number;
+}
+
+/** Playback state plus the timer that drives it. Lives outside React so islands can share it. */
+class StepStore {
+	state: StepState = { step: 0, playing: false, speed: 1 };
+	last = 0;
+	intervalMs = 1000;
+	loop = false;
+	private timer: ReturnType<typeof setTimeout> | undefined;
+	private listeners = new Set<() => void>();
+
+	subscribe = (fn: () => void) => {
+		this.listeners.add(fn);
+		return () => {
+			this.listeners.delete(fn);
+		};
+	};
+	get = () => this.state;
+
+	set(patch: Partial<StepState>) {
+		this.state = { ...this.state, ...patch };
+		this.schedule();
+		for (const fn of this.listeners) fn();
+	}
+
+	private schedule() {
+		clearTimeout(this.timer);
+		if (!this.state.playing) return;
+		if (this.state.step >= this.last && !this.loop) {
+			this.state = { ...this.state, playing: false };
+			return;
+		}
+		this.timer = setTimeout(() => {
+			const next = this.state.step >= this.last ? 0 : this.state.step + 1;
+			this.set({ step: next });
+		}, this.intervalMs / this.state.speed);
+	}
+}
+
+const sharedStores = new Map<string, StepStore>();
 
 export interface Stepper {
 	step: number;
@@ -29,55 +76,58 @@ export interface Stepper {
 	keyProps: { tabIndex: number; onKeyDown: (e: KeyboardEvent) => void };
 }
 
-export function useStepper(last: number, { intervalMs = 1000 }: { intervalMs?: number } = {}): Stepper {
-	const [step, setStepRaw] = useState(0);
-	const [playing, setPlaying] = useState(false);
-	const [speed, setSpeed] = useState(1);
+interface StepperOptions {
+	intervalMs?: number;
+	/** Components with the same syncId share step, play state and speed. */
+	syncId?: string;
+	/** Wrap back to the first frame instead of stopping at the end. */
+	loop?: boolean;
+	/** Start playing on mount (skipped when the user prefers reduced motion). */
+	autoplay?: boolean;
+}
+
+export function useStepper(last: number, { intervalMs = 1000, syncId, loop = false, autoplay = false }: StepperOptions = {}): Stepper {
+	const ref = useRef<StepStore | null>(null);
+	if (!ref.current) {
+		if (syncId) {
+			if (!sharedStores.has(syncId)) sharedStores.set(syncId, new StepStore());
+			ref.current = sharedStores.get(syncId)!;
+		} else ref.current = new StepStore();
+	}
+	const store = ref.current;
+	store.last = last;
+	store.intervalMs = intervalMs;
+	store.loop = loop;
+	const { step, playing, speed } = useSyncExternalStore(store.subscribe, store.get, store.get);
 	const clamp = (n: number) => Math.max(0, Math.min(last, n));
-	const setStep = (n: number) => setStepRaw(clamp(n));
 
 	// Keep the step in range if the number of frames changes (e.g. a mode switch).
 	useEffect(() => {
-		if (step > last) setStepRaw(last);
+		if (step > last) store.set({ step: last });
 	}, [last]);
 
 	useEffect(() => {
-		if (!playing) return;
-		if (step >= last) {
-			setPlaying(false);
-			return;
-		}
-		const id = setTimeout(() => setStepRaw((x) => Math.min(last, x + 1)), intervalMs / speed);
-		return () => clearTimeout(id);
-	}, [playing, step, last, speed, intervalMs]);
+		if (!autoplay) return;
+		if (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		store.set({ playing: true });
+	}, []);
 
 	const stepper: Stepper = {
-		step,
+		step: Math.min(step, last),
 		last,
 		playing,
 		speed,
-		setStep,
-		reset: () => {
-			setPlaying(false);
-			setStepRaw(0);
-		},
-		back: () => {
-			setPlaying(false);
-			setStepRaw((x) => clamp(x - 1));
-		},
-		next: () => {
-			setPlaying(false);
-			setStepRaw((x) => clamp(x + 1));
-		},
-		finish: () => {
-			setPlaying(false);
-			setStepRaw(last);
-		},
+		setStep: (n) => store.set({ step: clamp(n) }),
+		reset: () => store.set({ playing: false, step: 0 }),
+		back: () => store.set({ playing: false, step: clamp(store.state.step - 1) }),
+		next: () => store.set({ playing: false, step: clamp(store.state.step + 1) }),
+		finish: () => store.set({ playing: false, step: last }),
 		togglePlay: () => {
-			if (!playing && step >= last) setStepRaw(0);
-			setPlaying((p) => !p);
+			const st = store.state;
+			if (!st.playing && st.step >= last && !loop) store.set({ step: 0, playing: true });
+			else store.set({ playing: !st.playing });
 		},
-		setSpeed,
+		setSpeed: (x) => store.set({ speed: x }),
 		keyProps: {
 			tabIndex: 0,
 			onKeyDown: (e) => {
@@ -91,6 +141,31 @@ export function useStepper(last: number, { intervalMs = 1000 }: { intervalMs?: n
 		},
 	};
 	return stepper;
+}
+
+/** A value shared between islands on the same page (e.g. a mode toggle shown in two components). */
+const sharedValues = new Map<string, { value: unknown; listeners: Set<() => void> }>();
+
+export function useSharedValue<T>(key: string, initial: T): [T, (v: T) => void, () => T] {
+	if (!sharedValues.has(key)) sharedValues.set(key, { value: initial, listeners: new Set() });
+	const entry = sharedValues.get(key)!;
+	const value = useSyncExternalStore(
+		(fn) => {
+			entry.listeners.add(fn);
+			return () => {
+				entry.listeners.delete(fn);
+			};
+		},
+		() => entry.value as T,
+		() => initial,
+	);
+	const set = (v: T) => {
+		entry.value = v;
+		for (const fn of entry.listeners) fn();
+	};
+	// The live value; `value` can briefly be the initial value while an island hydrates.
+	const get = () => entry.value as T;
+	return [value, set, get];
 }
 
 interface ControlsProps {

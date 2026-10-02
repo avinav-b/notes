@@ -1,0 +1,55 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+.buttons i {
+	display: inline-block;
+	width: 0.7rem;
+	height: 0.7rem;
+	border-radius: 50%;
+}
+.dotMX {
+	background: var(--viz-mx);
+}
+.dotWX {
+	background: var(--viz-wx);
+}
+.dotWM {
+	background: var(--viz-wm);
+}
+.on {
+	border-color: var(--sl-color-accent) !important;
+	background: var(--sl-color-accent-low) !important;
+}
+.info {
+	min-height: 3em;
+	margin: 0.75rem 0;
+	font-size: 0.85rem;
+	line-height: 1.5;
+	color: var(--sl-color-gray-2);
+}
+.textMX {
+	color: var(--viz-mx);
+}
+.textWX {
+	color: var(--viz-wx);
+}
+.textWM {
+	color: var(--viz-wm);
+}
+.scroll {
+	overflow-x: auto;
+}
+.scroll svg {
+	min-width: 34rem;
+}

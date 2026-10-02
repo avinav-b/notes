@@ -13,6 +13,10 @@
 	--viz-surface: var(--sl-color-gray-7, #f6f6f6);
 	--viz-border: var(--sl-color-gray-5);
 	--viz-mono: var(--__sl-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+	/* Pipeline bypass paths */
+	--viz-mx: #2563eb;
+	--viz-wx: #c026d3;
+	--viz-wm: #0d9488;
 }
 
 :root[data-theme='dark'] {
@@ -27,6 +31,9 @@
 	--viz-front: rgba(96, 165, 250, 0.12);
 	--viz-back: rgba(167, 139, 250, 0.12);
 	--viz-surface: hsl(260, 8%, 6%);
+	--viz-mx: #60a5fa;
+	--viz-wx: #e879f9;
+	--viz-wm: #2dd4bf;
 }
 
 /* Shared button style for component controls. */
@@ -57,4 +64,11 @@
 	background: var(--sl-color-accent);
 	border-color: var(--sl-color-accent);
 	color: var(--sl-color-black);
+}
+
+/* Wide display math scrolls inside its own box instead of widening the page. */
+.katex-display {
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding-block: 0.25rem;
 }

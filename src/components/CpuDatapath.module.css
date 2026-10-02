@@ -1,0 +1,203 @@
+.root {
+	outline: none;
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.message {
+	min-height: 3.2em;
+	margin: 0.75rem 0;
+	padding: 0.5rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.scroll {
+	overflow-x: auto;
+}
+.svg {
+	display: block;
+	width: 100%;
+	min-width: 32rem;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+
+.region {
+	fill: var(--sl-color-gray-6);
+	opacity: 0.5;
+	transition:
+		fill 250ms,
+		opacity 250ms;
+}
+.regionOn {
+	fill: var(--sl-color-accent-low);
+	opacity: 0.8;
+}
+.regionLabel {
+	font-family: var(--__sl-font);
+	font-size: 11.5px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+}
+.regionLabelOn {
+	fill: var(--sl-color-accent-high);
+}
+.owner {
+	font-size: 10px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+
+.wire {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.6;
+	transition:
+		stroke 250ms,
+		stroke-width 250ms;
+}
+.wire.lit {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.8;
+}
+.head {
+	fill: var(--sl-color-gray-4);
+}
+.part {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.5;
+	transition:
+		fill 250ms,
+		stroke 250ms;
+}
+.part.lit {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.partFresh {
+	stroke: var(--viz-ok) !important;
+}
+.partLabel {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.partLabelBig {
+	font-family: var(--__sl-font);
+	font-size: 17px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.port {
+	font-size: 10px;
+	fill: var(--sl-color-gray-3);
+}
+
+.latch {
+	fill: var(--sl-color-accent);
+	opacity: 0.75;
+	transition:
+		opacity 250ms,
+		fill 250ms;
+}
+.latch.lit {
+	opacity: 1;
+}
+.fresh {
+	fill: var(--viz-ok) !important;
+	opacity: 1;
+}
+.latchLabel {
+	font-family: var(--__sl-font);
+	font-size: 10px;
+	font-weight: 700;
+	fill: var(--sl-color-black);
+}
+.value {
+	font-size: 10.5px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.valueFresh {
+	fill: var(--viz-ok);
+}
+
+.ctl {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.5;
+	transition:
+		fill 250ms,
+		stroke 250ms;
+}
+.ctl.lit {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.ctlLabel {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.ctlLine {
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1;
+	stroke-dasharray: 3 3;
+}
+.ctlLine.lit {
+	stroke: var(--sl-color-accent);
+	stroke-width: 1.6;
+}
+
+.clock {
+	fill: var(--sl-color-gray-6);
+}
+.clockFill {
+	fill: var(--sl-color-accent);
+	transition: width 400ms ease-in-out;
+}
+
+.bar {
+	fill: var(--sl-color-accent);
+	opacity: 0.55;
+	transition: opacity 250ms;
+}
+.barOn {
+	opacity: 0.9;
+}
+.field {
+	font-size: 10px;
+	font-weight: 700;
+	fill: var(--sl-color-black);
+}
+.barLabel {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-accent-high);
+}
+.barHolder {
+	font-size: 10px;
+	fill: var(--sl-color-gray-2);
+}
+
+.legend {
+	margin: 0.5rem 0 0;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.legend b {
+	color: var(--sl-color-text);
+	font-family: var(--viz-mono);
+}

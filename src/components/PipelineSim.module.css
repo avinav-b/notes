@@ -1,0 +1,85 @@
+.root {
+	outline: none;
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.toggle {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+.drawing {
+	margin-top: 0.75rem;
+	overflow-x: auto;
+}
+/* Keep the drawing readable on phones; it scrolls sideways inside the card instead. */
+.drawing svg {
+	min-width: 34rem;
+}
+.note {
+	margin: 0.5rem 0 0;
+	padding: 0.5rem 0.75rem;
+	border-left: 3px solid var(--viz-raw);
+	background: var(--viz-raw-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	font-size: 0.85rem;
+	line-height: 1.5;
+}
+
+.msgs {
+	width: 100%;
+	margin-top: 0.75rem;
+	border-collapse: collapse;
+	font-size: 0.82rem;
+	line-height: 1.45;
+}
+.msgs th,
+.msgs td {
+	padding: 0.3rem 0.5rem;
+	border-top: 1px solid var(--viz-border);
+	text-align: left;
+	vertical-align: top;
+}
+.msgs th {
+	width: 1.5rem;
+	font-family: var(--viz-mono);
+	color: var(--sl-color-gray-3);
+}
+.who {
+	width: 9.5rem;
+	font-family: var(--viz-mono);
+	font-size: 0.78rem;
+	white-space: nowrap;
+	font-weight: 700;
+}
+.muted td {
+	color: var(--sl-color-gray-4);
+}
+.bad td:last-child {
+	color: var(--viz-raw);
+}
+.good td:last-child {
+	color: var(--viz-ok);
+}
+@media (max-width: 40rem) {
+	.msgs tr {
+		display: grid;
+		grid-template-columns: 1.5rem 1fr;
+	}
+	.msgs td:last-child {
+		grid-column: 2;
+		padding-top: 0;
+		border-top: 0;
+	}
+	.who {
+		width: auto;
+	}
+}

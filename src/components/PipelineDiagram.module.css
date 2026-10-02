@@ -1,0 +1,179 @@
+.root {
+	outline: none;
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.static {
+	padding-block: 0.75rem;
+}
+.scroll {
+	overflow-x: auto;
+	margin-top: 0.75rem;
+}
+.static .scroll {
+	margin-top: 0;
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+
+.now {
+	fill: var(--sl-color-accent-low);
+	opacity: 0.7;
+}
+.head {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+}
+.headNow {
+	fill: var(--sl-color-accent-high);
+}
+.axis {
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.6;
+}
+.grid {
+	stroke: var(--viz-border);
+	stroke-width: 1;
+}
+.label {
+	font-size: 12.5px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.dep {
+	fill: var(--viz-raw);
+}
+
+.cell {
+	font-size: 14px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.cellNow {
+	fill: var(--sl-color-accent-high);
+}
+.dstall {
+	fill: var(--viz-raw);
+	font-size: 12px;
+}
+.pstall {
+	fill: var(--viz-war);
+	font-size: 12px;
+}
+.staleCell {
+	fill: var(--viz-raw);
+}
+.cellBg {
+	stroke-width: 1.2;
+}
+.dstallBg {
+	fill: var(--viz-raw-bg);
+	stroke: var(--viz-raw);
+	stroke-dasharray: 3 2;
+}
+.pstallBg {
+	fill: var(--viz-war-bg);
+	stroke: var(--viz-war);
+}
+.staleBg {
+	fill: var(--viz-raw-bg);
+	stroke: var(--viz-raw);
+}
+
+/* Bypass arrows */
+.arrowMX,
+.arrowWX,
+.arrowWM {
+	stroke-width: 2;
+}
+.arrowMX {
+	stroke: var(--viz-mx);
+	fill: var(--viz-mx);
+}
+.arrowWX {
+	stroke: var(--viz-wx);
+	fill: var(--viz-wx);
+}
+.arrowWM {
+	stroke: var(--viz-wm);
+	fill: var(--viz-wm);
+}
+.arrowMX path,
+.arrowWX path,
+.arrowWM path {
+	fill: none;
+}
+.headMX {
+	fill: var(--viz-mx);
+}
+.headWX {
+	fill: var(--viz-wx);
+}
+.headWM {
+	fill: var(--viz-wm);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	margin-top: 0.5rem;
+	font-size: 0.78rem;
+	color: var(--sl-color-gray-3);
+}
+.legend i {
+	display: inline-block;
+	min-width: 1.6rem;
+	margin-right: 0.35rem;
+	padding: 0 0.2rem;
+	border-radius: 0.25rem;
+	border: 1.2px solid;
+	font-family: var(--viz-mono);
+	font-style: normal;
+	font-weight: 700;
+	text-align: center;
+}
+.lgD {
+	color: var(--viz-raw);
+	background: var(--viz-raw-bg);
+	border-style: dashed !important;
+}
+.lgP {
+	color: var(--viz-war);
+	background: var(--viz-war-bg);
+}
+.lgStale {
+	color: var(--viz-raw);
+	background: var(--viz-raw-bg);
+}
+.lgArrow {
+	min-width: 0 !important;
+	width: 0;
+	height: 0.9rem;
+	padding: 0 !important;
+	border-width: 0 0 0 3px !important;
+	border-radius: 0 !important;
+	vertical-align: -0.15rem;
+}
+.legend .lgMX {
+	border-color: var(--viz-mx);
+}
+.legend .lgWX {
+	border-color: var(--viz-wx);
+}
+.legend .lgWM {
+	border-color: var(--viz-wm);
+}

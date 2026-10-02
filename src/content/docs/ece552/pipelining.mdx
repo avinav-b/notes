@@ -1,0 +1,434 @@
+---
+title: Pipelining
+description: From the sequential model to single-cycle, multi-cycle and pipelined processors, and how a pipeline handles data hazards with stalls and bypassing.
+lastUpdated: 2026-10-01
+sidebar:
+  order: 1
+---
+
+import CpuDatapath from '../../../components/CpuDatapath.tsx';
+import ExecTimeline from '../../../components/ExecTimeline.tsx';
+import PipelineSim from '../../../components/PipelineSim.tsx';
+import PipelineDiagram from '../../../components/PipelineDiagram.tsx';
+import BypassPaths from '../../../components/BypassPaths.tsx';
+
+## The Sequential Model
+
+This is the model of all modern ISAs.
+
+The **Program Counter (PC)** points to the memory address of the current instruction, and defines the **total order** on dynamic instruction. The next PC is always the next sequential instruction (PC + 4 with 4-byte instructions) unless the instruction says otherwise.
+
+The processor executes a loop:
+1. Fetch instruction at the PC
+2. Decode the instruction and read the inputs needed to execute instruction
+3. Execute the instruction
+4. Write the output
+5. Increment the program counter
+
+## Single Cycle Processor
+
+<CpuDatapath client:visible variant="single" />
+
+| Part | Contains |
+| --- | --- |
+| **Data path** | Functional units (e.g. the ALU), registers, memory interfaces, etc. |
+| **Control path** | Multiplexers, and the control signals for each component, such as write enables |
+
+## Processor Steps
+
+| Stage | What happens |
+| --- | --- |
+| **Instruction Fetch (F)** | The instruction is fetched from memory at the address indicated by the PC.<br />Increment the PC to point to the next instruction in the sequence. |
+| **Decode (D)** | Decode the instruction to find the instruction type (reading the opcode).<br />Decode the required source registers, and read them. |
+| **Execution (X)** | The ALU performs an arithmetic/logic operation.<br />For load or store instructions, the ALU often computes the effective memory address.<br />If the instruction is a branch, compute the target PC and update it. |
+| **Memory Access (M)** | For a load, fetch the contents of the memory at the computed address.<br />For a store, modify the contents of the memory at the computed address. |
+| **Writeback (W)** | Write instruction results to the register file. |
+
+## Multi-Cycle Processor
+
+<CpuDatapath client:visible variant="multi" />
+
+The multi-cycle processor adds registers to hold temporary data, creating the multi-cycle implementation:
+
+| Register | Holds |
+| --- | --- |
+| **IR** | The instruction register: the instruction, which is used to determine and drive control signals |
+| **A**, **B** | Source register values |
+| **O** | The output from the ALU |
+| **D** | The output from the memory/data cache |
+
+## Single vs Multi-Cycle Processor
+
+<ExecTimeline client:visible variant="single-vs-multi" />
+
+The basic datapath is: fetch, decode, execute.
+
+| | Single-cycle control | Multi-cycle control |
+| --- | --- | --- |
+| **Control** | Hardwired | – |
+| **CPI** | Low | High |
+| **Clock period** | Long: needed to accommodate the slowest instruction | Shorter |
+
+### Latency and throughput
+
+There is no good way to make a single instruction faster, i.e. decrease its **latency**.
+
+:::tip
+We ultimately don't care about latency. We just want programs to go faster. Turns out there are meaningful ways to increase **throughput** in a CPU.
+:::
+
+## Pipelining
+
+<ExecTimeline client:visible variant="multi-vs-pipelined" />
+
+:::tip
+Pipelining improves instruction **throughput** (not latency).
+:::
+
+We can think about pipelining by thinking about the multi-cycle design:
+- when one instruction flows from stage 1 to stage 2, allow the next instruction to enter stage 1.
+- the instruction stages themselves take the same amount of time and the instructions still take the same number of stages
+
+<PipelineDiagram client:visible mode="loop" generic={6} relative />
+
+Some instructions may take longer, but **5 instructions are in-flight concurrently**.
+
+## 5 Stage Pipelined Processor
+
+<CpuDatapath client:visible variant="pipelined" />
+
+The temporary values mentioned earlier (PC, IR, A, B, O, D) are now re-latched at every stage in a pipeline register. This is because every single stage of the processor is now executing a different instruction and will need different values.
+
+There are latches (**pipeline registers**) in between each stage, named by the stages they separate: `PC`, `F/D`, `D/X`, `X/M`, `M/W`.
+
+## Terminology
+
+| Term | Meaning |
+| --- | --- |
+| **Scalar pipeline** | One instruction per stage, unlike a **super-scalar** pipeline, where one stage might execute more than one instruction |
+| **In-order pipeline** | Instructions are fed through the pipeline to execute in program order |
+| **Pipeline depth** | The number of pipeline stages |
+
+## Instruction Conventions
+
+Some ISAs put the instruction destinations on the left, for example:
+```asm
+add r1, r2, r3 # r1 <- r2 + r3
+```
+and some on the right:
+```asm
+add r1, r2, r3 # r1 + r2 -> r3
+```
+
+:::note[Course convention]
+In this course, examples use `add r2, r3 -> r1` to be explicit and make the destination register clear.
+:::
+
+## Pipeline Example
+
+<PipelineSim
+	client:visible
+	syncId="example"
+	program={['add r1, r2 -> r3', 'lw #0(r5) -> r4', 'sw r6 -> #4(r7)']}
+	regs={{ r1: 10, r2: 20, r5: 100, r6: 7, r7: 200 }}
+	mem={{ 100: 55 }}
+/>
+
+Above, you can step through 7 cycles of a pipelined 5-stage processor executing 3 instructions.
+
+### Pipeline diagram
+
+<PipelineDiagram
+	client:visible
+	syncId="example"
+	program={['add r1, r2 -> r3', 'lw #0(r5) -> r4', 'sw r6 -> #4(r7)']}
+	regs={{ r1: 10, r2: 20, r5: 100, r6: 7, r7: 200 }}
+	mem={{ 100: 55 }}
+	minCycles={9}
+/>
+
+Pipeline diagrams are used to describe how instructions go through the processor. The CPU cycles are shown horizontally across, and instructions downwards.
+
+:::caution[Convention]
+Showing that an instruction does a pipeline step, for example X, in cycle 4, means that it *completed* the stage in cycle 4 and wrote to the *X/M* register at the end of cycle 4.
+:::
+
+## Pipelining Principles
+
+| Principle | Meaning |
+| --- | --- |
+| **Balance** | All stages should take approximately the same time.<br />Instructions must pass through all stages in the same order, even if the stage is not needed. |
+| **Buffering** | Not all stages take the same time, so instructions will sit and wait until the next stage is ready to accept them. |
+
+## Pipelining Performance
+
+Let's say you have a CPU which has the following instruction distribution:
+- 20% branch
+- 20% load
+- 60% ALU
+
+Here is what that looks like in terms of performance, where
+
+$$
+\text{performance} = \text{clock period} \times \text{CPI} \quad (\text{time per instruction})
+$$
+
+| Design | Clock period | CPI | Performance |
+| --- | --- | --- | --- |
+| Single-cycle | 50 ns | 1 | 50 ns/instr |
+| Multi-cycle | 11 ns | 4 | 44 ns/instr |
+| Pipelined | 12 ns | 1 | 12 ns/instr |
+| Pipelined, with stall penalties | 12 ns | 1.5 | 18 ns/instr |
+
+**Multi-cycle:** branch takes 3 cycles, load 5 cycles, ALU 4 cycles, so
+
+$$
+\text{CPI} = 0.2(3) + 0.2(5) + 0.6(4) = 0.6 + 1.0 + 2.4 = 4
+$$
+
+$$
+\text{performance} = 11\ \text{ns} \times 4 = 44\ \text{ns/instr}
+$$
+
+**Pipelined:** the clock period is the single-cycle delay split over 5 stages, plus overhead:
+
+$$
+\text{clock period} = \frac{50\ \text{ns}}{5\ \text{stages}} + \text{overhead} = 12\ \text{ns}
+$$
+
+CPI = 1: each instruction takes 5 cycles, **but** 1 instruction completes every cycle, so performance is 12 ns/instr. Actually, CPI = 1 + some penalty for pipelining; say CPI = 1.5, giving $12 \times 1.5 = 18$ ns/instr.
+
+**Why is the pipeline clock period greater than (delay through datapath) / (# of pipeline stages)?**
+- pipeline registers add delay
+- pipeline stages themselves have different delays: the clock period must account for the longest stage
+- extra bypass logic
+
+**Why is pipeline CPI greater than 1?**
+- CPI for a scalar in-order pipeline will be 1 + stall penalties
+- Stalls are used to remove hazards
+
+## Pipeline Management
+
+Proper pipeline management requires two **pipeline operations**. These are achieved using control signals.
+
+| Operation | What it does |
+| --- | --- |
+| **Stall** | Stop an instruction in its current stage. Younger instructions must wait for the older instructions to complete. |
+| **Flush** | Remove an instruction from the current stage. |
+
+:::caution
+Both **stalls** and **flushes** must also propagate to all younger instructions.
+:::
+
+## Dependence and Hazards
+
+| | Dependence | Hazard |
+| --- | --- | --- |
+| **What it is** | A relationship that serializes two instructions | The possibility of the hardware executing instructions incorrectly (such as by using the wrong data) due to pipelining. Another way to think about a hazard is breaking the sequential illusion. |
+| **A property of** | The program, not the hardware | The hardware |
+
+There are two kinds of dependence:
+- **Data dependence:** two instructions use the same value or storage.
+- **Control dependence:** one instruction affects whether another instruction executes or not.
+
+Hazards can be fixed by **stalling**.
+
+## Read-after-write (RAW) Hazards
+
+Take the following instructions:
+```asm
+add r2, r3 -> r1
+sub r1, r4 -> r2
+or r6, r3 -> r1
+```
+
+The `sub` instruction absolutely requires that the `add` instruction completes and writes to the `r1` register first.
+
+A **true dependence** is one where the actual data is depended on. Using a different register doesn't solve this.
+
+Imagine these instructions:
+```asm
+add r1, r2 -> r3
+lw #0(r3) -> r4
+addi r3, #1 -> r6
+sw r3 -> #0(r7)
+```
+
+The `add` instruction is writing to `r3`, which is needed by the next three instructions. How would this flow through a pipeline?
+
+<PipelineSim
+	client:visible
+	syncId="raw"
+	hazardToggle
+	hazard="none"
+	program={['add r1, r2 -> r3', 'lw #0(r3) -> r4', 'addi r3, #1 -> r6', 'sw r3 -> #0(r7)']}
+	regs={{ r1: 10, r2: 20, r3: 7, r7: 300 }}
+	watch={['r3']}
+/>
+
+As you can see in the animation above, the `lw` and `addi` instructions read the wrong value, because the `add` instruction has not finished writing to the register file in time for them to read it.
+
+### Internal Forwarding
+
+In cases where we have **internal forwarding**, we assume that the **W** stage of the pipeline writes to the regfile in the first half of the cycle, and the **D** stage reads in the second half. This means that we can read a value that is being written to the regfile in the same cycle.
+
+:::note
+We will generally assume this to be true unless told otherwise.
+:::
+
+### Detecting and stalling a RAW
+
+In a pipeline diagram, we will denote a stall by writing `d*` for a data stall, and `p*` for a propagated stall.
+
+<PipelineDiagram
+	client:visible
+	syncId="raw"
+	hazardToggle
+	activateHazard="stall"
+	program={['add r1, r2 -> r3', 'lw #0(r3) -> r4', 'addi r3, #1 -> r6', 'sw r3 -> #0(r7)']}
+	regs={{ r1: 10, r2: 20, r3: 7, r7: 300 }}
+	minCycles={10}
+/>
+
+Notice something about the stall here:
+- `lw` already gets r3 from the regfile
+- but `add` hasn't yet written r3 to the regfile (hence stall)
+
+But does this **need** to happen? Even though `lw` has to wait for r3 to be written, it hasn't actually used it yet. And the `add` has actually *already produced* the value that would be written to r3 in the pipeline. It just hasn't been written to the register file yet.
+
+**But if it has already been produced, can we just give it straight to the `lw` before writing to the regfile so the `lw` doesn't have to wait?**
+
+Yes, **bypassing**.
+
+### Bypassing (Forwarding) RAW Stalls
+
+The data being written must be written to the register file. But there is no need for other instructions to wait for that to happen to use the data.
+
+**Bypassing** is reading a value from an intermediate source before it is written to the primary source.
+
+| Bypass | From | To |
+| --- | --- | --- |
+| **MX** | The beginning of the M phase, i.e. the output of the X/M pipeline register | The ALU input muxes in the X phase |
+| **WX** | The beginning of the W phase, i.e. the output of the M/W pipeline register | The ALU input muxes in the X phase |
+| **WM** | The beginning of the W phase, i.e. the output of the M/W pipeline register | The data input mux in the M phase |
+
+<BypassPaths client:visible />
+
+#### Bypassing in Pipeline Diagrams
+
+If bypasses exist, draw the bypass arrow in the diagram.
+
+Here is an example of a RAW dependency and pipeline diagram showing the MX bypass:
+```asm
+add r2, r3 -> r1
+sub r1, r4 -> r2
+```
+
+<PipelineDiagram client:visible mode="static" bypass={['MX', 'WX', 'WM']} program={['add r2, r3 -> r1', 'sub r1, r4 -> r2']} minCycles={10} />
+
+Here is another example of a RAW dependency between the 1st and 3rd instruction, and a WX bypass:
+```asm
+add r2, r3 -> r1
+lw #0(r7) -> r5
+sub r1, r4 -> r2
+```
+
+<PipelineDiagram client:visible mode="static" bypass={['MX', 'WX', 'WM']} program={['add r2, r3 -> r1', 'lw #0(r7) -> r5', 'sub r1, r4 -> r2']} minCycles={10} />
+
+Here is an example of a WM bypass:
+```asm
+lw #0(r2) -> r1
+sw r1 -> #0(r4)
+```
+
+<PipelineDiagram client:visible mode="static" bypass={['MX', 'WX', 'WM']} program={['lw #0(r2) -> r1', 'sw r1 -> #0(r4)']} minCycles={10} />
+
+#### Load-Use Hazards
+
+Load-use hazards must receive special consideration. They are still RAW hazards. But unlike other RAWs, the data is *not* available after the X phase as it does not come from the ALU. The data comes from memory, and gets latched in the M/W pipeline register. This means an MX bypass is **insufficient**, and you need a WX bypass.
+
+Whether a stall is needed depends on *where* the instruction directly after the load uses the loaded value. The value only exists at the end of M, so it can first be bypassed at the start of the load's W:
+
+| Use of the loaded value | Example | Result |
+| --- | --- | --- |
+| **In X** (an ALU input or an address) | `sub r1, r4 -> r2` | A **1-cycle stall is unavoidable**: X starts while the load is still in M. The WX bypass keeps it to 1 stall; without it, the use waits for the register file write, which costs **2 stalls**. |
+| **In M** (the data of a store) | `sw r1 -> #0(r4)` | **No stall:** the WM bypass delivers the value at the start of the store's M, just in time (see the WM example above). |
+
+:::caution
+Since W comes one cycle after M, a load-use stall cannot be avoided when the use is in X. Only a load-store pair, where the value is needed in M, avoids the stall completely, using the WM bypass.
+:::
+
+Here is a pipeline diagram for:
+```asm
+lw #4(r3) -> r1
+sub r1, r4 -> r2
+```
+
+<PipelineDiagram
+	client:visible
+	syncId="loaduse"
+	bypass={['MX', 'WX', 'WM']}
+	program={['lw #4(r3) -> r1', 'sub r1, r4 -> r2']}
+	regs={{ r3: 100, r4: 2 }}
+	mem={{ 104: 42 }}
+	minCycles={10}
+/>
+
+Without a WX bypass, the same pair costs 2 stall cycles, since `sub` has to wait until it can read `r1` from the register file in cycle 5:
+
+<PipelineDiagram
+	client:visible
+	mode="static"
+	bypass={['MX', 'WM']}
+	program={['lw #4(r3) -> r1', 'sub r1, r4 -> r2']}
+	regs={{ r3: 100, r4: 2 }}
+	mem={{ 104: 42 }}
+	minCycles={10}
+/>
+
+Additionally, observe how using an MX bypass for a load-use RAW hazard would incorrectly use the effective address instead of the data from the data cache/memory.
+
+<PipelineSim
+	client:visible
+	syncId="loaduse"
+	bypass={['MX', 'WX', 'WM']}
+	program={['lw #4(r3) -> r1', 'sub r1, r4 -> r2']}
+	regs={{ r3: 100, r4: 2 }}
+	mem={{ 104: 42 }}
+	watch={['r1']}
+	notes={[
+		{
+			cycle: 4,
+			bypass: 'MX',
+			tag: '104 = address, not r1',
+			text: 'In cycle 4 the MX bypass is holding 104: the effective address #4(r3) that lw computed in the ALU, not the value of r1. lw only gets r1 = 42 out of the data cache during M, so sub cannot take r1 from MX. It stalls for a cycle and gets r1 through the WX bypass in cycle 5.',
+		},
+	]}
+/>
+
+## Write-after-write (WAW) Hazards
+
+Take the following instructions:
+```asm
+add r2, r3 -> r1
+sub r1, r4 -> r2
+or r3, r6 -> r1
+```
+
+There is a potential write after write hazard on `r1` between the `add` and the `or`.
+
+These dependences are [**artificial**](/ece552/dynamic-scheduling/#register-renaming) (i.e. no actual logical dependence): we could simply just replace the `r1` in the `or` with another register, e.g. `r8`.
+
+WAW hazards **do not affect** in-order pipelines where every instruction spends exactly one cycle in X, because instructions cannot 'leapfrog' each other in the pipeline: they will all reach the write phase in order.
+
+## Write-after-read (WAR) Hazards
+
+Similar to the WAW hazards, this is an [artificial dependence](/ece552/dynamic-scheduling/#register-renaming) which can be resolved by replacing the register used.
+
+Also, WAR hazards **do not affect** this simple in-order pipeline.
+
+## Pipelined Functional Units
+
+The pipeline we have looked at so far is shallow and simple. Real pipelines are much deeper.
+
+For example, the execute stage itself is usually a deep pipeline with many stages in real CPUs.

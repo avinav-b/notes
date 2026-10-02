@@ -1,0 +1,202 @@
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+
+.band {
+	fill: var(--sl-color-gray-6);
+	stroke: var(--viz-border);
+	stroke-width: 1;
+}
+
+.wire {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.6;
+	transition:
+		stroke 250ms,
+		stroke-width 250ms;
+}
+.head {
+	fill: var(--sl-color-gray-4);
+}
+.part {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.5;
+	transition:
+		fill 250ms,
+		stroke 250ms;
+}
+.partLabel {
+	font-family: var(--__sl-font);
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.regValue {
+	font-size: 10.5px;
+	fill: var(--sl-color-gray-2);
+	transition: fill 250ms;
+}
+.regGood {
+	fill: var(--viz-ok);
+	font-weight: 700;
+}
+.regBad {
+	fill: var(--viz-raw);
+	font-weight: 700;
+}
+
+/* Lit wires and parts */
+.wire.active {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.6;
+}
+.part.active {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.wire.good {
+	stroke: var(--viz-ok);
+	stroke-width: 2.6;
+}
+.part.good {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+}
+.wire.bad {
+	stroke: var(--viz-raw);
+	stroke-width: 2.6;
+	stroke-dasharray: 5 3;
+}
+.part.bad {
+	fill: var(--viz-raw-bg);
+	stroke: var(--viz-raw);
+}
+
+.latch {
+	fill: var(--sl-color-accent);
+	opacity: 0.85;
+}
+.latchLabel {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-accent-high);
+}
+
+/* Bypass paths */
+.bypass {
+	fill: none;
+	stroke-width: 1.8;
+	opacity: 0.8;
+	transition:
+		opacity 250ms,
+		stroke-width 250ms;
+}
+.bpMX {
+	stroke: var(--viz-mx);
+}
+.bpWX {
+	stroke: var(--viz-wx);
+}
+.bpWM {
+	stroke: var(--viz-wm);
+}
+.flow {
+	opacity: 1;
+	stroke-width: 3;
+	stroke-dasharray: 8 6;
+	animation: flow 0.9s linear infinite;
+}
+.bypassBad {
+	stroke: var(--viz-raw);
+}
+@keyframes flow {
+	to {
+		stroke-dashoffset: -28;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.flow {
+		animation: none;
+		stroke-dasharray: none;
+	}
+}
+.hit {
+	fill: none;
+	stroke: transparent;
+	stroke-width: 12;
+}
+.pickable {
+	cursor: pointer;
+}
+.dimmed {
+	opacity: 0.25;
+}
+
+.tag {
+	font-size: 10.5px;
+	font-weight: 700;
+	paint-order: stroke;
+	stroke: var(--viz-surface);
+	stroke-width: 4px;
+}
+.tagMX {
+	fill: var(--viz-mx);
+}
+.tagWX {
+	fill: var(--viz-wx);
+}
+.tagWM {
+	fill: var(--viz-wm);
+}
+.tagBad {
+	fill: var(--viz-raw);
+}
+
+/* Stage chips under the band */
+.chip rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--viz-border);
+	stroke-width: 1.2;
+	transition:
+		fill 250ms,
+		stroke 250ms;
+}
+.chipStage {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+}
+.chipText {
+	font-size: 10.5px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.chip_normal rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.chip_bubble rect {
+	stroke-dasharray: 3 3;
+}
+.chip_bubble .chipText {
+	fill: var(--sl-color-gray-3);
+	font-weight: 400;
+	font-style: italic;
+}
+.chip_waiting rect {
+	fill: var(--viz-raw-bg);
+	stroke: var(--viz-raw);
+	stroke-dasharray: 4 3;
+}
+.chip_stalled rect {
+	fill: var(--viz-war-bg);
+	stroke: var(--viz-war);
+}
+.chip_empty .chipStage {
+	fill: var(--sl-color-gray-4);
+}
