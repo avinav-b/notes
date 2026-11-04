@@ -122,7 +122,7 @@ When you optimize the common case, the common case may change. In Example 1, loo
 | `times()` | User CPU time of a part of a program | Call before and after the code; subtract `tms_utime` (example below) | 2 |
 | `rdtsc` | Cycles, from the on-chip time stamp counter. More accurate than the library when used correctly | Read before and after the code; subtract. Watch out for multi-threaded programs | 2 |
 | Performance counters | Low-level architectural events: cache misses, branch mispredictions, etc. | Through a package such as Linux `perf` or Intel's VTune | 2 |
-| `gprof` | Approximate time spent in each function and number of calls to each function, by sampling | `gcc -O2 -pg prog.c -o prog`, run `./prog` (writes `gmon.out`), then `gprof prog` | 1 |
+| `gprof` | Time per function, approximated by sampling; exact call counts from the `-pg` instrumentation | `gcc -O2 -pg prog.c -o prog`, run `./prog` (writes `gmon.out`), then `gprof prog` | 1 |
 | `gcov` | How many times each line executed: which loops and which side of an if/else matter most | `gcc -g -fprofile-arcs -ftest-coverage file.c -o file.o`, run `./prog` (writes `file.gcda`, `file.gcno`), then `gcov -b prog` (writes `file.c.gcov`) | 1 |
 | `valgrind` | Memory leaks (e.g. a `malloc()` that is never freed), and many other uses | `valgrind myprogram` | |
 

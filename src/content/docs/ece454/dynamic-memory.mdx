@@ -119,7 +119,7 @@ An array of structures repeats the structure's layout, padding included, so the 
 
 | Call | Behaviour |
 | --- | --- |
-| `void *malloc(size_t size)` | Returns a pointer to a block of **at least** `size` bytes. If `size == 0`, returns `NULL`. On failure, returns `NULL` and sets `errno`. |
+| `void *malloc(size_t size)` | Returns a pointer to a block of **at least** `size` bytes. If `size == 0`, may return `NULL` (or a unique pointer that must still be freed). On failure, returns `NULL` and sets `errno`. |
 | `void free(void *p)` | Returns the block at `p` to the pool of available memory. `p` must come from an earlier `malloc` or `realloc`. |
 | `void *realloc(void *p, size_t size)` | Changes the size of block `p` and returns a pointer to the new block. Contents are unchanged up to the smaller of the old and new sizes. |
 

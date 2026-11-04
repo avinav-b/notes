@@ -152,7 +152,7 @@ $$
 $$
 
 - With a 256-entry TLB and 4 KB pages, the reach is 256 x 4 KB = **1 MB**: you can only have TLB hits for 1 MB of data.
-- A typical L2 cache is 8 MB, so you can't have TLB hits for all of the L2. It's worth considering the TLB size before the L2 size.
+- A typical last-level (L3) cache is 8 MB, so you can't have TLB hits for all of it. It's worth considering the TLB size before the L2 size.
 - Real CPUs have second-level TLBs. Experiment with varying sizes, e.g. to find the best [tile size](/ece454/cache-optimizations/#tiling-blocking).
 - x86 supports **huge pages** (2 MB). With 256 entries, the TLB reach is **512 MB**.
 

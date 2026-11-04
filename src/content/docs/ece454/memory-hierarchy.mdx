@@ -161,7 +161,7 @@ For `long a[100]` (8-byte elements) starting at address 0, as (tag, set, offset)
 | `a[0]` | 0x0 | (0, 0, 0) | (0, 0, 0) |
 | `a[1]` | 0x8 | (0, 1, 0) | (0, 1, 0) |
 | `a[32]` | 0x100 | (0, 32, 0) | (1, 0, 0) |
-| `a[64]` | 0x200 | (1, 0, 0) | (1, 0, 0) |
+| `a[64]` | 0x200 | (1, 0, 0) | (2, 0, 0) |
 
 `a[0]` and `a[64]` collide in set 0 of the direct-mapped cache. In the 2-way cache they share set 0 but fit side by side, so the second `a[0]` hits:
 
