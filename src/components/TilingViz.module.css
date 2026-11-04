@@ -1,0 +1,244 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.modeOn {
+	border-color: var(--sl-color-accent) !important;
+	background: var(--sl-color-accent-low) !important;
+	color: var(--sl-color-accent-high) !important;
+}
+.message {
+	min-height: 1.6em;
+	margin: 0.75rem 0 0.75rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+
+/* ---- C += A x B ---- */
+.eq {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+.matrix {
+	flex: 1 1 0;
+	min-width: 0;
+}
+.mLabel {
+	font-weight: 700;
+	font-size: 0.85rem;
+	color: var(--sl-color-gray-2);
+	margin-bottom: 0.2rem;
+}
+.mSvg {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+.op {
+	font-family: var(--viz-mono);
+	font-weight: 700;
+	color: var(--sl-color-gray-3);
+	padding-top: 1.2rem;
+}
+.frame {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1;
+}
+.tileLine {
+	stroke: var(--sl-color-gray-5);
+	stroke-width: 0.8;
+	stroke-dasharray: 3 3;
+}
+.used {
+	fill: var(--viz-ok);
+	opacity: 0.55;
+}
+.miss {
+	fill: var(--viz-miss);
+}
+.loaded {
+	fill: var(--viz-cached-bg);
+}
+.inCache {
+	fill: var(--viz-cached);
+	opacity: 0.45;
+}
+.done {
+	fill: var(--sl-color-gray-5);
+}
+.tileCur {
+	fill: none;
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.5;
+	transition: x 450ms ease-in-out, y 450ms ease-in-out;
+}
+.cur {
+	fill: var(--sl-color-accent);
+	stroke: var(--sl-color-accent);
+	stroke-width: 1.5;
+	transition: x 300ms ease-in-out, y 300ms ease-in-out;
+}
+
+/* ---- bars ---- */
+.bars {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	margin-top: 0.85rem;
+}
+.barRow {
+	display: grid;
+	grid-template-columns: 6.2rem 1fr auto;
+	align-items: center;
+	gap: 0.6rem;
+}
+.barName {
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: var(--sl-color-gray-2);
+}
+.track {
+	position: relative;
+	height: 0.9rem;
+	border-radius: 0.45rem;
+	background: var(--sl-color-bg);
+	border: 1px solid var(--viz-border);
+	overflow: hidden;
+}
+.track > div {
+	position: absolute;
+	inset: 0 auto 0 0;
+	border-radius: 0.45rem;
+	transition: width 400ms ease-in-out;
+}
+.ghost {
+	background: repeating-linear-gradient(135deg, var(--viz-miss-bg) 0 4px, transparent 4px 8px);
+}
+.fill,
+.fillNow {
+	background: var(--viz-miss);
+}
+.fillOk {
+	background: var(--viz-ok);
+	min-width: 3px;
+}
+.fillCache {
+	background: var(--viz-cached);
+}
+.barVal {
+	font-family: var(--viz-mono);
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-2);
+	white-space: nowrap;
+}
+.bad {
+	color: var(--viz-miss);
+	font-weight: 700;
+}
+
+/* ---- totals view ---- */
+.sliders {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1.5rem;
+}
+.sliders label {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-family: var(--viz-mono);
+	font-weight: 700;
+	color: var(--sl-color-gray-2);
+}
+.sliders input {
+	width: 9rem;
+	accent-color: var(--sl-color-accent);
+	cursor: pointer;
+}
+.sliderVal {
+	min-width: 2.6em;
+	color: var(--sl-color-accent-high);
+}
+.ratio {
+	margin: 0.6rem 0 0.8rem;
+	font-size: 0.85rem;
+	color: var(--sl-color-gray-2);
+}
+.ratio b {
+	color: var(--sl-color-text);
+}
+.warn {
+	margin: 0.5rem 0 0;
+	font-size: 0.85rem;
+	color: var(--viz-miss);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	margin-top: 0.6rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span::before {
+	content: '';
+	display: inline-block;
+	width: 0.85rem;
+	height: 0.85rem;
+	margin-right: 0.35rem;
+	vertical-align: -0.12em;
+	border-radius: 0.15rem;
+}
+.lgMiss::before {
+	background: var(--viz-miss);
+}
+.lgUsed::before {
+	background: color-mix(in srgb, var(--viz-ok) 55%, transparent);
+}
+.lgLoaded::before {
+	background: var(--viz-cached-bg);
+	border: 1px solid var(--viz-border);
+}
+.lgCache::before {
+	background: color-mix(in srgb, var(--viz-cached) 45%, transparent);
+}
+.lgDone::before {
+	background: var(--sl-color-gray-5);
+}
+.lgCur::before {
+	background: var(--sl-color-accent);
+}
+
+@media (max-width: 30rem) {
+	.barRow {
+		grid-template-columns: 5.2rem 1fr;
+	}
+	.barVal {
+		grid-column: 2;
+		margin-top: -0.25rem;
+	}
+	.eq {
+		gap: 0.25rem;
+	}
+}
+
+.scaleNote {
+	margin: 0.3rem 0 0;
+	font-size: 0.78rem;
+	color: var(--sl-color-gray-3);
+}

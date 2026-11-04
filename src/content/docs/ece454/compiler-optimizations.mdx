@@ -1,0 +1,220 @@
+---
+title: Compiler Optimizations
+description: How a compiler sees a program (IR, basic blocks, control flow graphs, data flow analysis), what it can and can't optimize, and the basic machine-independent and machine-dependent optimizations.
+lastUpdated: 2026-11-03
+sidebar:
+  order: 4
+---
+
+import CompilerFlow from '../../../components/CompilerFlow.tsx';
+import BasicBlocks from '../../../components/BasicBlocks.tsx';
+import CodeSteps from '../../../components/CodeSteps.tsx';
+import ArrayLayout from '../../../components/ArrayLayout.tsx';
+import {
+	compilerFlow,
+	cfg,
+	reachingDefs,
+	constantProp,
+	cse,
+	copyProp,
+	deadCode,
+	arrayLayout,
+	licm,
+	inlining,
+	unrolling,
+} from '../../../embeds/ece454/compiler-optimizations';
+
+## A Brief History of Compilation
+
+| Era | Programmer writes | Translated to machine instructions by |
+| --- | --- | --- |
+| In the beginning | Machine instructions (`1010010010 ...`) | Nothing: the processor runs them directly |
+| Assembler | Human-readable assembly (`add r3,r3,r1`) | The assembler |
+| Compiler | A high-level language (HLL) such as C | The compiler (to assembly), then the assembler |
+
+## Goals of a Compiler
+
+- The **correct** program executes correctly.
+- Provide support for **debugging** incorrect programs.
+- The program executes **fast**.
+- Possibly also: fast compilation, small code size, a more energy-efficient program.
+
+## Inside a Compiler
+
+<CompilerFlow client:visible {...compilerFlow.props} />
+
+| Part | Job |
+| --- | --- |
+| **Front end** | Translates the high-level language into an **intermediate representation (IR)**, which is similar to assembly |
+| **Optimizer** | Only in an optimizing compiler: rewrites the IR into improved IR |
+| **Code generator** | Translates the IR into the low-level language (machine instructions) |
+
+### Control flow graph
+
+A **basic block** is a group of consecutive instructions with a **single entry point** and a **single exit point**. The **control flow graph (CFG)** is how a compiler sees your program: basic blocks connected by the possible jumps between them.
+
+<BasicBlocks client:visible {...cfg.props} />
+
+### Data flow analysis
+
+Many compiler optimizations use **data flow analysis**:
+
+1. Analyse and summarize the effects of the instructions in each basic block.
+2. Use the CFG to propagate these effects to the succeeding basic blocks.
+
+For example, **reaching definitions** analysis calculates, for each program point, the set of definitions (program points) that **may** potentially reach that point.
+
+<BasicBlocks client:visible {...reachingDefs.props} />
+
+## Performance Optimization
+
+### Three requirements
+
+| Requirement | Why |
+| --- | --- |
+| **Preserve correctness** | The speed of an incorrect program is irrelevant |
+| **Improve performance of the average case** | The optimized program may be worse than the original if unlucky |
+| **Be worth the effort** | E.g. 1 person-year to implement, 2x the compilation time, for 0.1% faster code: probably not worth it |
+
+### How optimizations improve performance
+
+$$
+\text{Execution time} = \text{num instructions} \times \text{CPI} \times \text{time/cycle}
+$$
+
+| Fewer instructions | Fewer cycles per instruction |
+| --- | --- |
+| Use an optimized sequence of instructions | Schedule instructions to avoid hazards |
+| Use new instructions | Improve cache/memory behaviour, e.g. prefetching, code and data locality |
+
+### Role of an optimizing compiler
+
+- Provide an efficient mapping of the program to machine instructions.
+- Eliminate minor inefficiencies: **register allocation**, **instruction selection**, [**instruction scheduling**](/ece552/dynamic-scheduling/#static-instruction-scheduling).
+- It does **not** (usually) improve asymptotic efficiency. Choosing the best overall algorithm is up to the programmer: big-O savings are often more important than constant factors, but constant factors also matter.
+
+### Limitations of optimizing compilers
+
+- It must not change program behaviour under **any** possible condition.
+- Most analysis is done only **within procedures**: inter-procedural analysis is too expensive in most cases.
+- Most analysis is based only on **static information**: the compiler has difficulty anticipating run-time inputs.
+
+:::caution
+When in doubt, the compiler must always be conservative.
+:::
+
+### Role of the programmer
+
+| Don't | Do |
+| --- | --- |
+| Smash code into oblivion: it becomes hard to read, maintain and assure correctness | **Select the best algorithm** |
+| | **Write readable, maintainable code**: procedures and recursion, even though they may slow down code |
+| | **Focus on inner loops**: do detailed optimizations where code executes repeatedly; that is where most of the gain is |
+| | **Eliminate optimization blockers**, so the compiler can do its job |
+
+## Basic Compiler Optimizations
+
+| Machine independent (apply equally well to most CPUs) | Machine dependent (apply differently to different CPUs) |
+| --- | --- |
+| Constant propagation | Instruction selection and scheduling |
+| Constant folding | Loop unrolling |
+| Copy propagation | Parallel unrolling |
+| Common subexpression elimination | |
+| Dead code elimination | |
+| Loop invariant code motion | |
+| Function inlining | |
+
+:::tip
+You could do all of these by hand, but it is much better if the compiler does them: many of them make code less readable and maintainable.
+:::
+
+### Constant propagation and constant folding
+
+- **Constant propagation (CP):** replace variables with constants when possible.
+- **Constant folding (CF):** evaluate expressions that contain only constants. This can lead to further optimization, e.g. another round of constant propagation.
+
+<CodeSteps client:visible {...constantProp.props} />
+
+### Common subexpression elimination (CSE)
+
+Compute a given expression only once. The compiler must ensure the variables have not been modified in between.
+
+<CodeSteps client:visible {...cse.props} />
+
+### Copy propagation
+
+Replace occurrences of the target of a direct assignment with the corresponding value. Often used after common subexpression elimination and other optimizations.
+
+<CodeSteps client:visible {...copyProp.props} />
+
+### Dead code elimination (DCE)
+
+The compiler can determine when certain code will never execute, and removes it. You don't have to worry about such code hurting performance, which makes it easier to keep programs readable and debuggable (e.g. debug code guarded by a flag).
+
+<CodeSteps client:visible {...deadCode.props} />
+
+### Loop invariant code motion (LICM)
+
+A **loop invariant** is a value that does not change across iterations. LICM moves invariant code out of the loop, which is a significant performance win.
+
+Take this triply nested loop over `char a[I][J][K]`:
+
+```c
+for (i = 0; i < I; ++i) {
+  for (j = 0; j < J; ++j) {
+    for (k = 0; k < K; ++k) {
+      a[i][j][k] = i*j*k;
+    }
+  }
+}
+```
+
+In C, a multi-dimensional array is stored in [**row-major order**](/ece454/cache-optimizations/#array-layout): the last index varies fastest. So
+
+$$
+\text{addr of } a[i][j][k] = \text{addr of } a + (i \times J \times K) + (j \times K) + k
+$$
+
+<ArrayLayout client:visible {...arrayLayout.props} />
+
+With $I = J = K = 100$, the inner loop body executes 1,000,000 times. Most of the address computation only depends on `i` or `j`, so it can be moved out of the inner loops:
+
+<CodeSteps client:visible {...licm.props} />
+
+### Function inlining
+
+A function call site is replaced with the body of the function.
+
+<CodeSteps client:visible {...inlining.props} />
+
+| Good | Bad |
+| --- | --- |
+| Eliminates call/return overhead | Can be hard on the instruction cache if many copies are made |
+| Can expose further optimizations | Code size can grow with a large body and many call sites |
+
+:::tip[As a programmer]
+A good compiler inlines for best performance, so feel free to use procedure calls to make your code readable.
+:::
+
+### Loop unrolling
+
+Do the work of several iterations in each trip around the loop.
+
+<CodeSteps client:visible {...unrolling.props} />
+
+Why it helps:
+
+- **Reduces loop overhead:** fewer adds to update `j`, and fewer loop condition tests.
+- **Reduces [branch prediction](/ece454/cpu-architectures/#branch-prediction) penalties.**
+- **Enables more aggressive instruction scheduling:** more instructions in the loop's basic block for the scheduler to move around.
+
+## gcc Optimization Levels
+
+| Flag | What it does |
+| --- | --- |
+| `-g` | Include debug information, no optimization |
+| `-O0` | Default: no optimization |
+| `-O1` | Optimizations that don't take too long: CP, CF, CSE, DCE, LICM, inlining of functions called once |
+| `-O2` | Takes longer optimizing; more aggressive scheduling, e.g. inlining small functions |
+| `-O3` | Makes space/speed trade-offs: can increase code size; loop unrolling, more inlining |
+| `-Os` | Optimize program size |

@@ -1,0 +1,231 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.groups {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem 1rem;
+}
+.group {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+.message {
+	min-height: 1.6em;
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.stream {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem;
+	margin: 0.25rem 0 0.5rem;
+}
+.chip {
+	font-family: var(--viz-mono);
+	font-size: 0.78rem;
+	font-weight: 600;
+	padding: 0.1rem 0.4rem;
+	border-radius: 0.3rem;
+	border: 1.5px solid var(--viz-border);
+	color: var(--sl-color-gray-3);
+	transition: background 300ms, border-color 300ms, color 300ms;
+}
+.chipHit {
+	background: var(--viz-ok-bg);
+	border-color: var(--viz-ok);
+	color: var(--sl-color-text);
+}
+.chipMiss {
+	background: var(--viz-miss-bg);
+	border-color: var(--viz-miss);
+	color: var(--sl-color-text);
+}
+.chipCur {
+	outline: 2px solid var(--sl-color-accent);
+	outline-offset: 1px;
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--__sl-font);
+}
+.page {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.2;
+	stroke-dasharray: 5 4;
+}
+.pageLabel {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+.cell rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--viz-border);
+	stroke-width: 1.2;
+	transition: fill 400ms, stroke 400ms, stroke-width 300ms;
+}
+.cell text {
+	font-family: var(--viz-mono);
+	font-size: 10.5px;
+	fill: var(--sl-color-gray-3);
+}
+.cDemand rect {
+	fill: var(--viz-miss-bg);
+	stroke: var(--viz-miss);
+}
+.cUseful rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+}
+.cPf rect {
+	fill: var(--viz-cached-bg);
+	stroke: var(--viz-cached);
+	stroke-dasharray: 3 2;
+}
+.cHitNow rect {
+	fill: var(--viz-ok);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.5;
+}
+.cMissNow rect {
+	fill: var(--viz-miss);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.5;
+}
+.cDemand text,
+.cUseful text,
+.cPf text {
+	fill: var(--sl-color-text);
+}
+.cHitNow text,
+.cMissNow text {
+	fill: var(--sl-color-black);
+	font-weight: 700;
+}
+.pf path {
+	fill: none;
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+	animation: draw 500ms ease-in-out;
+}
+.pfBlocked path {
+	stroke: var(--viz-miss);
+	stroke-dasharray: 4 3;
+	animation: none;
+}
+.x {
+	color: var(--viz-miss);
+}
+.head {
+	fill: var(--sl-color-accent);
+}
+@keyframes draw {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+.stats {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem 1.25rem;
+	margin-top: 0.5rem;
+	font-size: 0.85rem;
+	color: var(--sl-color-gray-2);
+}
+.stat {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+.stat b {
+	font-family: var(--viz-mono);
+	color: var(--sl-color-text);
+}
+.dot {
+	width: 0.7rem;
+	height: 0.7rem;
+	border-radius: 0.15rem;
+}
+.dHit {
+	background: var(--viz-ok);
+}
+.dMiss {
+	background: var(--viz-miss);
+}
+.dPf {
+	background: var(--viz-cached);
+}
+.ok,
+.wait {
+	font-size: 0.75rem;
+	font-weight: 700;
+	padding: 0 0.35rem;
+	border-radius: 0.25rem;
+}
+.ok {
+	color: var(--viz-ok);
+	background: var(--viz-ok-bg);
+}
+.wait {
+	color: var(--viz-war);
+	background: var(--viz-war-bg);
+}
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem 1rem;
+	margin-top: 0.4rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.lg {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+.sw {
+	width: 1.3rem;
+	height: 0.75rem;
+	border-radius: 0.2rem;
+	border: 1.5px solid;
+}
+.swMiss {
+	background: var(--viz-miss-bg);
+	border-color: var(--viz-miss);
+}
+.swHit {
+	background: var(--viz-ok-bg);
+	border-color: var(--viz-ok);
+}
+.swPf {
+	background: var(--viz-cached-bg);
+	border: 1.5px dashed var(--viz-cached);
+}
+.arrowSw {
+	width: 1.3rem;
+	border-top: 2px solid var(--sl-color-accent);
+}

@@ -1,0 +1,93 @@
+---
+title: Modern Allocators
+description: phkmalloc, a two-level allocator that keeps its metadata out of the heap so it touches as few pages as possible.
+lastUpdated: 2026-11-03
+sidebar:
+  order: 10
+---
+
+import PhkMalloc from '../../../components/PhkMalloc.tsx';
+import { classicFreeList, phkPageAllocator, phkSubPageAllocator } from '../../../embeds/ece454/modern-allocators';
+
+## Case Study: phkmalloc
+
+phkmalloc is the FreeBSD malloc by Poul-Henning Kamp ("Malloc(3) revisited", USENIX ATC 1998).
+
+:::tip[Key goal]
+Minimize the number of **pages** malloc accesses. This improves locality, especially when a program's working set is large, close to the available physical memory.
+:::
+
+### Problem with Existing Mallocs
+
+| Problem | Cost |
+| --- | --- |
+| Information about free chunks is kept **in** the free chunks | malloc needs that memory even though the application doesn't. If the OS paged those pages out, walking the free list pages them back in |
+| Allocations don't work in pages | An object smaller than a page can still span two pages, so it needs two pages paged in and two [TLB](/ece454/virtual-memory-and-prefetching/#the-tlb) entries |
+
+<PhkMalloc client:visible {...classicFreeList.props} />
+
+### Design
+
+- **Metadata is kept separately** from the heap:
+  - contiguous metadata (the page directory) lives in its own `mmap` area
+  - dynamically allocated metadata uses malloc itself
+- **Two-level allocator:**
+
+| Level | Used for | Granularity |
+| --- | --- | --- |
+| Page allocator | Allocations larger than half a page | Whole pages |
+| Sub-page allocator | Allocations smaller than half a page | Chunks within a page |
+
+The sub-page level is similar to [simple segregated storage](/ece454/dynamic-memory/#simple-segregated-storage): several lists, each of one fixed size, with every request rounded up to the next power of 2.
+
+## Page Allocator
+
+Two structures, both outside the heap:
+
+| Structure | Contents |
+| --- | --- |
+| **Page directory** | A header, then one entry (a `void *`) per heap page. An allocated run of pages is marked **S** (start page) followed by **F** (follow page) entries |
+| **Free list** | One entry per run of free pages, in address order |
+
+**`p = allocate(n pages)`**
+1. Look up the free list for the first run of free pages $\geq n$ pages.
+2. Update the free list, and mark the pages S, F, ... in the page directory.
+3. If $n$ contiguous pages aren't available: grow the heap, and reallocate the contiguous page directory using `mmap`.
+
+**`free(p)`**
+1. Look up `p`'s page in the page directory, in constant time.
+2. Use the S and F flags to find the size of the page run; update the page directory.
+3. Add the page run to the free list in address order, [coalescing](/ece454/dynamic-memory/#freeing-and-coalescing) with its neighbours.
+
+<PhkMalloc client:visible {...phkPageAllocator.props} />
+
+:::note[Why two structures?]
+Each one answers a different question quickly. The directory is indexed by page, so `free(p)` finds the run and its size in constant time from the pointer alone. The free list holds only the free runs, so `allocate` searches free space without scanning every page.
+:::
+
+## Sub-Page Allocator
+
+Each page used for small allocations is split into chunks of one size (32 B, 64 B, ...). Its directory entry points to a **`struct pginfo`** holding the chunk size and a **bitmap** of free chunks. For each size, the pginfos of pages that still have a free chunk form a linked list, kept in sorted address order.
+
+| `allocate(32 bytes)` | `free(chunk)` |
+| --- | --- |
+| 1. If the linked list is empty, allocate a new page and pginfo | 1. Find the pginfo for the chunk; update its bitmap |
+| 2. Use the bitmap to find a free chunk in the first pginfo in the list; update the bitmap | 2. If this is the first free chunk in the page, add the pginfo into the list |
+| 3. If all chunks are now allocated, remove the pginfo from the list | 3. If all chunks are free, remove the pginfo from the list, free it, and free the page |
+
+<PhkMalloc client:visible {...phkSubPageAllocator.props} />
+
+## Summary
+
+| Level | Design | Why it works |
+| --- | --- | --- |
+| Page | Single free list for multi-page allocations | Simple, and large allocations are less frequent |
+| Sub-page | Power-of-2 segregated storage | Almost constant-time allocate and free; low space overhead (the page header); no splitting or coalescing overhead |
+
+**Compared with simple segregated storage:**
+
+| | phkmalloc |
+| --- | --- |
+| Internal fragmentation | Similar, since both round up to a power of 2 |
+| External fragmentation | Lower: pages whose chunks are all free go back to the page allocator, and high-address pages go back to the OS |
+| Paging | Lower: it never touches free pages |

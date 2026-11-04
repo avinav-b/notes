@@ -1,0 +1,121 @@
+---
+title: Garbage Collection
+description: Implicit memory management with memory as a graph, mark and sweep, Baker's algorithm, conservative GC for C, and reference counting.
+lastUpdated: 2026-11-03
+sidebar:
+  order: 11
+---
+
+import GcGraph from '../../../components/GcGraph.tsx';
+import { memoryGraph, markSweep, refCounting } from '../../../embeds/ece454/garbage-collection';
+
+## Why Garbage Collection
+
+`malloc` and `free` are **explicit** memory management: the programmer keeps track of allocated memory and frees each block once it's no longer needed. This is highly error-prone, and leads to:
+- memory leaks
+- dangling pointer bugs
+- double free bugs
+
+**Garbage collection** is automatic reclamation of heap-allocated storage: the application never explicitly frees memory.
+
+- Common in functional, scripting, and modern object-oriented languages: Lisp, Haskell, Matlab, Java, Perl, Python, Go, etc.
+- Variants exist for C and C++ (**conservative** collectors), but they can't collect all garbage.
+
+```c
+void foo() {
+    int *p = malloc(128);
+    return; /* p block is now garbage */
+}
+```
+
+### When Can a Block Be Freed?
+
+The memory manager can't know which memory will be used in the future, but it can tell that a block **with no pointers to it** can never be used again. This needs some assumptions about pointers:
+
+- the memory manager can tell pointers from non-pointers
+- pointers can't be hidden (e.g. cast to an integer and back again)
+- every pointer points to the start of a block
+- the size of each allocated block can be determined
+
+### Classic Algorithms
+
+| Algorithm | Moves blocks? |
+| --- | --- |
+| Mark and sweep (McCarthy, 1960) | No |
+| Reference counting (Collins, 1960) | No |
+| Mark and copy (Minsky, 1963) | Yes, moves and compacts blocks (not covered) |
+
+## Memory as a Graph
+
+Memory is a directed graph:
+
+| Graph | Memory |
+| --- | --- |
+| Node | A heap block |
+| Edge | A pointer |
+| Root node | A location outside the heap that holds a pointer into the heap: registers, stack variables, global variables |
+
+A block is **reachable** if there is a path to it from any root. Unreachable blocks are **garbage**, since the application has no way to access them.
+
+<GcGraph client:visible {...memoryGraph.props} />
+
+## Mark and Sweep
+
+Builds on top of a malloc/free package, with an extra **mark bit** in the header of each block. Allocate with malloc until you run out of space, then run two phases:
+
+| Phase | Work |
+| --- | --- |
+| **Mark** | Start at the roots and set the mark bit on every reachable block |
+| **Sweep** | Scan all blocks and free the ones that are not marked |
+
+- Marking can go depth first or breadth first.
+- Cycles: during the search, return immediately on reaching a block that is already marked.
+
+<GcGraph client:visible {...markSweep.props} />
+
+### Baker's Algorithm
+
+Basic sweep takes time proportional to the **heap size**, because it must visit every block to check its mark bit.
+
+Baker's algorithm also keeps a list of all allocated chunks, alongside the [free list](/ece454/dynamic-memory/#method-2-explicit-free-list). The sweep only walks the allocated list, freeing the unmarked blocks. Mark and sweep times are then both proportional to the size of **allocated** memory. Switch the figure above to **Baker** to compare.
+
+### Mark and Sweep in C
+
+In C the collector can't tell pointers from other data, so a **conservative** collector checks every word: if it points into a heap block, it marks that block.
+
+| Problem | Consequence / fix |
+| --- | --- |
+| False positives: a word that isn't a pointer is treated as one | Garbage is kept as if reachable, leading to [external fragmentation](/ece454/dynamic-memory/#external-fragmentation) |
+| C pointers can point into the middle of a block | Track the start and end of each block, using a binary search tree keyed by the start address of allocated blocks |
+
+For details see [A garbage collector for C and C++](https://hboehm.info/gc/index.html) (the Boehm collector).
+
+### Issues
+
+- Must identify every reference and pointer.
+- Jumps all over memory: poor [cache locality](/ece454/memory-hierarchy/#why-caches-work-locality) lowers the cache hit rate and increases paging.
+- Search time is proportional to the non-garbage, so it can be lots of work for little reward (not much garbage collected).
+- The program must stop while GC runs.
+
+:::note
+Today, garbage collection is done **partially** (not all garbage is collected at once) and **incrementally** (in parallel with program execution).
+:::
+
+## Reference Counting
+
+- Each block's header holds a count of the references to it.
+- A new reference increments the count; removing a reference decrements it.
+- When the count reaches 0, the block is freed.
+
+This needs compiler support or custom class objects: the count updates are code inserted around each pointer operation. In the figure, the indented italic lines are the inserted code.
+
+<GcGraph client:visible {...refCounting.props} />
+
+### Problems
+
+| Problem | Detail |
+| --- | --- |
+| malloc may return null | The inserted code must check, which adds cost |
+| Freed blocks may contain pointers | Must recursively follow them and decrement the counts of the blocks they point to |
+| Cycles | Reference counting fails conservatively: it may not free all garbage, but it never frees non-garbage |
+| Counter updates must be atomic | Adds overhead to every increment and decrement |

@@ -1,0 +1,145 @@
+import { embed } from '../types';
+
+export const vsumLadder = embed('OptimizationLadder', 'Optimizing vsum: CPE by version', 522, {
+	metric: 'CPE',
+	versions: [
+		{
+			name: 'vsum',
+			tag: '-g',
+			title: 'The original, compiled for debugging.',
+			cpe: 42.06,
+			code: [
+				'void vsum(vec_ptr v, int *dest) {',
+				'  int i;',
+				'  *dest = 0;',
+				'  for (i = 0; i < vec_len(v); i++) {',
+				'    int val;',
+				'    get_vec_element(v, i, &val);',
+				'    *dest += val;',
+				'  }',
+				'}',
+			],
+		},
+		{
+			name: 'vsum1',
+			tag: '-O2',
+			title: 'Same code, compiled with -O2.',
+			cpe: 31.25,
+			code: [
+				'void vsum1(vec_ptr v, int *dest) {',
+				'  int i;',
+				'  *dest = 0;',
+				'  for (i = 0; i < vec_len(v); i++) {',
+				'    int val;',
+				'    get_vec_element(v, i, &val);',
+				'    *dest += val;',
+				'  }',
+				'}',
+			],
+		},
+		{
+			name: 'vsum2',
+			tag: 'LICM',
+			title: 'Call vec_len() once, before the loop.',
+			cpe: 20.66,
+			code: [
+				'void vsum2(vec_ptr v, int *dest) {',
+				'  int i;',
+				'+ int length = vec_len(v);',
+				'  *dest = 0;',
+				'- for (i = 0; i < vec_len(v); i++) {',
+				'+ for (i = 0; i < length; i++) {',
+				'    int val;',
+				'    get_vec_element(v, i, &val);',
+				'    *dest += val;',
+				'  }',
+				'}',
+			],
+		},
+		{
+			name: 'vsum3',
+			tag: 'inline + LICM',
+			title: 'Inline get_vec_element(), hoist get_vec_start().',
+			cpe: 6.0,
+			code: [
+				'void vsum3(vec_ptr v, int *dest) {',
+				'  int i;',
+				'  int length = vec_len(v);',
+				'+ int *data = get_vec_start(v);',
+				'  *dest = 0;',
+				'  for (i = 0; i < length; i++) {',
+				'-   int val;',
+				'-   get_vec_element(v, i, &val);',
+				'-   *dest += val;',
+				'+   *dest += data[i];',
+				'  }',
+				'}',
+			],
+		},
+		{
+			name: 'vsum4',
+			tag: 'local sum',
+			title: 'Accumulate in a local variable, write *dest once.',
+			cpe: 2.0,
+			code: [
+				'void vsum4(vec_ptr v, int *dest) {',
+				'  int i;',
+				'  int length = vec_len(v);',
+				'  int *data = get_vec_start(v);',
+				'- *dest = 0;',
+				'+ int sum = 0;',
+				'  for (i = 0; i < length; i++) {',
+				'-   *dest += data[i];',
+				'+   sum += data[i];',
+				'  }',
+				'+ *dest = sum;',
+				'}',
+			],
+		},
+		{
+			name: 'vsum5',
+			tag: 'unroll ×3',
+			title: 'Three elements per iteration (-funroll-loops).',
+			cpe: 1.33,
+			code: [
+				'void vsum5(vec_ptr v, int *dest) {',
+				'  int i;',
+				'  int length = vec_len(v);',
+				'+ int limit = length - 2;',
+				'  int *data = get_vec_start(v);',
+				'  int sum = 0;',
+				'- for (i = 0; i < length; i++) {',
+				'+ for (i = 0; i < limit; i += 3) {',
+				'    sum += data[i];',
+				'+   sum += data[i+1];',
+				'+   sum += data[i+2];',
+				'  }',
+				'+ for (; i < length; i++)  // fix-up',
+				'+   sum += data[i];',
+				'  *dest = sum;',
+				'}',
+			],
+		},
+	],
+});
+
+export const vsum4Schedule = embed('FuSchedule', 'vsum4 loop schedule: unlimited vs assumed CPU', 513, {
+	modes: [
+		{ label: 'Unlimited units', unroll: 1, resources: 'unlimited', caption: 'Every op starts as soon as its inputs are ready.' },
+		{ label: 'Assumed CPU', unroll: 1, resources: 'assumed', measured: 2.0, caption: '4 integer ops per element, 2 integer units.' },
+	],
+});
+
+export const unrolledSchedule = embed('FuSchedule', 'vsum loop schedule with unrolling', 500, {
+	modes: [
+		{ label: 'No unrolling', unroll: 1, resources: 'assumed', measured: 2.0, caption: 'Loop overhead: 3 of the 4 integer ops.' },
+		{ label: 'Unroll ×2', unroll: 2, resources: 'assumed', measured: 1.5, caption: 'Loop overhead shared by 2 elements.' },
+		{ label: 'Unroll ×3', unroll: 3, resources: 'assumed', measured: 1.33, caption: 'Loop overhead shared by 3 elements.' },
+	],
+});
+
+export const vprodTree = embed('ReductionTree', 'vprod: serial chain vs parallel unrolling', 637, {
+	variants: ['serial', 'leftPairs', 'reassoc', 'twoAcc'],
+	n: 12,
+	latency: 4,
+});

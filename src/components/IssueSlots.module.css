@@ -1,0 +1,237 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.modes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+.message {
+	min-height: 1.6em;
+	margin: 0.75rem 0 0.25rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+
+.body {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 1rem 2rem;
+	margin-top: 0.75rem;
+}
+.svg {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	flex: none;
+	font-family: var(--viz-mono);
+}
+
+.head {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+
+.cellG {
+	transition: opacity 500ms ease-in-out;
+}
+.cell {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1;
+}
+.cellIdle {
+	fill: none;
+	stroke: var(--sl-color-gray-5);
+	stroke-width: 1;
+	stroke-dasharray: 2 3;
+}
+.waste {
+	transition: opacity 500ms ease-in-out;
+}
+.hatchLine {
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 2;
+}
+
+.switch {
+	transition: opacity 400ms;
+}
+.switch line {
+	stroke: var(--sl-color-gray-2);
+	stroke-width: 2;
+	stroke-dasharray: 6 4;
+}
+
+.move {
+	transition: transform 600ms ease-in-out;
+}
+.arrowShaft {
+	fill: var(--sl-color-accent);
+}
+.arrowStroke {
+	fill: none;
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.timeLabel {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.endRule {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+.endLabel {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-accent-high);
+}
+
+.insn {
+	transition:
+		transform 650ms ease-in-out,
+		opacity 450ms ease-in-out;
+}
+.insn circle {
+	stroke-width: 2;
+}
+.insn text {
+	font-size: 13px;
+	font-weight: 700;
+}
+.app1 circle {
+	fill: var(--viz-app1-bg);
+	stroke: var(--viz-app1);
+}
+.app1 text {
+	fill: var(--viz-app1);
+}
+.app2 circle {
+	fill: var(--viz-app2-bg);
+	stroke: var(--viz-app2);
+}
+.app2 text {
+	fill: var(--viz-app2);
+}
+
+.stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+	gap: 0.6rem;
+	flex: 1 1 14rem;
+	min-width: 0;
+}
+.stat {
+	display: flex;
+	flex-direction: column;
+	padding: 0.5rem 0.7rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.5rem;
+	background: var(--sl-color-bg);
+}
+.statLabel {
+	font-size: 0.75rem;
+	color: var(--sl-color-gray-3);
+}
+.statValue {
+	font-family: var(--viz-mono);
+	font-size: 1.35rem;
+	line-height: 1.3;
+}
+.statSub {
+	font-size: 0.7rem;
+	color: var(--sl-color-gray-4);
+}
+.meter {
+	grid-column: 1 / -1;
+	padding: 0.5rem 0.7rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.5rem;
+	background: var(--sl-color-bg);
+}
+.meterHead {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.75rem;
+	color: var(--sl-color-gray-3);
+}
+.meterHead b {
+	font-family: var(--viz-mono);
+	color: var(--sl-color-text);
+}
+.track {
+	height: 0.7rem;
+	margin: 0.35rem 0 0.25rem;
+	border-radius: 0.35rem;
+	background: repeating-linear-gradient(45deg, var(--sl-color-gray-5) 0 2px, transparent 2px 6px);
+	border: 1px solid var(--sl-color-gray-4);
+	overflow: hidden;
+}
+.fill {
+	height: 100%;
+	background: var(--sl-color-accent);
+	transition: width 600ms ease-in-out;
+}
+.meterFoot {
+	font-size: 0.75rem;
+	color: var(--sl-color-gray-3);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem 1.1rem;
+	margin-top: 0.75rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.lg {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	transition: opacity 400ms;
+}
+.dot {
+	width: 0.85rem;
+	height: 0.85rem;
+	border-radius: 50%;
+	border: 2px solid;
+}
+.dot1 {
+	border-color: var(--viz-app1);
+	background: var(--viz-app1-bg);
+}
+.dot2 {
+	border-color: var(--viz-app2);
+	background: var(--viz-app2-bg);
+}
+.wasteSwatch {
+	width: 0.95rem;
+	height: 0.95rem;
+	border: 1px solid var(--sl-color-gray-4);
+	background: repeating-linear-gradient(45deg, var(--sl-color-gray-4) 0 2px, transparent 2px 6px);
+}
+.switchSwatch {
+	width: 1.4rem;
+	border-top: 2px dashed var(--sl-color-gray-2);
+}

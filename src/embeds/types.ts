@@ -1,13 +1,44 @@
 // An interactive component as used on a page, so the same settings can be rendered on the page itself
 // and on its standalone embed page (/embed/<course>/<page>/<id>/, used for iframes in Obsidian).
 export type EmbedComponent =
+	| 'AddressTranslation'
+	| 'AmatBar'
+	| 'AmdahlExplorer'
+	| 'ArrayLayout'
+	| 'BasicBlocks'
+	| 'BuddyAllocator'
 	| 'BypassPaths'
+	| 'CacheSim'
+	| 'CoalesceCases'
+	| 'CodeSteps'
+	| 'CompilerFlow'
 	| 'CpuDatapath'
 	| 'ExecTimeline'
+	| 'FuSchedule'
+	| 'GcGraph'
+	| 'HeapSim'
 	| 'InsnBufferPipeline'
+	| 'IssueSlots'
+	| 'MatrixAccess'
+	| 'MemFigure'
+	| 'MemoryHierarchy'
+	| 'MisalignedRead'
+	| 'OooTimeline'
+	| 'OptimizationLadder'
+	| 'PhkMalloc'
 	| 'PipelineDiagram'
 	| 'PipelineSim'
-	| 'RenameDemo';
+	| 'ReductionTree'
+	| 'RenameDemo'
+	| 'SamplingProfiler'
+	| 'SegregatedLists'
+	| 'ServerTimeline'
+	| 'StridePrefetcher'
+	| 'StructLayout'
+	| 'ThroughputCurve'
+	| 'TilingViz'
+	| 'TlbReach'
+	| 'VirtualMapping';
 
 export interface Embed {
 	component: EmbedComponent;

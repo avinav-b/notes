@@ -17,6 +17,11 @@
 	--viz-mx: #2563eb;
 	--viz-wx: #c026d3;
 	--viz-wm: #0d9488;
+	/* ECE454 CPU architectures: two hardware threads / applications */
+	--viz-app1: #2563eb;
+	--viz-app1-bg: #dbeafe;
+	--viz-app2: #db2777;
+	--viz-app2-bg: #fce7f3;
 }
 
 :root[data-theme='dark'] {
@@ -34,6 +39,11 @@
 	--viz-mx: #60a5fa;
 	--viz-wx: #e879f9;
 	--viz-wm: #2dd4bf;
+	/* ECE454 CPU architectures: two hardware threads / applications */
+	--viz-app1: #60a5fa;
+	--viz-app1-bg: rgba(96, 165, 250, 0.16);
+	--viz-app2: #f472b6;
+	--viz-app2-bg: rgba(244, 114, 182, 0.16);
 }
 
 /* Shared button style for component controls. */
@@ -71,4 +81,68 @@
 	overflow-x: auto;
 	overflow-y: hidden;
 	padding-block: 0.25rem;
+}
+
+/* ECE454 Memory Hierarchy / Cache Optimizations: cache miss, and "currently in the cache". Hits use --viz-ok. */
+:root {
+	--viz-miss: #be123c;
+	--viz-miss-bg: #ffe4e6;
+	--viz-cached: #2563eb;
+	--viz-cached-bg: #dbeafe;
+}
+:root[data-theme='dark'] {
+	--viz-miss: #fb7185;
+	--viz-miss-bg: rgba(251, 113, 133, 0.17);
+	--viz-cached: #60a5fa;
+	--viz-cached-bg: rgba(96, 165, 250, 0.16);
+}
+
+/* ECE454 Measuring and Profiling / Compiler Optimizations: categorical series (one per function or
+   loop index), and code removed by an optimization. New code uses --viz-ok. */
+:root {
+	--viz-series-1: #0e7490;
+	--viz-series-2: #a21caf;
+	--viz-series-3: #4d7c0f;
+	--viz-series-4: #b45309;
+	--viz-gone: #dc2626;
+	--viz-gone-bg: #fee2e2;
+}
+:root[data-theme='dark'] {
+	--viz-series-1: #22d3ee;
+	--viz-series-2: #e879f9;
+	--viz-series-3: #a3e635;
+	--viz-series-4: #fbbf24;
+	--viz-gone: #f87171;
+	--viz-gone-bg: rgba(248, 113, 113, 0.16);
+}
+
+/* ECE454 Modern Allocators / Garbage Collection: unreachable heap blocks (garbage). Live/reachable
+   blocks use --viz-ok. */
+:root {
+	--viz-garbage: #dc2626;
+	--viz-garbage-bg: #fee2e2;
+}
+:root[data-theme='dark'] {
+	--viz-garbage: #f87171;
+	--viz-garbage-bg: rgba(248, 113, 113, 0.17);
+}
+
+/* ECE454 Dynamic Memory: allocated heap words (in use, not new; new allocations use --viz-ok), and
+   wasted space (padding, internal/external fragmentation, a request that doesn't fit). */
+:root {
+	--viz-alloc: #475569;
+	--viz-alloc-bg: #dbe2ea;
+	--viz-frag: #be185d;
+	--viz-frag-bg: #fce7f3;
+}
+:root[data-theme='dark'] {
+	--viz-alloc: #a8b4c4;
+	--viz-alloc-bg: rgba(148, 163, 184, 0.36);
+	--viz-frag: #f472b6;
+	--viz-frag-bg: rgba(244, 114, 182, 0.16);
+}
+
+/* Keep inline math in table cells on one line (it broke mid-formula on phones). */
+table .katex {
+	white-space: nowrap;
 }

@@ -1,0 +1,213 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+.sub2 {
+	margin-bottom: 0.4rem;
+}
+.message {
+	min-height: 1.6em;
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--__sl-font);
+}
+.head {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.sub {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+	font-family: var(--viz-mono);
+}
+.space {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.2;
+	transition: stroke 400ms, stroke-width 400ms;
+}
+.procHl .space {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+.vpage rect {
+	stroke-width: 1.4;
+	transition: opacity 400ms;
+}
+.p1 .vpage rect {
+	fill: var(--viz-app1-bg);
+	stroke: var(--viz-app1);
+}
+.p2 .vpage rect {
+	fill: var(--viz-app2-bg);
+	stroke: var(--viz-app2);
+}
+.vpage text,
+.frame text {
+	font-family: var(--viz-mono);
+	font-size: 11px;
+	font-weight: 600;
+	fill: var(--sl-color-text);
+}
+.vpage,
+.frame {
+	transition: opacity 400ms ease-in-out;
+}
+.dim {
+	opacity: 0.3;
+}
+.gap {
+	font-size: 11px;
+	font-style: italic;
+	fill: var(--sl-color-gray-4);
+}
+.band rect {
+	fill: color-mix(in srgb, var(--sl-color-gray-6) 50%, transparent);
+	stroke: var(--viz-border);
+	stroke-dasharray: 4 4;
+}
+.band text {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+.line {
+	fill: none;
+	stroke-width: 1.8;
+	opacity: 0.85;
+	transition: opacity 400ms, stroke-width 300ms;
+}
+.l1 {
+	stroke: var(--viz-app1);
+}
+.l2 {
+	stroke: var(--viz-app2);
+}
+.lineOn {
+	stroke-width: 3;
+	opacity: 1;
+}
+.lineDim {
+	opacity: 0.15;
+}
+.frame rect {
+	stroke-width: 1.4;
+	transition: fill 400ms, stroke 400ms;
+}
+.f1 {
+	fill: var(--viz-app1-bg);
+	stroke: var(--viz-app1);
+}
+.f2 {
+	fill: var(--viz-app2-bg);
+	stroke: var(--viz-app2);
+}
+.free {
+	fill: transparent;
+	stroke: var(--viz-border);
+	stroke-dasharray: 3 3;
+}
+.disk rect:first-child {
+	fill: var(--sl-color-gray-6);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.2;
+	transition: stroke 400ms;
+}
+.diskHl rect:first-child {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+.diskLabel {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+.attempt {
+	transition: opacity 400ms;
+	pointer-events: none;
+}
+.attemptGhost {
+	fill: none;
+	stroke: var(--viz-miss);
+	stroke-width: 1.4;
+	stroke-dasharray: 2 5;
+	opacity: 0.5;
+}
+.attemptLine {
+	fill: none;
+	stroke: var(--viz-miss);
+	stroke-width: 2.4;
+	stroke-dasharray: 6 4;
+}
+.attemptX {
+	color: var(--viz-miss);
+}
+.attemptText {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--viz-miss);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem 1rem;
+	margin-top: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-2);
+}
+.lg {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+.sw {
+	width: 1.3rem;
+	height: 0.75rem;
+	border-radius: 0.2rem;
+	border: 1.5px solid;
+}
+.sw1 {
+	background: var(--viz-app1-bg);
+	border-color: var(--viz-app1);
+}
+.sw2 {
+	background: var(--viz-app2-bg);
+	border-color: var(--viz-app2);
+}
+.swShared {
+	background: linear-gradient(90deg, var(--viz-app1-bg) 50%, var(--viz-app2-bg) 50%);
+	border-color: var(--viz-app1) var(--viz-app2) var(--viz-app2) var(--viz-app1);
+}
+.lineSw {
+	width: 1.3rem;
+	height: 0;
+	border-top: 2px solid var(--sl-color-gray-2);
+}
+.sup {
+	font-size: 8px;
+}

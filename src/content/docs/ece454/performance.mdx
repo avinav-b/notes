@@ -1,0 +1,86 @@
+---
+title: Defining Performance
+description: What performance means for programs and servers, latency vs throughput, and why more parallelism does not always mean more throughput.
+lastUpdated: 2026-11-03
+sidebar:
+  order: 1
+---
+
+import ServerTimeline from '../../../components/ServerTimeline.tsx';
+import ThroughputCurve from '../../../components/ThroughputCurve.tsx';
+import { latencyThroughput, throughputVsThreads } from '../../../embeds/ece454/performance';
+
+## What Is Performance?
+
+For a simple program, performance is **speed**: how fast the program runs. Measure it with the Unix `time` command:
+
+```sh
+time ./my_program
+```
+
+A server program runs for a long time, handling request after request, so "how fast it runs" doesn't apply. Its performance has two sides.
+
+## Latency vs. Throughput
+
+| Metric | Question it answers |
+| --- | --- |
+| **Latency** (also called **response time**) | How fast does the server respond to my request? |
+| **Throughput** | How many requests does it serve per unit time? |
+
+A simple server handles one request at a time:
+
+```c
+void dummy_server() {
+  while (request = next_request()) {
+    respond(request);
+  }
+}
+```
+
+If each of 3 requests takes latency $L_1$, $L_2$, $L_3$:
+
+$$
+\text{Throughput} = \frac{3}{L_1 + L_2 + L_3}
+$$
+
+The two metrics can move together or in opposite directions. Press **Play** to watch the same 3 requests on three machines.
+
+<ServerTimeline client:visible {...latencyThroughput.props} />
+
+| Change | Latency | Throughput | Correlation |
+| --- | --- | --- | --- |
+| **Faster CPU** | Better (smaller) | Better (higher) | Positive |
+| **Parallelize**: serve requests on separate cores | Worse (larger) | Better (higher) | Negative |
+
+After parallelizing:
+- **Throughput is higher** because the requests run at the same time, so all of them finish sooner.
+- **Latency is worse** because each request now shares the machine with the others (and pays to coordinate with them), so each one takes longer on its own.
+
+### Real-life analogy
+
+| Plane (Toronto to Paris) | Time | Speed | Passengers | Throughput (passenger-mph) |
+| --- | --- | --- | --- | --- |
+| Boeing 747 | 8 hours | 610 mph | 470 | 286,700 |
+| Concorde | 4 hours | 1350 mph | 132 | 178,200 |
+
+Which plane has higher performance? It depends on the metric: the Concorde has lower **latency**, the 747 has higher **throughput**.
+
+## Parallelism vs. Throughput
+
+Will more parallelism always improve throughput? No. As threads are added, throughput first grows close to linearly, then increases slowly, and then (in practice) degrades. Hover or tap the plot to read it.
+
+<ThroughputCurve client:visible {...throughputVsThreads.props} />
+
+:::tip
+Measure the **peak** throughput, and the number of threads where it occurs.
+:::
+
+## Performance Measurement Is Complicated
+
+- **Many other metrics**: utilization, goodput, jitter, etc.
+- **Which case?** Best case, worst case, or average?
+- **Different applications have different requirements**, e.g. Google/Facebook/Amazon, online gaming, Netflix, flight control software on an airplane.
+
+:::note
+Performance evaluation is a research field of its own: ACM's special interest group on performance evaluation is **SIGMETRICS**.
+:::

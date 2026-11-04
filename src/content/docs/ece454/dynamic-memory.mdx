@@ -1,0 +1,437 @@
+---
+title: Dynamic Memory
+description: Alignment, the malloc/free API, allocator goals and fragmentation, and how allocators track free blocks with implicit, explicit and segregated lists and the buddy system.
+lastUpdated: 2026-11-03
+sidebar:
+  order: 9
+---
+
+import MemFigure from '../../../components/MemFigure.tsx';
+import MisalignedRead from '../../../components/MisalignedRead.tsx';
+import StructLayout from '../../../components/StructLayout.tsx';
+import HeapSim from '../../../components/HeapSim.tsx';
+import CoalesceCases from '../../../components/CoalesceCases.tsx';
+import SegregatedLists from '../../../components/SegregatedLists.tsx';
+import BuddyAllocator from '../../../components/BuddyAllocator.tsx';
+import {
+	processImage,
+	misalignedRead,
+	structExamples,
+	structReorder,
+	internalFrag,
+	allocExample,
+	placementPolicies,
+	coalescing,
+	coalesceCases,
+	explicitList,
+	segregatedLists,
+	buddyAllocator,
+	allocPatterns,
+} from '../../../embeds/ece454/dynamic-memory';
+
+## Why Dynamic Memory?
+
+- Some data structure sizes aren't known in advance (e.g. read `n` values from a file, where `n` is user specified).
+- DRAM is still precious: programs should request memory when they need it and give it back when they're done, so it can be reused.
+- Allocator performance can significantly affect overall program performance, and scalable allocation is essential for multi-core performance.
+
+### Stack vs. heap
+
+| | Stack | Heap |
+| --- | --- | --- |
+| Holds | Local variables, parameters, return values | Memory allocated with `malloc()` |
+| Lifetime | Until the function returns | Until it's explicitly freed |
+
+The stack can't hold everything: anything allocated there disappears when the function returns, so data that must outlive the call has to go on the heap.
+
+### Dynamic memory allocators
+
+An allocator provides an abstraction of memory as a set of **blocks**: variable-sized, contiguous pieces of memory, handed out to the application.
+
+| Kind | The application... | Examples |
+| --- | --- | --- |
+| **Explicit** | allocates and frees space | `malloc`/`free` in C, `new`/`delete` in C++ |
+| **Implicit** | allocates, but doesn't free | [Garbage collection](/ece454/garbage-collection/) in Java, ML, Lisp |
+
+Allocators request more heap memory from the operating system with the `sbrk` or memory-mapping (`mmap`) system calls. `sbrk` moves the **brk** pointer, the top of the heap.
+
+<MemFigure client:visible {...processImage.props} />
+
+## Alignment
+
+With **K-byte alignment**, an object's start address must be a multiple of K. With 4-byte alignment, for example, the two lowest bits of the start address are `00`.
+
+### Why align?
+
+Suppose there's no alignment requirement and a 4-byte `int` starts at `0x923d3f`, with 64-byte [cache blocks](/ece454/memory-hierarchy/#cache-organization-s-e-b). A cache block holds data aligned at the cache block size, so each block's start address has 0 in its lower 6 bits. The int straddles the boundary at `0x923d40`, so reading it needs **2 cache blocks**.
+
+The CPU similarly reads data at **word** granularity, so a misaligned `short`, `int` or pointer can take two CPU reads. On a 32-bit machine, align an `int` to 4 bytes (lower 2 bits of the address are 0) for good performance.
+
+<MisalignedRead client:visible {...misalignedRead.props} />
+
+:::tip
+Avoid crossing word and cache block boundaries. An aligned value never crosses one.
+:::
+
+### Alignment rules
+
+| Type | Size | Alignment (lowest address bits) |
+| --- | --- | --- |
+| `char` | 1 B | none |
+| `short` | 2 B | 2-byte (`0`) |
+| `int`, `float` | 4 B | 4-byte (`00`) |
+| `double` | 8 B | 8-byte (`000`) |
+| Pointers | 4 or 8 B (32 or 64-bit architecture) | same as size |
+
+Who aligns:
+- **Compilers** insert gaps within structures so each field is correctly aligned.
+- **Libraries** (e.g. `malloc`) return aligned addresses.
+- **Programmers** can use a compiler alignment directive for efficient access:
+
+```c
+// gcc allocates 6 bytes
+struct S { short f[3]; };
+// gcc allocates 8 bytes
+struct S { short f[3]; } __attribute__ ((aligned (8)));
+```
+
+### Structures
+
+- **Within a structure:** each field's offset satisfies that field's alignment requirement.
+- **Placement and size:** with K the largest alignment requirement of any field, the structure's start address and its length must be multiples of K.
+
+<StructLayout client:visible {...structExamples.props} />
+
+| Struct | Data | K | Size with alignment |
+| --- | --- | --- | --- |
+| `{ char c; int i[2]; }` | 9 B | 4 | 12 B |
+| `{ char c; int i[2]; double v; }` | 17 B | 8 | 24 B |
+
+### Arrays of structures, and saving space
+
+An array of structures repeats the structure's layout, padding included, so the padding is paid once per element. Field order matters: putting the two `short`s next to each other shrinks `S3` from 12 bytes to 8.
+
+<StructLayout client:visible {...structReorder.props} />
+
+## Memory Management API
+
+`#include <stdlib.h>`
+
+| Call | Behaviour |
+| --- | --- |
+| `void *malloc(size_t size)` | Returns a pointer to a block of **at least** `size` bytes. If `size == 0`, returns `NULL`. On failure, returns `NULL` and sets `errno`. |
+| `void free(void *p)` | Returns the block at `p` to the pool of available memory. `p` must come from an earlier `malloc` or `realloc`. |
+| `void *realloc(void *p, size_t size)` | Changes the size of block `p` and returns a pointer to the new block. Contents are unchanged up to the smaller of the old and new sizes. |
+
+:::caution
+A well-written program checks every `malloc` (and `realloc`) for `NULL`.
+:::
+
+`malloc` typically returns a **double-word aligned** address: 8-byte on a 32-bit machine (4-byte words), 16-byte on a 64-bit machine (8-byte words). The allocator doesn't know what type will be stored, so it aligns for the largest common type.
+
+```c
+void foo(int n, int m) {
+  int i, *p;
+  if ((p = (int *) malloc(n * sizeof(int))) == NULL) {          // block of n ints
+    perror("malloc"); exit(0);
+  }
+  for (i = 0; i < n; i++) p[i] = i;
+  if ((p = (int *) realloc(p, (n+m) * sizeof(int))) == NULL) {  // grow to n+m ints
+    perror("realloc"); exit(0);
+  }
+  for (i = n; i < n+m; i++) p[i] = i;
+  for (i = 0; i < n+m; i++) printf("%d\n", p[i]);
+  free(p);                                                      // return p to the pool
+}
+```
+
+## Allocator Basics
+
+:::note[Assumptions for the rest of this page]
+- Memory is word addressable, and each word can hold a pointer.
+- `malloc` returns word-aligned addresses (in practice, GNU malloc returns double-word aligned addresses).
+- Sizes are in words: `malloc(4)` below means `malloc(4 * sizeof(void *))`.
+:::
+
+<HeapSim client:visible {...allocExample.props} />
+
+### Constraints
+
+| Applications | Allocators |
+| --- | --- |
+| Can issue any sequence of `malloc` and `free` requests | Must respond **immediately** to every request (no buffering or reordering) |
+| Can only free blocks that are allocated | Must allocate blocks from free memory, aligned to satisfy all alignment requirements |
+| | Can only manipulate and modify free memory |
+| | Can't move a block once it's allocated (**no compaction**) |
+
+### Goals
+
+For a sequence of requests $R_0, R_1, \ldots, R_{n-1}$, maximize both **throughput** and **peak memory utilization**. These goals often conflict.
+
+- **Throughput:** completed requests per unit time. Ideally `malloc` and `free` take constant time; they certainly shouldn't take time linear in the number of blocks. Example: 5,000 `malloc` calls and 5,000 `free` calls in 10 seconds is 1,000 operations/second.
+- **Memory utilization:** allocated structures should take up most of the heap, so fragmentation should be small.
+
+:::note[An extreme example]
+`malloc(N)` takes the next N free words, and `free` does nothing. Throughput is great, but memory utilization is terrible.
+:::
+
+### Peak memory utilization
+
+| Symbol | Meaning |
+| --- | --- |
+| $P_k$ | **Aggregate payload** after $k$ requests: the sum of the currently allocated payloads (`malloc(p)` adds $p$ bytes, a free subtracts) |
+| $H_k$ | Current total **heap size** |
+
+Peak memory utilization after $k$ requests uses the high watermarks (maximum values) of both:
+
+$$
+U_k = \frac{\max_{0 \le i \le k} P_i}{\max_{0 \le j \le k} H_j}
+$$
+
+Higher is better. The high watermarks are used because the heap has to be big enough for the largest payload the program ever has live at once. Comparing the peaks measures how well the allocator handled that worst moment; the current payload drops after frees, which would make the allocator look wasteful even when the heap was sized exactly for the peak.
+
+## Fragmentation
+
+Poor memory utilization caused by unusable memory comes in two forms:
+
+| | Where the waste is | Measuring it |
+| --- | --- | --- |
+| **Internal** | Unused space **inside** an allocation (padding) | Depends only on previous requests, so it's easy to measure |
+| **External** | Unused space in the heap, **outside** allocations | Depends on future requests, so it's harder to measure |
+
+### Internal fragmentation
+
+With 4-byte words, `malloc(13)` returns 16 bytes: 3 bytes of padding go on the internal fragmentation tally.
+
+<StructLayout client:visible {...internalFrag.props} />
+
+Causes: a **minimum size** for allocated blocks, and **padding for alignment**.
+
+:::note
+The header space of in-use blocks increases the heap size, so it lowers peak memory utilization, but it doesn't count as internal fragmentation.
+:::
+
+### External fragmentation
+
+There's enough free memory in total, but no single free block is big enough. Switch the example above to `p4 = malloc(6)`: 7 words are free, but they're split into blocks of 5 and 2.
+
+## Implementation Issues
+
+| Question | Answer on this page |
+| --- | --- |
+| Given a pointer, how much memory does `free` release? | A **header** word |
+| How do we keep track of free blocks? | Implicit, explicit or segregated lists |
+| How do we pick a block for an allocation, when many might fit? | Placement policy |
+| How do we insert a freed block? | Coalescing and insertion policy |
+
+### Knowing how much to free
+
+Keep the block's size in the word just before the block: the **header**. `malloc(4)` uses 5 words, and `free(p0)` reads the size at `p0 - 1`. This costs an extra word per allocated block.
+
+### Keeping track of free blocks
+
+1. **Implicit list:** the size fields link all blocks, allocated and free.
+2. **Explicit list:** pointers stored inside the free blocks link just the free blocks.
+3. **Segregated free lists:** separate explicit free lists for different size classes.
+
+## Method 1: Implicit List
+
+Each block needs a size and a free/allocated flag. If block sizes are always multiples of two, the lowest bit of the size is always 0, so the flag can live there (`a = 1` allocated, `a = 0` free):
+
+```c
+size = sizeword & ~0x1;   // sizeword & 0b1111...1110
+```
+
+| Word | Contents |
+| --- | --- |
+| Header | `size` &#124; `a` (size includes the header) |
+| Payload | Application data (allocated blocks only) |
+| Padding | Optional |
+
+### Finding a free block
+
+| Policy | How | Trade-off |
+| --- | --- | --- |
+| **First fit** | Search from the start; take the first free block that fits | Linear in the total number of blocks (allocated and free). Can leave "splinters" at the start of the list. |
+| **Next fit** | Like first fit, but start where the previous search ended | Research suggests fragmentation is worse |
+| **Best fit** | Search the whole list; take the free block with the closest size that fits | Keeps fragments small, so usually helps fragmentation. Slower than first or next fit. |
+
+If the chosen block is bigger than needed, **split** it: the rest becomes a new free block.
+
+<HeapSim client:visible {...placementPolicies.props} />
+
+### Freeing and coalescing
+
+The simplest `free` only clears the allocated flag. That can cause **false fragmentation**: there's enough free space, but the allocator can't find it because it's split across neighbouring free blocks.
+
+**Coalescing** joins the freed block with the next and/or previous block if they're free. The next block is easy to find (add the size to the address); the previous one isn't.
+
+<HeapSim client:visible {...coalescing.props} />
+
+### Boundary tags
+
+**Boundary tags** [Knuth73] replicate the header (size and allocated bit) as a **footer** at the end of the block. The previous block's footer sits just before the current header, so the list can be traversed backwards. This needs extra space, but it's an important and general technique.
+
+With boundary tags, freeing block `n` is constant time in all four cases: read the previous block's footer and the next block's header, then merge.
+
+<CoalesceCases client:visible {...coalesceCases.props} />
+
+| Case | Previous | Next | New free block size |
+| --- | --- | --- | --- |
+| 1 | allocated | allocated | n |
+| 2 | allocated | free | n + m2 |
+| 3 | free | allocated | n + m1 |
+| 4 | free | free | n + m1 + m2 |
+
+### Allocator policies
+
+- **Placement policy** (finding a free block during allocation): first fit, next fit, best fit, etc.
+- **Coalescing policy** (inserting a block during free):
+  - **Immediate coalescing:** coalesce adjacent blocks whenever `free` is called.
+  - **Deferred coalescing:** make `free` faster by coalescing only when needed, e.g. while scanning the free list in `malloc`, or when external fragmentation reaches a threshold. This pays off when a program frees blocks and soon allocates the same sizes again, since an immediate merge would just be split apart again.
+
+### Implicit list summary
+
+| | |
+| --- | --- |
+| Implementation | Very simple |
+| Allocation | Linear time in the number of free **and** allocated blocks |
+| Free | Constant time in all cases, even with coalescing |
+| Memory usage | Depends on the placement policy |
+
+:::note[In practice]
+Modern allocators don't use implicit lists, because allocation is linear time. Splitting and boundary-tag coalescing are used by many allocators, though.
+:::
+
+## Method 2: Explicit Free List
+
+Link only the free blocks, using pointers stored in the free blocks' own (unused) payload space. The list is typically doubly linked (`pred` and `succ`), and the links can point to any free block, in any address order. Boundary tags still give constant-time coalescing.
+
+- **Allocating:** walk the free list. Allocation time is linear in the number of **free** blocks instead of all blocks. When splitting, the leftover free block takes the original block's place in the list.
+- **Freeing:** where does the freed block go in the list?
+
+| Insertion policy | How | Pros | Cons |
+| --- | --- | --- | --- |
+| **LIFO** | Insert at the start of the list; the latest freed block may be the next one allocated | Simple, constant time | Studies suggest more fragmentation than address-ordered |
+| **Address-ordered** | Keep the list in address order: `addr(pred) < addr(curr) < addr(succ)` | Studies suggest less fragmentation than LIFO | Needs a search to insert |
+
+<HeapSim client:visible {...explicitList.props} />
+
+### Freeing with LIFO
+
+Initially `free_list = x` and `x.pred = NULL`. To `free(self)` with no coalescing, connect it to the head of the list:
+
+```c
+self.succ = free_list;
+free_list.pred = self;
+free_list = self;
+self.pred = NULL;
+```
+
+To coalesce, splice the free neighbour(s) out of the list first, merge, then add the merged block to the start of the list:
+
+| Neighbours | Steps |
+| --- | --- |
+| a-self-f | Splice out next, coalesce self and next, add to head |
+| f-self-a | Splice out prev, coalesce self and prev, add to head |
+| f-self-f | Splice out prev and next, coalesce all three, add to head |
+
+### Explicit list summary
+
+- Allocation is linear in the number of free blocks instead of total blocks: much faster when most of memory is full.
+- Allocation and free are slightly more complicated, since blocks are spliced in and out of the list.
+- The main use of linked lists is with segregated free lists: multiple lists for different size classes, or possibly for different types of objects.
+
+## Method 3: Segregated Free Lists
+
+Each **size class** has its own collection of free blocks. Often there's a separate class for every small size (2, 3, 4, ...), and one class per power of two for larger sizes.
+
+### Simple segregated storage
+
+All blocks in a list have the **same size** N. A request of size in (M, N] gets a block from list N, where M is the previous list's block size.
+
+- **Allocate:** if list N isn't empty, take its first block (no splitting). If it is empty, grow the heap, carve the new space into blocks of size N, add them to the list, then take the first one.
+- **Free:** add the block to its list.
+
+| Advantages | Disadvantages |
+| --- | --- |
+| Constant-time allocation and free: every block in a list is the same size, so just take or add at the head | **Internal fragmentation:** requests round up to the class size |
+| No splitting or coalescing | **External fragmentation:** free blocks in one list can't be used for other sizes, and blocks are never coalesced |
+| Low per-block overhead: the size doesn't need to be stored in a header | |
+
+### Segregated best fit
+
+Blocks in a list lie within a **size range**, so they can have different sizes.
+
+- **Allocate size N:** search the matching list for a block of size M >= N. If found, (optionally) split it and put the fragment on the list for its size. If not, try the next larger class, and so on; if still nothing, grow the heap.
+- **Free:** coalesce, and put the result on the list for its new size.
+
+| Advantages | Trade-offs |
+| --- | --- |
+| Controls the fragmentation of simple segregated storage (thanks to splitting and coalescing); fragmentation is similar to best fit | Slower allocation than simple segregated storage |
+| Faster than unsegregated best fit: no exhaustive search | Splitting and coalescing can increase search times (deferred coalescing can help) |
+
+<SegregatedLists client:visible {...segregatedLists.props} />
+
+## Binary Buddy Allocator
+
+A variant of segregated best fit: each list holds fixed-size blocks, and block sizes are powers of two. It needs a header, but no footer, to coalesce.
+
+- **`allocate(size)`:** round the size up to $2^n$. If no free block of that size exists, take a larger block and split it in half, recursively, until one is available.
+- **`free(p)`:** compute the address of the block's **buddy** from its address and size. If the buddy is in the free list for that size, coalesce, and repeat with the merged block.
+
+$$
+\text{addr}(\text{buddy}) = \text{addr} \oplus \text{size}
+$$
+
+Flipping the size bit of the address gives the buddy. For `d` in step 7 below: $256\text{K} \oplus 128\text{K} = 384\text{K}$.
+
+<BuddyAllocator client:visible {...buddyAllocator.props} />
+
+## Other Considerations
+
+### Allocation patterns
+
+Block lifetimes aren't random:
+
+<MemFigure client:visible {...allocPatterns.props} />
+
+| Pattern | Behaviour |
+| --- | --- |
+| **Ramp** | Allocations throughout the program's lifetime, without releases |
+| **Plateau** | Allocations, then lengthy use, then releases |
+| **Peaks** | Bursty behaviour and short object lifetimes |
+
+Block sizes aren't random either: a 1992 study by Zorn and Grunwald of six allocation-heavy C programs found that 53-93% of requests were for the top two sizes.
+
+:::tip
+Allocators can exploit these patterns: allocate blocks with the same or similar sizes contiguously, and blocks with similar lifetimes contiguously.
+:::
+
+### Linked lists for free blocks
+
+Implicit lists (linking allocated and free blocks) aren't used because allocation is linear time. Explicit lists (free blocks only, one or more lists) are more common.
+
+Where is the list stored?
+
+| | Benefit | Problem |
+| --- | --- | --- |
+| **Integrated:** links live inside the free blocks | No separate space to manage for links | Poor [locality](/ece454/memory-hierarchy/#why-caches-work-locality) when traversing the list |
+| **External:** links live in space separate from the blocks | Better locality when traversing the list | That space has to be managed and grown |
+
+What order are free blocks kept in?
+
+| Order | Effect |
+| --- | --- |
+| **LIFO:** add freed blocks to the start | Provides locality |
+| **FIFO:** add freed blocks to the end | |
+| **Sorted by block size** | Limits traversal for smaller allocations |
+| **Sorted by address** | Reduces heap fragmentation |
+
+### Other data structures for free blocks
+
+| Structure | Idea | Use |
+| --- | --- | --- |
+| **Region / arena** (single pointer) | `mmap` large regions, kept in a list. Allocate by incrementing one pointer; release the whole region when done. No free list or headers inside a region. | Related blocks that can all be released at once |
+| **Bitmap** | One bit per fixed-size block; blocks of the same size are allocated contiguously | Segregated storage (each list holds one size) |
+| **Ordered trees** | Search for a free block of a given size faster than a linked list | e.g. a red-black tree does best fit in $O(\log n)$ for $n$ free blocks |

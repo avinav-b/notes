@@ -1,0 +1,126 @@
+.root {
+	container-type: inline-size;
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.on {
+	border-color: var(--sl-color-accent) !important;
+	color: var(--sl-color-accent-high) !important;
+	background: var(--sl-color-accent-low) !important;
+}
+
+.flow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.3rem;
+	margin-top: 1rem;
+	min-height: 5rem;
+}
+.optWrap {
+	flex: none;
+	display: grid;
+	grid-template-columns: 0fr;
+	opacity: 0;
+	transition:
+		grid-template-columns 600ms ease-in-out,
+		opacity 450ms ease-in-out;
+}
+.optOn {
+	grid-template-columns: 1fr;
+	opacity: 1;
+}
+.optInner {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.arrowWrap {
+	flex: none;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.1rem;
+}
+.arrowLbl {
+	font-family: var(--viz-mono);
+	font-size: 0.75rem;
+	color: var(--sl-color-gray-2);
+	white-space: nowrap;
+}
+.arrow {
+	flex: none;
+	color: var(--sl-color-gray-3);
+}
+.stage {
+	flex: 0 1 auto;
+	padding: 0.6rem 0.7rem;
+	border: 1.5px solid var(--sl-color-gray-3);
+	border-radius: 0.4rem;
+	background: var(--sl-color-bg);
+	font-weight: 700;
+	text-align: center;
+	line-height: 1.25;
+}
+.optimizer {
+	border-color: var(--sl-color-accent);
+	background: var(--sl-color-accent-low);
+	color: var(--sl-color-accent-high);
+}
+.data {
+	flex: 0 1 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	line-height: 1.25;
+	gap: 0.15rem;
+}
+.dataTitle {
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--sl-color-gray-3);
+}
+.dataText {
+	font-family: var(--viz-mono);
+	font-size: 0.82rem;
+	color: var(--sl-color-gray-2);
+}
+
+/* Narrow: stack top to bottom. */
+@container (max-width: 28rem) {
+	.flow,
+	.optInner {
+		flex-direction: column;
+	}
+	.arrowWrap {
+		flex-direction: row-reverse;
+		gap: 0.4rem;
+	}
+	.arrow {
+		transform: rotate(90deg);
+	}
+	.optWrap {
+		grid-template-columns: none;
+		grid-template-rows: 0fr;
+		transition:
+			grid-template-rows 600ms ease-in-out,
+			opacity 450ms ease-in-out;
+	}
+	.optOn {
+		grid-template-rows: 1fr;
+	}
+	.optInner {
+		min-height: 0;
+	}
+}

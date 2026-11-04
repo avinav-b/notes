@@ -1,0 +1,181 @@
+---
+title: Measuring and Profiling
+description: What to measure when comparing computers and programs, Amdahl's law for optimizing part of a program, and the tools for timing and profiling code.
+lastUpdated: 2026-11-03
+sidebar:
+  order: 3
+---
+
+import AmdahlExplorer from '../../../components/AmdahlExplorer.tsx';
+import SamplingProfiler from '../../../components/SamplingProfiler.tsx';
+import { amdahl, gprofSampling } from '../../../embeds/ece454/measuring-and-profiling';
+
+## Why Measure?
+
+| Goal | Question |
+| --- | --- |
+| Compare two computers/processors | Which one is faster? Which one should I buy? |
+| Optimize a program | Which part of the program should I focus my effort on? |
+| Compare program implementations | Which one is faster? Did my optimization work? |
+| Find a bug | Why is it running much more slowly than expected? |
+
+## Basic Measurements
+
+| Measure | Meaning |
+| --- | --- |
+| **IPS** | Instructions per second (**MIPS**: millions, **BIPS**: billions) |
+| **FLOPS** | Floating point operations per second (megaFLOPS = $10^6$, gigaFLOPS = $10^9$) |
+| **IPC** | Instructions per processor cycle: a measure of throughput |
+| [**CPI**](/ece454/cpu-architectures/#what-makes-a-cpu-fast) | Cycles per instruction, $\text{CPI} = 1 / \text{IPC}$: the reciprocal of throughput, which makes it easier to compare with instruction latencies |
+
+### How not to compare processors
+
+| Metric | Why it misleads |
+| --- | --- |
+| **Clock frequency (MHz)** | IPC can be radically different between processors (the "megahertz myth") |
+| **CPI / IPC** | Depends on the instruction set, and on how efficient the compiler's code is |
+| **FLOPS** | Only matters if floating point matters for your applications; also depends on the instruction set |
+
+:::note[The megahertz myth]
+- Apple II at 1 MHz: a load takes 2 cycles, so **2 µs**.
+- IBM PC (Intel 8088) at 4.77 MHz: a load takes 25 cycles, so **5.24 µs**.
+
+The machine with almost 5x the clock rate does a load more than 2x slower.
+:::
+
+### How to measure a processor
+
+Use **wall-clock time** (seconds):
+
+$$
+\text{time} = \text{IC} \times \text{CPI} \times \text{ClockPeriod}
+$$
+
+| Term | Meaning |
+| --- | --- |
+| **IC** | Instruction count: total instructions executed |
+| **CPI** | Cycles per instruction |
+| **ClockPeriod** | Seconds per cycle $= 1 / \text{ClockFrequency}$ |
+
+## Amdahl's Law
+
+$$
+\text{speedup} = \frac{\text{OldTime}}{\text{NewTime}}
+$$
+
+If a program used to take 10 minutes and takes 5 minutes after optimization, the speedup is $10 / 5 = 2$, i.e. 2x faster.
+
+When an optimization only applies to **part** of a program:
+
+| Symbol | Meaning |
+| --- | --- |
+| $f$ | Fraction of execution time the optimization applies to ($0 < f < 1$) |
+| $s$ | Improvement factor: the speedup of that part |
+
+$$
+\text{NewTime} = \text{OldTime} \times \left[(1-f) + \frac{f}{s}\right]
+\qquad
+\text{speedup} = \frac{1}{(1-f) + f/s}
+$$
+
+<AmdahlExplorer client:visible {...amdahl.props} />
+
+:::tip[The limit]
+The best you can do is eliminate $f$ entirely. The $1-f$ part remains, so the speedup can never exceed $1/(1-f)$.
+:::
+
+### Example 1
+
+An optimization makes loops go 3x faster, and the program spends 70% of its time in loops ($f = 0.7$, $s = 3$):
+
+$$
+\text{speedup} = \frac{1}{1 - 0.7 + 0.7/3} = \frac{1}{0.5333} = 1.875
+$$
+
+### Example 2
+
+An optimization makes loops go 4x faster, and the whole program goes 2x faster. What fraction of the program is loops?
+
+$$
+2 = \frac{1}{1 - f + f/4}
+\;\Rightarrow\; 1 - \tfrac{3}{4}f = \tfrac{1}{2}
+\;\Rightarrow\; f = \tfrac{2}{3}
+$$
+
+### Implication: the common case changes
+
+:::caution
+When you optimize the common case, the common case may change. In Example 1, loops are 70% of the old time but only 44% of the new time: the rest of the program is now the common case.
+:::
+
+## Tools for Measuring and Understanding Software
+
+| Kind | What it is |
+| --- | --- |
+| **Software timers** | C library and OS-level timers |
+| **Hardware timers and performance counters** | Built into the processor chip |
+| **Instrumentation** | Decorates your program with code that counts and measures |
+
+| Tool | What it measures | How to use it | Lab |
+| --- | --- | --- | --- |
+| `time` | Whole program: `real` (wall clock), `user` and `sys` (CPU time in user and kernel mode). Not super accurate, but good enough for many uses | `time ./prog` | 1 |
+| `times()` | User CPU time of a part of a program | Call before and after the code; subtract `tms_utime` (example below) | 2 |
+| `rdtsc` | Cycles, from the on-chip time stamp counter. More accurate than the library when used correctly | Read before and after the code; subtract. Watch out for multi-threaded programs | 2 |
+| Performance counters | Low-level architectural events: cache misses, branch mispredictions, etc. | Through a package such as Linux `perf` or Intel's VTune | 2 |
+| `gprof` | Approximate time spent in each function and number of calls to each function, by sampling | `gcc -O2 -pg prog.c -o prog`, run `./prog` (writes `gmon.out`), then `gprof prog` | 1 |
+| `gcov` | How many times each line executed: which loops and which side of an if/else matter most | `gcc -g -fprofile-arcs -ftest-coverage file.c -o file.o`, run `./prog` (writes `file.gcda`, `file.gcno`), then `gcov -b prog` (writes `file.c.gcov`) | 1 |
+| `valgrind` | Memory leaks (e.g. a `malloc()` that is never freed), and many other uses | `valgrind myprogram` | |
+
+`gprof` and `gcov` are used together to find the commonly executed code, which is where optimization effort should go.
+
+### Software timers in a program
+
+```c
+#include <sys/times.h>  // C library functions for time
+
+unsigned get_time() {
+    struct tms t;
+    times(&t);          // fills the struct
+    return t.tms_utime; // user CPU time (as opposed to OS CPU time)
+}
+
+start_time = get_time();
+do_work();              // function to measure
+elapsed_time = get_time() - start_time;
+```
+
+A cycle counter is used the same way: `start_cycles = get_tsc()` (which executes `rdtsc`), `do_work()`, then subtract.
+
+### Performance counters
+
+Special on-chip event counters that can be programmed to count architectural events. They used to be difficult to use: full OS support was missing, and counters can overflow, so they must be sampled carefully. Software packages such as `perf` and VTune now make them easier to use.
+
+### Instrumentation
+
+A compiler or tool inserts new code and data structures into the program, so it can count or measure anything visible to software. For example: record the address of every load, or count how many times every function is called.
+
+| Instrumentor | Use |
+| --- | --- |
+| **Intel PIN** | General purpose instrumentation tool for x86 |
+| **Valgrind** | Finding bugs and memory leaks. Adds instrumentation to the binary dynamically, so gcc doesn't need to be rerun; runs 4 to 5x slower than native |
+| **gprof** | Counts and measures where time is spent, via sampling |
+
+A `valgrind` leak report ends with a summary like this:
+
+```
+== LEAK SUMMARY:
+== definitely lost: 0 bytes in 0 blocks
+== indirectly lost: 0 bytes in 0 blocks
+== possibly lost: 0 bytes in 0 blocks
+== still reachable: 330,372 bytes in 11,148 blocks
+```
+
+:::caution[Observer effect]
+You can't measure a system without disturbing it: the instrumentation code itself slows down execution.
+:::
+
+### How gprof samples
+
+`gprof` periodically interrupts the program (roughly every 10 ms), checks which function is currently executing, and adds the interval (10 ms) to that function's time counter. Sampling approximates the time spent in each function.
+
+<SamplingProfiler client:visible {...gprofSampling.props} />

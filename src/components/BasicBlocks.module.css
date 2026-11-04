@@ -1,0 +1,219 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.message {
+	min-height: 2.2em;
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+.cfgSvg {
+	max-width: 32rem;
+	margin-inline: auto;
+}
+.narrow {
+	max-width: 32rem;
+	margin-inline: auto;
+}
+
+.fade {
+	transition: opacity 500ms ease-in-out;
+}
+.hidden {
+	opacity: 0;
+}
+
+.row {
+	transition: transform 600ms ease-in-out;
+}
+.listing,
+.block {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.5;
+	transition:
+		fill 400ms,
+		stroke 400ms;
+}
+.blockName {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+}
+.lbl {
+	font-size: 14px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.insn {
+	font-size: 14px;
+	fill: var(--sl-color-text);
+	transition: fill 300ms;
+}
+.insnLeader {
+	font-weight: 700;
+	fill: var(--sl-color-accent-high);
+}
+.leaderMark {
+	fill: var(--sl-color-accent);
+	rx: 2;
+}
+.reason {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 600;
+	fill: var(--sl-color-accent-high);
+}
+
+.edge {
+	fill: none;
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.8;
+	transition:
+		opacity 500ms ease-in-out,
+		stroke 400ms;
+}
+.branch {
+	stroke-dasharray: 6 4;
+}
+.cur {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.4;
+}
+.headFill {
+	fill: var(--sl-color-gray-3);
+}
+.headCur {
+	fill: var(--sl-color-accent);
+}
+
+/* Reaching definitions */
+.edgeLbl {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 600;
+	fill: var(--sl-color-gray-3);
+}
+.lineNo {
+	fill: var(--sl-color-gray-3);
+}
+.def2 {
+	stroke: var(--viz-series-1);
+	fill: color-mix(in srgb, var(--viz-series-1) 14%, var(--sl-color-bg));
+}
+.def4 {
+	stroke: var(--viz-series-2);
+	fill: color-mix(in srgb, var(--viz-series-2) 14%, var(--sl-color-bg));
+}
+.use {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.4;
+}
+.cur2 {
+	stroke: var(--viz-series-1);
+	stroke-width: 2.4;
+}
+.cur4 {
+	stroke: var(--viz-series-2);
+	stroke-width: 2.4;
+}
+.chip {
+	transition:
+		transform 700ms ease-in-out,
+		opacity 400ms ease-in-out;
+}
+.chip rect {
+	stroke-width: 1.5;
+}
+.chip text {
+	font-size: 12px;
+	font-weight: 700;
+}
+.chip2 rect {
+	fill: color-mix(in srgb, var(--viz-series-1) 18%, var(--viz-surface));
+	stroke: var(--viz-series-1);
+}
+.chip2 text {
+	fill: var(--viz-series-1);
+}
+.chip4 rect {
+	fill: color-mix(in srgb, var(--viz-series-2) 18%, var(--viz-surface));
+	stroke: var(--viz-series-2);
+}
+.chip4 text {
+	fill: var(--viz-series-2);
+}
+.setLbl {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem 1.1rem;
+	margin-top: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span::before {
+	content: '';
+	display: inline-block;
+	width: 1.4rem;
+	margin-right: 0.4rem;
+	vertical-align: 0.25em;
+	border-top: 2px solid var(--sl-color-gray-3);
+}
+.lgLeader::before {
+	width: 0.3rem !important;
+	height: 0.9rem;
+	border: none !important;
+	background: var(--sl-color-accent);
+	vertical-align: -0.1em !important;
+	border-radius: 2px;
+}
+.lgBranch::before {
+	border-top-style: dashed !important;
+}
+.lgD2::before,
+.lgD4::before {
+	width: 0.9rem !important;
+	height: 0.7rem;
+	border: 1.5px solid !important;
+	border-radius: 999px;
+	vertical-align: -0.05em !important;
+}
+.lgD2::before {
+	border-color: var(--viz-series-1) !important;
+	background: color-mix(in srgb, var(--viz-series-1) 18%, transparent);
+}
+.lgD4::before {
+	border-color: var(--viz-series-2) !important;
+	background: color-mix(in srgb, var(--viz-series-2) 18%, transparent);
+}
+
+.insnBig {
+	font-size: 16px;
+}

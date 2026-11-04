@@ -1,0 +1,244 @@
+---
+title: Virtual Memory and Prefetching
+description: Why programs use virtual addresses, how the MMU translates them with page tables and the TLB, page faults, programming for TLB reach, and hardware and software prefetching.
+lastUpdated: 2026-11-03
+sidebar:
+  order: 8
+---
+
+import AddressTranslation from '../../../components/AddressTranslation.tsx';
+import MemFigure from '../../../components/MemFigure.tsx';
+import MemoryHierarchy from '../../../components/MemoryHierarchy.tsx';
+import OooTimeline from '../../../components/OooTimeline.tsx';
+import StridePrefetcher from '../../../components/StridePrefetcher.tsx';
+import TlbReach from '../../../components/TlbReach.tsx';
+import VirtualMapping from '../../../components/VirtualMapping.tsx';
+import {
+	hardwarePrefetch,
+	pageTableLookup,
+	physicalAddressing,
+	prefetchIdea,
+	prefetchPaths,
+	processLayout,
+	softwarePrefetch,
+	tlbLookup,
+	tlbReach,
+	virtualMapping,
+} from '../../../embeds/ece454/virtual-memory-and-prefetching';
+
+## Virtual Memory
+
+### Process memory layout
+
+The memory of a process on IA32 Linux:
+
+| Region | Holds |
+| --- | --- |
+| **Text** | Executable instructions. Read-only |
+| **Data** | Statically allocated data, e.g. arrays and strings in the code |
+| **Heap** | Dynamically allocated storage: `malloc()`, `calloc()`, `new` |
+| **Stack** | Local variables, parameters, return values |
+
+<MemFigure client:visible {...processLayout.props} />
+
+### Virtual addresses
+
+- Programs access data and instructions using **virtual addresses**.
+- Conceptually, memory is a very large array of bytes, each with its own address: **4 GB** for 32-bit architectures, **16 EB** (exabytes) for 64-bit architectures.
+- The system gives each process its own **private address space**.
+- **Memory allocation**, deciding where each program object is stored, is done by a combination of the compiler and the run-time system.
+
+### Why not physical addressing?
+
+Simple embedded microcontrollers use **physical addressing**: the CPU puts a physical address (PA) on the bus and memory returns the data word.
+
+<AddressTranslation client:visible {...physicalAddressing.props} />
+
+This causes several problems for larger, multi-process systems:
+
+| Problem | With physical addresses |
+| --- | --- |
+| **1. Fit** | 64-bit addresses cover 16 EB (16M TB), but even a big server has about 1 TB of physical memory. And there are many processes |
+| **2. Memory management** | Processes 1 to n each have text, data, heap, stack and mapped regions. What goes where in physical memory? |
+| **3. Portability** | A program laid out for machine 1's physical memory doesn't fit machine 2's. What goes where? |
+| **4. Protection** | Process i must not be able to reach process j's memory |
+| **5. Sharing** | But sometimes processes i and j do need to share memory |
+
+### The fix: a level of indirection
+
+Each process gets its own private **virtual** memory space, and a mapping translates it to physical memory. This solves all of the problems above:
+
+<VirtualMapping client:visible {...virtualMapping.props} />
+
+In hardware, the **MMU** (memory management unit) on the CPU chip translates each virtual address (VA) from the CPU into a physical address before it goes to memory.
+
+### Main memory as a cache for disk
+
+Virtual memory turns main memory into a cache for the disk: pages not in memory live on disk. The miss penalty is large (for a 4 KB read):
+
+| Device | Latency | vs DRAM |
+| --- | --- | --- |
+| DRAM | ~100 ns | 1x |
+| Intel Optane NVMe SSD | 2.8 µs | 28x slower |
+| SATA SSD | 70 µs | 700x slower |
+| Disk | 10 ms | 100,000x slower |
+
+So this "DRAM cache" is designed differently from a CPU cache:
+
+- **Paging:** map virtual to physical addresses at a fixed-size **page** granularity. Pages are large to reduce the mapping information, typically **4 KB**, which matches the disk's block access granularity.
+- **[Fully associative](/ece454/memory-hierarchy/#cache-organization-s-e-b):** any virtual page can be mapped to any physical page frame. This needs a sophisticated mapping function, e.g. a multi-level page table.
+- **Sophisticated replacement algorithms**, e.g. LRU or clock / second chance.
+- [**Write-back**](/ece454/memory-hierarchy/#writes) rather than write-through.
+
+:::tip[Why so sophisticated?]
+A miss costs up to 100,000 DRAM accesses, so avoiding even a few misses pays for a complex mapping and replacement policy. For the same reason, writing through to disk on every store would be far too slow.
+:::
+
+## Page Tables
+
+The MMU keeps the VA to PA mappings in **page tables**, stored in memory. Each **page table entry (PTE)** says where a virtual page (VP) is: in a physical page (PP), or not in memory.
+
+A normal translation:
+
+1. The processor sends the VA to the MMU.
+2. The MMU requests the PTE from the page table (in cache/memory)...
+3. ...which returns it.
+4. The MMU sends the PA to cache/memory.
+5. Cache/memory sends the data word to the processor.
+
+If the page is **not mapped in physical memory**:
+
+1. The processor sends the VA to the MMU.
+2. The MMU requests the PTE from the page table...
+3. ...but the PTE is invalid.
+4. The PTE is absent, so the MMU triggers a **page fault** exception.
+5. The OS handler chooses a **victim page** (and, if the page is dirty, pages it out to disk).
+6. The handler pages in the new page and updates the PTE in memory.
+7. The handler returns to the original process, **restarting** the faulting instruction.
+
+<AddressTranslation client:visible {...pageTableLookup.props} />
+
+## The TLB
+
+PTEs are cached in L1 like any other memory word, but:
+
+- PTEs may be evicted by other data references.
+- Even on a cache hit, the PTE access adds a 1-cycle delay. That **doubles** the cost of accessing physical addresses from the cache.
+
+The solution is a **translation lookaside buffer (TLB)**: a small hardware cache in the MMU that caches the PTEs of a small number of pages (e.g. 256 entries).
+
+| | What happens |
+| --- | --- |
+| **TLB hit** | The PTE comes from the TLB. No access to the page table in memory |
+| **TLB miss** | An additional memory access reads the PTE from the page table (and the PTE is cached in the TLB) |
+
+<AddressTranslation client:visible {...tlbLookup.props} />
+
+## Programming for Virtual Memory
+
+At any point in time, a program tends to access a set of active virtual pages called its **working set**. Programs with better [locality](/ece454/memory-hierarchy/#why-caches-work-locality) have smaller working sets.
+
+| If | Then |
+| --- | --- |
+| working set size > main memory size | Pages are swapped (copied) in and out continuously. This is **thrashing**, and leads to a performance meltdown |
+| # working set pages > # TLB entries | **TLB misses** occur. Not as bad as thrashing, but still worth avoiding |
+
+### TLB reach
+
+The **TLB reach** is the amount of memory the TLB covers:
+
+$$
+\text{TLB reach} = \text{TLB entries} \times \text{page size}
+$$
+
+- With a 256-entry TLB and 4 KB pages, the reach is 256 x 4 KB = **1 MB**: you can only have TLB hits for 1 MB of data.
+- A typical L2 cache is 8 MB, so you can't have TLB hits for all of the L2. It's worth considering the TLB size before the L2 size.
+- Real CPUs have second-level TLBs. Experiment with varying sizes, e.g. to find the best [tile size](/ece454/cache-optimizations/#tiling-blocking).
+- x86 supports **huge pages** (2 MB). With 256 entries, the TLB reach is **512 MB**.
+
+<TlbReach client:visible {...tlbReach.props} />
+
+## Prefetching
+
+The basic idea:
+
+- **Predict** data that might be needed soon (the prediction might be wrong).
+- Initiate an **early request** for that data (a load-to-cache).
+- If effective, this helps tolerate the latency to memory.
+
+<OooTimeline client:visible {...prefetchIdea.props} />
+
+### Prefetching is difficult
+
+Prefetching is effective only if **all** of these are true:
+
+| Condition | Otherwise |
+| --- | --- |
+| There is spare memory bandwidth | Prefetching can cause a bandwidth bottleneck |
+| Prefetching is **accurate** | It is only useful if the prefetched data will be used soon |
+| Prefetching is **timely** | You prefetch the right data, but not enough in advance |
+| Prefetched data doesn't displace other in-use data | E.g. prefetched data should not replace a cache block about to be used |
+| The latency hidden outweighs the cost | The cost of lots of useless prefetched data can be significant |
+
+:::caution
+Ineffective prefetching can **hurt** performance.
+:::
+
+### Hardware prefetching
+
+| Prefetcher | How it works |
+| --- | --- |
+| **Next-block** (simple) | When a cache block is accessed, prefetch the adjacent block. It behaves as if cache blocks were twice as big, and helps with unaligned instructions (even when data is aligned) |
+| **Stream / stride** (more complex) | Recognizes a "stream": addresses separated by a constant "stride", e.g. 0x1, 0x2, 0x3, ... (stride 0x1) or 0x100, 0x300, 0x500, ... (stride 0x200). It prefetches predicted future addresses: cur_addr + stride, cur_addr + 2 x stride, ... |
+
+<StridePrefetcher client:visible {...hardwarePrefetch.props} />
+
+### Core i7 hardware prefetching
+
+- Includes next-block prefetching.
+- Includes multiple streaming prefetchers.
+- Prefetching is performed within a page boundary.
+- The details are kept vague / secret.
+
+<MemoryHierarchy client:visible {...prefetchPaths.props} />
+
+### Software prefetching
+
+Hardware provides special prefetch instructions, e.g. Intel's `prefetchnta` instruction or the `_mm_prefetch()` intrinsic. The compiler or the programmer can insert them in code, and they can prefetch (non-strided) patterns that the hardware wouldn't recognize, such as a linked list:
+
+```c
+void process_list(list_t *head) {
+  list_t *p = head;
+  while (p) {
+    process(p);
+    p = p->next;
+  }
+}
+```
+
+```c
+void process_list_PF(list_t *head) {
+  list_t *p = head;
+  list_t *q;
+  while (p) {
+    q = p->next;
+    prefetch(q);   // start fetching the next node...
+    process(p);    // ...while this one is processed
+    p = q;
+  }
+}
+```
+
+This assumes `process()` runs long enough to hide the prefetch latency.
+
+<OooTimeline client:visible {...softwarePrefetch.props} />
+
+## Summary: Optimizing for the Memory Hierarchy
+
+| Area | Guideline |
+| --- | --- |
+| **Caches: [conflict misses](/ece454/memory-hierarchy/#types-of-cache-misses)** | Less of a concern due to high associativity: modern CPUs have 8-way L1/L2 and 16-way L3 |
+| **Caches: capacity** | Keep the working set within on-chip cache capacity. Focus on either L1 or L2, depending on the required working-set size |
+| **Virtual memory: page misses** | Keep the working set within main memory capacity |
+| **Virtual memory: TLB misses** | Keep the working set's # pages < the TLB's # entries |
+| **Prefetching** | Arrange data structures so access patterns are sequential / strided. Use compiler- or manually-inserted prefetch instructions |

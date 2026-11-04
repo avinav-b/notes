@@ -1,0 +1,320 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.ops {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	margin-top: 0.75rem;
+}
+.op {
+	font-family: var(--viz-mono);
+	font-size: 0.78rem;
+	padding: 0.15rem 0.45rem;
+	border-radius: 0.3rem;
+	border: 1px solid var(--viz-border);
+	background: var(--sl-color-bg);
+	color: var(--sl-color-gray-2);
+	transition: border-color 300ms, background 300ms, opacity 300ms;
+}
+.opNow {
+	border-color: var(--sl-color-accent);
+	background: var(--sl-color-accent-low);
+	color: var(--sl-color-text);
+	font-weight: 700;
+}
+.opDone {
+	opacity: 0.5;
+}
+.msg {
+	min-height: 1.5em;
+	margin: 0.5rem 0 0.25rem;
+	padding: 0.35rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+
+.ruler {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.rulerUnit {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+
+.blk {
+	animation: fadeIn 450ms ease-in-out;
+}
+.body {
+	stroke: none;
+}
+.free .body {
+	fill: var(--sl-color-bg);
+}
+.alloc .body {
+	fill: var(--viz-alloc-bg);
+}
+.used {
+	fill: var(--viz-alloc-bg);
+	stroke: none;
+}
+.fresh .used {
+	fill: var(--viz-ok-bg);
+}
+.fresh .body {
+	fill: var(--viz-ok-bg);
+}
+.waste {
+	stroke: none;
+}
+.hatchBg {
+	fill: var(--viz-frag-bg);
+}
+.hatchLine {
+	stroke: var(--viz-frag);
+	stroke-width: 1.3;
+	opacity: 0.7;
+}
+.size {
+	font-size: 14px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.free .size {
+	fill: var(--sl-color-gray-2);
+}
+.sup {
+	font-size: 10px;
+}
+.owner {
+	font-family: var(--__sl-font);
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.fresh .owner {
+	fill: var(--viz-ok);
+}
+.bound {
+	stroke: var(--sl-color-gray-2);
+	stroke-width: 2.5;
+	transition: opacity 500ms ease-in-out;
+	animation: grow 500ms ease-in-out;
+	transform-box: fill-box;
+	transform-origin: center;
+}
+.gone {
+	opacity: 0;
+}
+@keyframes grow {
+	from {
+		transform: scaleY(0);
+	}
+}
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+}
+.frame {
+	fill: none;
+	stroke: var(--sl-color-gray-2);
+	stroke-width: 2;
+}
+.splitMark {
+	fill: none;
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.5;
+	animation: fadeIn 400ms ease-in-out;
+}
+
+.arcOk path,
+.arcNo path {
+	fill: none;
+	stroke-width: 2.2;
+	animation: fadeIn 400ms ease-in-out;
+}
+.arcOk path {
+	stroke: var(--viz-ok);
+}
+.arcNo path {
+	stroke: var(--viz-frag);
+	stroke-dasharray: 5 3;
+}
+.headOk {
+	fill: var(--viz-ok);
+}
+.headNo {
+	fill: var(--viz-frag);
+}
+.buddyBox {
+	fill: none;
+	stroke-width: 2.5;
+}
+.arcOk .buddyBox {
+	stroke: var(--viz-ok);
+}
+.arcNo .buddyBox {
+	stroke: var(--viz-frag);
+	stroke-dasharray: 5 3;
+}
+.arcLabel {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 700;
+}
+.arcOk .arcLabel {
+	fill: var(--viz-ok);
+}
+.arcNo .arcLabel {
+	fill: var(--viz-frag);
+}
+
+.panel text {
+	font-size: 13px;
+}
+.pl {
+	fill: var(--sl-color-gray-2);
+}
+.pv {
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.pvOk {
+	fill: var(--viz-ok);
+}
+.pvNo {
+	fill: var(--viz-frag);
+}
+.bit {
+	fill: var(--sl-color-text);
+}
+.bitLow {
+	fill: var(--sl-color-gray-4);
+}
+.bitMark {
+	fill: var(--sl-color-accent-high);
+	font-weight: 700;
+}
+.colMark {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 1.2;
+}
+.sum {
+	stroke: var(--sl-color-gray-4);
+}
+.reqBar {
+	fill: var(--viz-alloc-bg);
+	stroke: none;
+}
+.roundBar {
+	fill: none;
+	stroke: var(--sl-color-accent);
+	stroke-width: 1.5;
+	stroke-dasharray: 4 2;
+}
+
+.hist {
+	transition: opacity 300ms;
+}
+.histFuture {
+	opacity: 0.12;
+}
+.histLabel {
+	font-size: 10.5px;
+	fill: var(--sl-color-gray-3);
+}
+.histNow .histLabel {
+	fill: var(--sl-color-accent-high);
+	font-weight: 700;
+}
+.hAlloc {
+	fill: var(--viz-alloc);
+	opacity: 0.75;
+}
+.hFree {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 0.8;
+}
+.histNow .hAlloc,
+.histNow .hFree {
+	stroke: var(--sl-color-accent);
+	stroke-width: 1.2;
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	margin-top: 0.5rem;
+	font-size: 0.78rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+.legend i {
+	display: inline-block;
+	width: 0.95rem;
+	height: 0.8rem;
+	border: 1px solid var(--sl-color-gray-4);
+	border-radius: 2px;
+}
+.unit {
+	margin-left: auto;
+}
+.swUsed {
+	background: var(--viz-alloc-bg);
+}
+.swWaste {
+	background: repeating-linear-gradient(45deg, var(--viz-frag-bg) 0 3px, var(--viz-frag) 3px 4px);
+}
+.swFree {
+	background: var(--sl-color-bg);
+}
+.swFresh {
+	background: var(--viz-ok-bg);
+	border-color: var(--viz-ok) !important;
+}
+.swOk,
+.swNo {
+	width: 1.3rem !important;
+	height: 0 !important;
+	border: none !important;
+	border-top: 2px solid var(--viz-ok) !important;
+	border-radius: 0 !important;
+}
+.swNo {
+	border-top: 2px dashed var(--viz-frag) !important;
+}
+
+/* On phones, keep the figure readable and let it scroll sideways inside the card. */
+.scroll {
+	overflow-x: auto;
+}
+.scroll > svg {
+	min-width: 34rem;
+}

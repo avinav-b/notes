@@ -1,0 +1,185 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.modes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+.message {
+	min-height: 1.6em;
+	margin: 0.75rem 0 0.25rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.wrap {
+	margin-top: 0.75rem;
+	width: 100%;
+}
+.svg {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+
+.axis {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.rowLabel {
+	font-size: 12px;
+	font-weight: 600;
+	fill: var(--sl-color-text);
+	transition: opacity 400ms ease-in-out;
+}
+/* A row with nothing in the current mode (e.g. an instruction only one version of the code has). */
+.rowEmpty {
+	opacity: 0.3;
+}
+.colEven {
+	fill: transparent;
+}
+.colOdd {
+	fill: var(--sl-color-gray-6);
+	opacity: 0.35;
+}
+
+.seg {
+	transition: none;
+}
+.ready .seg,
+.ready .finish {
+	transition:
+		transform 600ms ease-in-out,
+		opacity 400ms ease-in-out;
+}
+.seg rect {
+	stroke-width: 1.4;
+}
+.seg text {
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.work rect {
+	fill: var(--sl-color-gray-6);
+	stroke: var(--sl-color-gray-3);
+}
+.work text {
+	fill: var(--sl-color-text);
+}
+.wait rect {
+	fill: var(--viz-raw-bg);
+	stroke: var(--viz-raw);
+	stroke-dasharray: 4 3;
+}
+.wait text {
+	fill: var(--viz-raw);
+}
+.stuck rect {
+	fill: var(--viz-war-bg);
+	stroke: var(--viz-war);
+	stroke-dasharray: 4 3;
+}
+.stuck text {
+	fill: var(--viz-war);
+}
+.miss rect {
+	stroke: var(--sl-color-gray-3);
+}
+.miss text {
+	fill: var(--sl-color-text);
+	paint-order: stroke;
+	stroke: var(--viz-surface);
+	stroke-width: 4px;
+	stroke-linejoin: round;
+}
+.flush rect {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-dasharray: 2 3;
+}
+.flush text {
+	fill: var(--sl-color-gray-4);
+	text-decoration: line-through;
+}
+.hatchBg {
+	fill: var(--sl-color-gray-6);
+}
+.hatchLine {
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 2.5;
+}
+
+.finish line,
+.finishSwatch {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+	stroke-dasharray: 5 3;
+}
+
+.bar,
+.barCur {
+	cursor: pointer;
+}
+.bar rect,
+.barCur rect {
+	transition: width 600ms ease-in-out;
+}
+.bar rect {
+	fill: var(--sl-color-gray-5);
+}
+.barCur rect {
+	fill: var(--sl-color-accent);
+}
+.barLabel {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	fill: var(--sl-color-gray-3);
+}
+.barCur .barLabel {
+	fill: var(--sl-color-text);
+	font-weight: 700;
+}
+.barValue {
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+}
+.barValueIn {
+	fill: var(--sl-color-text);
+}
+.barCur .barValue {
+	fill: var(--sl-color-accent-high);
+}
+.barCur .barValueIn {
+	fill: var(--sl-color-black);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem 1.1rem;
+	margin-top: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.lg {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+.lg svg rect {
+	stroke-width: 1.2;
+}

@@ -1,0 +1,492 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+
+.message {
+	min-height: 2.4em;
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.45rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.tag {
+	display: inline-block;
+	margin-right: 0.5rem;
+	padding: 0 0.45rem;
+	border-radius: 0.3rem;
+	font-family: var(--viz-mono);
+	font-size: 0.8rem;
+	font-weight: 700;
+	background: var(--sl-color-accent-low);
+	color: var(--sl-color-accent-high);
+}
+
+.figure {
+	overflow-x: auto;
+}
+.svg {
+	display: block;
+	width: 100%;
+	min-width: 520px;
+	height: auto;
+	font-family: var(--__sl-font);
+}
+
+.section {
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+.sectionSub {
+	font-weight: 500;
+	text-transform: none;
+	letter-spacing: 0;
+	fill: var(--sl-color-gray-3);
+}
+.rowLabel {
+	font-size: 12px;
+	font-weight: 600;
+	fill: var(--sl-color-gray-3);
+	transition: fill 300ms;
+}
+.rowLabelHl {
+	fill: var(--sl-color-accent-high);
+}
+.pageNum {
+	font-family: var(--viz-mono);
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+	transition: opacity 500ms;
+}
+.marker {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.hidden {
+	opacity: 0;
+}
+
+/* Arrows */
+.head {
+	fill: var(--sl-color-gray-3);
+}
+.headCur {
+	fill: var(--sl-color-accent);
+}
+.link {
+	fill: none;
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.5;
+	transition: stroke 300ms;
+}
+.linkCur {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.2;
+}
+.linkMove {
+	transition:
+		d 500ms ease-in-out,
+		stroke 300ms;
+}
+
+/* Metadata area */
+.metaBox {
+	fill: none;
+	stroke: var(--sl-color-gray-5);
+	stroke-dasharray: 5 4;
+}
+.dirOutline {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.2;
+	transition: width 500ms ease-in-out;
+}
+.dirGrown .dirOutline {
+	stroke: var(--sl-color-accent);
+}
+.grownTag {
+	font-size: 10.5px;
+	font-weight: 700;
+	fill: var(--sl-color-accent-high);
+}
+.dirCell rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-5);
+	transition:
+		fill 300ms,
+		stroke 300ms,
+		opacity 500ms;
+}
+.dirCell text {
+	font-family: var(--viz-mono);
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.dirCell {
+	transition: opacity 500ms;
+}
+.dirUsed rect {
+	fill: var(--viz-alloc-bg);
+	stroke: var(--viz-alloc);
+}
+.dirHl rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+.ptrDot {
+	fill: var(--sl-color-text);
+}
+
+/* Free-list nodes (page runs) */
+.geo {
+	transition:
+		x 500ms ease-in-out,
+		width 500ms ease-in-out;
+}
+.runNode rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.3;
+	transition:
+		x 500ms ease-in-out,
+		width 500ms ease-in-out,
+		fill 300ms,
+		stroke 300ms;
+}
+.runNode text {
+	font-family: var(--viz-mono);
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.runPtr {
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.3;
+}
+.runNodeCur rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+.runNodeSkip {
+	opacity: 0.45;
+}
+.runNodeSkip rect {
+	stroke-dasharray: 3 3;
+}
+
+/* Heap pages */
+.freePage {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-dasharray: 4 3;
+	transition: opacity 500ms;
+}
+.usedRun {
+	animation: appear 500ms ease-in-out;
+}
+.usedRun rect {
+	fill: var(--viz-alloc-bg);
+	stroke: var(--viz-alloc);
+	stroke-width: 1.3;
+}
+.usedRun line {
+	stroke: var(--viz-alloc);
+	stroke-width: 1;
+	stroke-dasharray: 2 3;
+}
+.newRun rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+	stroke-width: 2;
+}
+.newRun line {
+	stroke: var(--viz-ok);
+}
+.pageHl {
+	fill: none;
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.2;
+	animation: appear 400ms ease-in-out;
+}
+.heapEnd {
+	transition: transform 500ms ease-in-out;
+}
+.heapEnd line {
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.2;
+}
+.heapEnd text {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+@keyframes appear {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+/* Sub-page: pginfo, chunks, lists */
+.info {
+	animation: appear 500ms ease-in-out;
+}
+.info rect:first-child {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.3;
+	transition:
+		fill 300ms,
+		stroke 300ms;
+}
+.infoHl rect:first-child {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+.infoSize {
+	font-family: var(--viz-mono);
+	font-size: 11.5px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.bit {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1;
+	transition:
+		fill 400ms,
+		stroke 400ms;
+}
+.bitUsed {
+	fill: var(--viz-alloc);
+	stroke: var(--viz-alloc);
+}
+.bitHl {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+.chunkPage {
+	animation: appear 500ms ease-in-out;
+}
+.chunkFrame {
+	fill: none;
+	stroke: var(--viz-alloc);
+	stroke-width: 1.3;
+}
+.chunk {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-dasharray: 3 2;
+	transition:
+		fill 400ms,
+		stroke 400ms;
+}
+.chunkUsed {
+	fill: var(--viz-alloc-bg);
+	stroke: var(--viz-alloc);
+	stroke-dasharray: none;
+}
+.chunkHl {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.2;
+	stroke-dasharray: none;
+}
+.chunkHl.chunkUsed {
+	fill: var(--viz-ok-bg);
+}
+.chipMove {
+	transition: transform 500ms ease-in-out;
+	animation: appear 500ms ease-in-out;
+}
+.chip rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.3;
+	transition:
+		fill 300ms,
+		stroke 300ms;
+}
+.chip text {
+	font-family: var(--viz-mono);
+	font-size: 11.5px;
+	fill: var(--sl-color-text);
+}
+.chipHl rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+.nullText {
+	font-size: 12px;
+	font-style: italic;
+	fill: var(--sl-color-gray-4);
+}
+
+/* Classic malloc */
+.pageBg {
+	fill: var(--sl-color-bg);
+	transition: fill 400ms;
+}
+.touchBar {
+	fill: var(--sl-color-accent);
+	opacity: 0;
+	transition: opacity 400ms;
+}
+.touchBarOn {
+	opacity: 1;
+}
+.cUsed rect {
+	fill: var(--viz-alloc-bg);
+	stroke: var(--viz-alloc);
+	stroke-width: 1;
+	transition:
+		fill 400ms,
+		stroke 400ms;
+}
+.cFree rect {
+	fill: none;
+	stroke: var(--sl-color-gray-3);
+	stroke-dasharray: 4 3;
+	transition: stroke 300ms;
+}
+.nextDot {
+	fill: var(--sl-color-gray-2);
+}
+.cCur rect {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.2;
+	stroke-dasharray: none;
+}
+.cCur .nextDot {
+	fill: var(--sl-color-accent);
+}
+.cFresh {
+	animation: appear 500ms ease-in-out;
+}
+.cFresh rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+	stroke-width: 2;
+}
+.pagedOut {
+	stroke: none;
+	opacity: 0.9;
+	transition: opacity 500ms;
+}
+.hatchLine {
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 3;
+}
+.pageEdge {
+	stroke: var(--sl-color-gray-2);
+	stroke-width: 1.6;
+}
+.spanBox {
+	fill: none;
+	stroke: var(--viz-ok);
+	stroke-width: 2.2;
+	animation: appear 500ms ease-in-out;
+}
+.pageState {
+	font-size: 11px;
+	font-weight: 600;
+	fill: var(--sl-color-gray-3);
+}
+.pageStateTouched {
+	fill: var(--sl-color-accent-high);
+}
+
+/* Footer: legend + counters */
+.footer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem 1rem;
+	margin-top: 0.6rem;
+}
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span::before {
+	content: '';
+	display: inline-block;
+	width: 0.95rem;
+	height: 0.7rem;
+	margin-right: 0.4rem;
+	vertical-align: -0.05em;
+	border-radius: 2px;
+	border: 1.5px solid;
+	box-sizing: border-box;
+}
+.lgUsed::before {
+	background: var(--viz-alloc-bg);
+	border-color: var(--viz-alloc) !important;
+}
+.lgNew::before {
+	background: var(--viz-ok-bg);
+	border-color: var(--viz-ok) !important;
+}
+.lgFree::before {
+	border-style: dashed !important;
+	border-color: var(--sl-color-gray-3) !important;
+}
+.lgCur::before {
+	background: var(--sl-color-accent-low);
+	border-color: var(--sl-color-accent) !important;
+}
+.lgOut::before {
+	background: repeating-linear-gradient(45deg, var(--sl-color-gray-4) 0 2px, transparent 2px 5px);
+	border-color: var(--sl-color-gray-4) !important;
+}
+.badges {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+}
+.badge {
+	padding: 0.15rem 0.55rem;
+	border-radius: 0.35rem;
+	font-size: 0.8rem;
+	border: 1px solid;
+	transition:
+		background 300ms,
+		color 300ms;
+}
+.badge b {
+	font-family: var(--viz-mono);
+	font-size: 0.9rem;
+}
+.badgeGood {
+	color: var(--viz-ok);
+	border-color: var(--viz-ok);
+	background: var(--viz-ok-bg);
+}
+.badgeBad {
+	color: var(--viz-miss);
+	border-color: var(--viz-miss);
+	background: var(--viz-miss-bg);
+}

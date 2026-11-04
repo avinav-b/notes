@@ -1,0 +1,159 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.6rem 1.25rem;
+}
+.slider {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	font-size: 0.85rem;
+	color: var(--sl-color-gray-2);
+	min-width: 10rem;
+}
+.slider b {
+	color: var(--sl-color-text);
+	font-family: var(--viz-mono);
+}
+.slider input {
+	accent-color: var(--sl-color-accent);
+	width: 100%;
+}
+.seg {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.25rem;
+}
+.segLabel {
+	font-size: 0.85rem;
+	color: var(--sl-color-gray-2);
+	margin-right: 0.25rem;
+}
+.verdict {
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid;
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+	transition: border-color 300ms;
+}
+.hit {
+	border-color: var(--viz-ok);
+}
+.hit b {
+	color: var(--viz-ok);
+}
+.tlbmiss {
+	border-color: var(--viz-raw);
+}
+.tlbmiss b {
+	color: var(--viz-raw);
+}
+.thrash {
+	border-color: var(--viz-miss);
+}
+.thrash b {
+	color: var(--viz-miss);
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--__sl-font);
+}
+.zone {
+	transition: x 400ms ease-in-out, width 400ms ease-in-out;
+}
+.zHit {
+	fill: var(--viz-ok-bg);
+}
+.zMiss {
+	fill: var(--viz-raw-bg);
+}
+.zThrash {
+	fill: var(--viz-miss-bg);
+}
+.zoneLabel {
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+.tHit {
+	fill: var(--viz-ok);
+}
+.tMiss {
+	fill: var(--viz-raw);
+}
+.tThrash {
+	fill: var(--viz-miss);
+}
+.grid {
+	stroke: var(--viz-border);
+	stroke-dasharray: 2 3;
+}
+.tick {
+	font-family: var(--viz-mono);
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.axisNote {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.barLabel {
+	font-size: 12.5px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.bar rect {
+	stroke-width: 1.4;
+	transition: width 400ms ease-in-out, fill 300ms, stroke 300ms;
+}
+.value {
+	font-family: var(--viz-mono);
+	font-size: 11.5px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.valueIn {
+	fill: var(--sl-color-text);
+}
+.b_reach rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.b_l2 rect,
+.b_mem rect {
+	fill: var(--sl-color-gray-6);
+	stroke: var(--sl-color-gray-3);
+}
+.ws_hit rect {
+	fill: var(--viz-ok);
+	stroke: var(--viz-ok);
+}
+.ws_tlbmiss rect {
+	fill: var(--viz-raw);
+	stroke: var(--viz-raw);
+}
+.ws_thrash rect {
+	fill: var(--viz-miss);
+	stroke: var(--viz-miss);
+}
+.ws_hit .valueIn,
+.ws_tlbmiss .valueIn,
+.ws_thrash .valueIn {
+	fill: var(--sl-color-black);
+}

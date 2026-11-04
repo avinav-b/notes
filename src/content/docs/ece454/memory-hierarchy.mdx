@@ -1,0 +1,283 @@
+---
+title: Memory Hierarchy
+description: Why memory is the bottleneck, how caches work and are organized (sets, ways, tag/index/offset), the kinds of misses, write policies, and how to inspect and measure your machine's caches.
+lastUpdated: 2026-11-03
+sidebar:
+  order: 6
+---
+
+import AmatBar from '../../../components/AmatBar.tsx';
+import CacheSim from '../../../components/CacheSim.tsx';
+import MemoryHierarchy from '../../../components/MemoryHierarchy.tsx';
+import {
+	averageAccessTime,
+	cacheHitMiss,
+	conflictMisses,
+	directVsTwoWay,
+	memoryPyramid,
+	ugMachineCaches,
+} from '../../../embeds/ece454/memory-hierarchy';
+
+## The Processor-Memory Bottleneck
+
+A plain triple-loop matrix multiply and the best tuned version do exactly the same number of operations ($2n^3$), both compiled with optimizations. Yet on large matrices the best code runs about **160x** faster (in Gflop/s, on a 2 x Core 2 Duo 3 GHz desktop).
+
+```c
+for (i = 0; i < n; i++)
+  for (j = 0; j < n; j++)
+    for (k = 0; k < n; k++)
+      c[i][j] += a[i][k] * b[k][j];
+```
+
+The difference is how the code uses the memory hierarchy:
+
+| | Reference time | Size |
+| --- | --- | --- |
+| **L1 cache** | 1-4 ns | ≤ 64 KB |
+| **Main memory** | 100 ns, **100x slower** | ≥ GBs |
+
+:::note
+1 ns = $10^{-9}$ s. On a 2.5 GHz CPU, 1 cycle = 0.4 ns.
+:::
+
+## The Memory Hierarchy
+
+Each level holds a subset of the data of the level below it: registers hold words retrieved from L1, L1 holds cache lines retrieved from L2, and so on down to local disks, which hold files retrieved from remote servers. Going down, each level is **larger, slower and cheaper per byte**.
+
+<MemoryHierarchy client:visible {...memoryPyramid.props} />
+
+The cache numbers are for an Intel Core i7. Note the latency axis is logarithmic: every grid line is 10x slower than the one before.
+
+## Cache Basics
+
+- Memory is viewed as partitioned into fixed-size **blocks**. Data is copied between levels in block-sized transfer units.
+- The cache is smaller, faster and more expensive, and holds a subset of the blocks.
+- **Hit**: the requested block is in the cache.
+- **Miss**: the block is fetched from memory and stored in the cache.
+  - The **placement policy** chooses the set of cache slots where the block can go.
+  - The **replacement policy** chooses which block in that set gets evicted (the **victim**).
+
+<CacheSim client:visible {...cacheHitMiss.props} />
+
+### Performance metrics
+
+| Metric | Definition | Typical |
+| --- | --- | --- |
+| **Miss rate** | Fraction of references not found in the cache: misses / accesses = 1 - hit rate | 3-10% for L1, < 1% for L2 |
+| **Hit time** | Time to deliver a line in the cache to the processor, including the time to determine whether it is in the cache | 1-4 cycles for L1, 5-20 for L2 |
+| **Miss penalty** | Additional time required because of a miss | 50-400 cycles for main memory |
+
+The average access time is
+
+$$
+\text{average access time} = \text{hit time} + \text{miss rate} \times \text{miss penalty}
+$$
+
+With a 1-cycle hit time and a 100-cycle miss penalty:
+
+- 97% hits: $1 + 0.03 \times 100 = 4$ cycles
+- 99% hits: $1 + 0.01 \times 100 = 2$ cycles
+
+<AmatBar client:visible {...averageAccessTime.props} />
+
+:::tip[Think in miss rate]
+A hit and a miss differ by about 100x, so going from 97% to 99% hits **doubles** performance. This is why cache performance is discussed in terms of miss rate: a 3% miss rate is much worse than 1%.
+:::
+
+### Types of cache misses
+
+| Miss | When it happens | Notes |
+| --- | --- | --- |
+| **Cold** (compulsory) | First access to a block | Not much to do about these, except [prefetching](/ece454/virtual-memory-and-prefetching/#prefetching) (later) |
+| **Conflict** | The cache is large enough, but several blocks map to the same slot. Hardware placement limits a block to a small subset of the slots (sometimes just one), e.g. block $i$ must go in slot $i \bmod 8$ | Less of a problem today |
+| **Capacity** | The set of active blocks (the **working set**) is larger than the cache | The most significant problem today |
+
+With $i \bmod 8$ placement, blocks 0 and 8 both need slot 0, so referencing 0, 8, 0, 8, ... misses every time even though the rest of the cache is empty. Two ways per set fixes it:
+
+<CacheSim client:visible {...conflictMisses.props} />
+
+### Why caches work: locality
+
+Programs tend to use data and instructions with addresses equal or near to those they used recently.
+
+| | Meaning |
+| --- | --- |
+| **Temporal locality** | Recently referenced items are likely to be referenced again soon |
+| **Spatial locality** | Items with nearby addresses tend to be referenced close together in time |
+
+```c
+sum = 0;
+for (i = 0; i < n; i++)
+  sum += a[i];
+return sum;
+```
+
+| | Temporal | Spatial |
+| --- | --- | --- |
+| **Data** | `i`, `n`, `sum` are referenced every iteration | Neighbouring elements of `a` are accessed in a stride-1 pattern |
+| **Instructions** | The loop body is executed repeatedly | Instructions are fetched in sequence |
+
+:::tip
+Being able to assess the locality in your code is an important skill.
+:::
+
+## Cache Organization (S, E, B)
+
+A cache is an array of $S = 2^s$ **sets**. Each set has $E = 2^e$ **lines** (blocks), and each line has:
+
+- a **valid bit**
+- a **tag**
+- $B = 2^b$ bytes of data (the cache block)
+
+$$
+\text{cache size} = S \times E \times B \text{ data bytes}
+$$
+
+An incoming address is split into three fields:
+
+| Field | Bits | Use |
+| --- | --- | --- |
+| **Tag** | the rest of the high bits | Matched against the tags of the lines in the set |
+| **Index** | $s$ | Selects the set |
+| **Offset** | $b$ | The starting byte within the block |
+
+A lookup is: use the index to find the set, check for a valid line whose tag matches, then read the bytes at the offset. If no tag matches, a line is evicted and replaced with the **entire** new block (all $B$ bytes are loaded from memory).
+
+### Direct-mapped vs 2-way set associative
+
+Both caches below hold 512 B (0x200) with 8-byte blocks and 32-bit addresses:
+
+| | Sets | Ways | Offset | Index | Tag |
+| --- | --- | --- | --- | --- | --- |
+| **Direct-mapped** ($E = 1$) | 64 | 1 | [2:0], 3 bits | [8:3], 6 bits | [31:9], 23 bits |
+| **2-way set associative** ($E = 2$) | 32 | 2 | [2:0], 3 bits | [7:3], 5 bits | [31:8], 24 bits |
+
+The 2-way cache has the same total size but half the sets, so the index loses a bit and the tag gains one. On a lookup it compares the tag with **both** lines in the set. On a miss with a full set, the replacement policy (random, least recently used (LRU), ...) picks the victim.
+
+For `long a[100]` (8-byte elements) starting at address 0, as (tag, set, offset):
+
+| Element | Address | Direct-mapped | 2-way |
+| --- | --- | --- | --- |
+| `a[0]` | 0x0 | (0, 0, 0) | (0, 0, 0) |
+| `a[1]` | 0x8 | (0, 1, 0) | (0, 1, 0) |
+| `a[32]` | 0x100 | (0, 32, 0) | (1, 0, 0) |
+| `a[64]` | 0x200 | (1, 0, 0) | (1, 0, 0) |
+
+`a[0]` and `a[64]` collide in set 0 of the direct-mapped cache. In the 2-way cache they share set 0 but fit side by side, so the second `a[0]` hits:
+
+<CacheSim client:visible {...directVsTwoWay.props} />
+
+### Caches today: Intel Core i7
+
+| Level | Size | Associativity | Latency |
+| --- | --- | --- | --- |
+| L1 instruction / L1 data | 32 KB each | 8-way | 4 cycles |
+| L2 (unified) | 256 KB | 8-way | 10 cycles |
+| L3 (shared) | 8 MB | 16-way | 40-75 cycles |
+| Main memory | 16 GB | | 60-100 cycles |
+| Disk | > 500 GB | | 10s of millions of cycles |
+
+L1 and L2 use 64 B blocks.
+
+:::tip
+With 8- and 16-way associativity, [conflict misses](#types-of-cache-misses) are not much of an issue today. Staying within on-chip cache capacity is the key.
+:::
+
+## Writes
+
+Data now exists in several copies (L1, L2, main memory, disk), and they must be kept consistent.
+
+| Case | Policy | What it does | Good for |
+| --- | --- | --- | --- |
+| **Write hit** | **Write-through** | Write to the cache and immediately to memory | |
+| | **Write-back** | Defer the write to memory until the line is replaced. Needs a **dirty bit** (whether the line differs from memory) | |
+| **Write miss** | **Write-allocate** | Load the block into the cache, then update the line | More reads and writes to the location follow |
+| | **No-write-allocate** | Write immediately to memory | Streaming writes (written once, not read again soon) |
+
+Typical pairings:
+
+- write-through + no-write-allocate
+- write-back + write-allocate
+
+## Finding Your Cache Parameters
+
+The UG machines have one Intel Core i7-4790 (3.6 GHz, 4 hyper-threaded cores). Each core has its own L1 and L2; the L3 is shared.
+
+<MemoryHierarchy client:visible {...ugMachineCaches.props} />
+
+| Tool | Shows |
+| --- | --- |
+| `lscpu` | Cache sizes and associativity |
+| `lstopo` | Topology: which caches each core has, and which are shared |
+| `/sys/devices/system/cpu/cpu0/cache/indexN/` | One directory per cache (`index0` is the L1 data cache, `index2` the L2) |
+| `perf` | Hardware performance counters, e.g. cache misses |
+
+```sh
+$ lstopo
+Machine (16GB)
+  Package L#0 + L3 L#0 (8192KB)
+    L2 L#0 (256KB) + L1d L#0 (32KB) + L1i L#0 (32KB) + Core L#0 + PU L#0 (P#0)
+    L2 L#1 (256KB) + L1d L#1 (32KB) + L1i L#1 (32KB) + Core L#1 + PU L#1 (P#1)
+    ...
+```
+
+The useful files in each sysfs cache directory:
+
+| File | L1 data (`index0`) | L2 (`index2`) |
+| --- | --- | --- |
+| `level` | 1 | 2 |
+| `type` | Data | Unified (instructions and data) |
+| `size` | 32K | 256K |
+| `coherency_line_size` | 64 (64 B lines) | 64 |
+| `number_of_sets` | 64 | 512 |
+| `ways_of_associativity` | 8 | 8 |
+| `shared_cpu_list` | 0 (cpu0 only) | |
+
+### Hardware counters with perf
+
+```sh
+# L1 data cache load misses for program pi
+perf stat -e L1-dcache-load-misses pi
+
+# all the events you can measure
+perf list
+
+# several events at once
+perf stat -e instructions -e L1-dcache-loads -e L1-dcache-misses -e LLC-loads -e LLC-misses program
+```
+
+## Case Study: BST vs Hash Table
+
+A binary search tree (BST) and a hash table each store 100 million ($\approx 2^{26}$) items: the unique words of a $2^{29}$ byte (~500 MB) file, with an average word length of about 5.
+
+**Expected speedup of the hash table:**
+
+- BST: about $\log_2(2^{26}) = 26$ pointer traversals per lookup, fewer for internal nodes.
+- Hash table: about 2 (one to the hash table entry, one to the data item).
+- Measured on the running code, the BST traverses pointers **8x** more than the hash table (the estimate was 26 / 2 = 13).
+- So the hash table should be roughly 8x faster.
+
+**Measured:** only **2.5-2.8x** faster. The first hypothesis was the memory hierarchy, so `perf` was run on both:
+
+| | BST | Hash table | Ratio |
+| --- | --- | --- | --- |
+| Time | 13.11 s | 4.77 s | 2.75 |
+| Instructions | 50 b | 21 b | 2.4 |
+| L1 hits (4 cycles) | 13000 m | 4500 m | 2.9 |
+| L1 misses (10 cycles) | 1000 m | 214 m | 4.7 |
+| LLC loads (40-75 cycles) | 333 m | 101 m | 3.3 |
+| LLC misses (60-100 cycles) | 21 m | 18 m | 1.2 |
+
+Every ratio is far below the expected 8. The instruction count and L1 hits are proportional to runtime, so the question becomes which instructions are running:
+
+- `gprof` (with [inlining](/ece454/compiler-optimizations/#function-inlining) of the hash function disabled, so it shows up) found that the **hash key calculation takes significant time**.
+- Counting loads and stores per inserted word in the assembly:
+  - BST: 31 = 5 initial + 2 per iteration x ~13 (the depth of the tree traversal)
+  - Hash table: 13 = 10 initial (including the hash key calculation) + 2 per iteration x 1.5 (linked list traversal)
+- The per-iteration parts give 13 / 1.5 ≈ 8, the measured pointer-traversal ratio. But the totals give 31 / 13 = **2.38**, roughly the observed speedup.
+
+So the fixed per-insertion work (initialization, hashing) has a significant impact on the speedup.
+
+:::tip[Lesson]
+Use code profiling before memory profiling.
+:::

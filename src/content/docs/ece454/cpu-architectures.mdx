@@ -1,0 +1,138 @@
+---
+title: CPU Architectures
+description: The tricks CPUs use to lower cycles per instruction, from pipelining and branch prediction to superscalar, out-of-order execution and simultaneous multithreading.
+lastUpdated: 2026-11-03
+sidebar:
+  order: 2
+---
+
+import OooTimeline from '../../../components/OooTimeline.tsx';
+import IssueSlots from '../../../components/IssueSlots.tsx';
+import { pipelining, branchStall, dataHazard, cacheMiss, issueSlots, multithreading } from '../../../embeds/ece454/cpu-architectures';
+
+## What Makes a CPU Fast
+
+Higher transistor density gives a faster clock, and so a faster CPU. That is true, but there is more to it. A faster CPU needs:
+
+- a **faster clock cycle**
+- fewer [**cycles per instruction (CPI)**](/ece454/measuring-and-profiling/#how-to-measure-a-processor)
+
+$$
+\text{CPU time} = \text{instructions} \times \text{CPI} \times \text{cycle time}
+$$
+
+This page is about the tricks CPUs play to lower CPI. ECE552 covers them in more depth.
+
+:::note[Moore's law]
+In 1965 Gordon Moore (director of research at Fairchild) observed that the number of transistors on a chip was doubling every two years.
+:::
+
+## Intel at a Glance
+
+Each generation of Intel CPU added one trick, and CPI kept falling:
+
+| Year | Processor | Technique | CPI | Key idea |
+| --- | --- | --- | --- | --- |
+| 1971 | 4004 | No pipeline | $n$ | First stand-alone microprocessor (4-bit, 108 KHz, 2300 transistors). Each instruction runs all $n$ steps before the next starts. |
+| 1985 | 386 | [Pipelining](#pipelining) | close to 1 | Overlap instructions: a new one starts every cycle. |
+| | | [Branch prediction](#branch-prediction) | closer to 1 | Guess branch directions so the pipeline doesn't stall. |
+| 1993 | Pentium | [Superscalar](#superscalar-execution) | $< 1$ | Issue several instructions per cycle. |
+| 1995 | PentiumPro | [Out-of-order execution](#out-of-order-execution) | $\ll 1$ | Run independent instructions past stalled ones. |
+| 1999 | Pentium III | Deep pipeline | shorter cycle | More, simpler stages, so a shorter clock cycle. |
+| 2000 | Pentium IV | [SMT](#multithreading) | $\lll 1$ | Two threads share the issue slots. |
+
+## Pipelining
+
+In the 1980s, **RISC** (Patterson at Berkeley, who coined the term in 1980; Hennessy's MIPS at Stanford in 1981) simplified CPU design with a small number of instruction formats and simple instruction processing. That leads naturally to a [**pipeline**](/ece552/pipelining/#pipelining): split instruction processing into stages, each doing a simple computation, and overlap instructions.
+
+<OooTimeline client:visible {...pipelining.props} />
+
+Pipelining reduces CPI from 5 to 1 (ideally).
+
+## Branch Prediction
+
+A pipeline fetches a new instruction every cycle, but a branch's direction is only known a few stages later. Which instruction should it fetch after the branch? Waiting for the branch to resolve stalls the pipeline.
+
+<OooTimeline client:visible {...branchStall.props} />
+
+It is more than a cycle here and there:
+
+| Factor | Why it hurts |
+| --- | --- |
+| **Branch frequency** | 15% to 25% of instructions are branches. |
+| **Deeper pipelines** | Cycles are shorter, but the branch resolves many stages after it is fetched, so the misprediction penalty is larger. |
+| **Superscalar** | Several instructions are issued per cycle, so a misprediction flushes and refetches more of them. |
+| **Object-oriented programming** | More indirect branches, which are harder to predict. |
+
+**Solution:** predict the branch direction, and predict the future from history: a table remembers the outcomes of previous branches.
+
+:::tip[Branch prediction matters]
+The prediction tables on the Intel P4 use about 30K bits.
+:::
+
+So far:
+- a pipeline reduces CPI from $n$ to 1 (ideal case)
+- branches cause stalls, so the effective CPI is above 1
+- branch prediction brings it back towards 1
+
+To get CPI **below 1**, the CPU must finish more than one instruction per cycle.
+
+## Superscalar Execution
+
+A **superscalar** CPU issues multiple instructions in the same cycle. This exploits **instruction-level parallelism (ILP)**: independent instructions in the same program can run at the same time. Instructions still issue in program order, so one that must wait holds up everything behind it.
+
+## Out-of-Order Execution
+
+A [**data hazard**](/ece552/pipelining/#dependence-and-hazards) is the obstacle to perfect pipelining: an instruction needs a result that isn't ready yet. Below, ADD needs `F0` from DIV. In order, SUB waits too, even though it doesn't use `F0`. An [**out-of-order**](/ece552/dynamic-scheduling/#motivation-dynamic-scheduling) CPU doesn't make it wait, as long as that is safe.
+
+<OooTimeline client:visible {...dataHazard.props} />
+
+Out-of-order execution also **masks cache-miss delays**: the CPU can start a load early and run other instructions while it waits for memory.
+
+<OooTimeline client:visible {...cacheMiss.props} />
+
+:::caution[Out-of-order is hard to get right]
+The CPU must detect and stall for every dependence, or the program executes incorrectly. For example, what if an instruction writes a register too early? What if an interrupt or exception occurs in between?
+:::
+
+## Packing the Issue Slots
+
+Each cell is an **issue slot**: one instruction can start there. Rows are cycles, so time runs down. Step through the designs and watch the same 9 instructions get packed tighter.
+
+<IssueSlots client:visible {...issueSlots.props} />
+
+| Design | Cycles for 9 instructions | What changes |
+| --- | --- | --- |
+| Single-issue | 9 | One instruction per cycle. |
+| Superscalar (3-wide) | 5 | Several per cycle, in program order. |
+| Out-of-order superscalar | 4 | Later independent instructions fill empty slots. |
+| Wider out-of-order (6-wide) | 4 | No faster: there aren't enough independent instructions. |
+
+:::tip[The limits of ILP]
+Making a superscalar wider gives **diminishing returns**: one program doesn't have enough independent instructions to fill the extra slots.
+:::
+
+## Multithreading
+
+The empty slots can be filled with instructions from **another program**.
+
+<IssueSlots client:visible {...multithreading.props} />
+
+| Approach | How | Empty slots |
+| --- | --- | --- |
+| **Multithreading, the "old-fashioned" way** | Fast context switching: the CPU alternates between applications. | Still wasted while each application runs. |
+| **Simultaneous multithreading (SMT)**, aka hyperthreading | Instructions from both applications issue in the same cycle. | Filled by the other application. |
+
+:::tip
+SMT is 20% to 30% faster than context switching.
+:::
+
+## 32-bit to 64-bit
+
+Why 64 bits?
+
+- **Address space**: 32-bit addresses reach 4 GB; 64-bit addresses reach 4 GB × 4 GB = 16M TB. This benefits large databases and media processing.
+- **OSs and counters**: a 64-bit counter will not overflow (if incremented by 1).
+- **Math and cryptography**: better performance for math on large or precise values.
+
+The drawback: pointers take 64 bits instead of 32, so code size increases. Going to 128 bits is unlikely.

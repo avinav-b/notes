@@ -1,0 +1,136 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 1.25rem;
+	margin-bottom: 0.5rem;
+}
+.slider {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-weight: 600;
+	color: var(--sl-color-gray-2);
+}
+.slider input {
+	width: 11rem;
+	accent-color: var(--sl-color-accent);
+	cursor: pointer;
+}
+.value {
+	min-width: 3em;
+	font-family: var(--viz-mono);
+	color: var(--sl-color-accent-high);
+}
+.formula {
+	font-family: var(--viz-mono);
+	font-size: 0.85rem;
+	color: var(--sl-color-gray-2);
+}
+.formula b {
+	color: var(--sl-color-text);
+}
+
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+.section {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+.cellHit,
+.cellMiss {
+	transition: fill 300ms ease-in-out, stroke 300ms ease-in-out;
+	stroke-width: 1;
+}
+.cellHit {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+}
+.cellMiss {
+	fill: var(--viz-miss);
+	stroke: var(--viz-miss);
+}
+.gridNote {
+	font-size: 12px;
+	fill: var(--sl-color-gray-2);
+}
+.missText {
+	fill: var(--viz-miss);
+	font-weight: 700;
+}
+
+.tick {
+	stroke: var(--viz-border);
+	stroke-width: 1;
+}
+.tickText {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.rowLabel {
+	font-size: 13px;
+	font-weight: 600;
+	fill: var(--sl-color-gray-2);
+}
+.hitSeg {
+	fill: var(--sl-color-gray-4);
+}
+.missSeg {
+	fill: var(--viz-miss);
+	transition: width 400ms ease-in-out;
+}
+.barText {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+	transition: x 400ms ease-in-out;
+}
+.live .rowLabel {
+	fill: var(--sl-color-accent-high);
+}
+.live .hitSeg,
+.live .missSeg {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	margin-top: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span::before {
+	content: '';
+	display: inline-block;
+	width: 0.85rem;
+	height: 0.85rem;
+	margin-right: 0.35rem;
+	vertical-align: -0.12em;
+	border-radius: 0.2rem;
+}
+.lgHit::before {
+	background: var(--sl-color-gray-4);
+}
+.lgMiss::before {
+	background: var(--viz-miss);
+}

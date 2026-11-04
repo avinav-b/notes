@@ -1,0 +1,208 @@
+---
+title: Cache Optimizations
+description: Writing code with locality, how array layout and access order set the miss rate, loop interchange, and tiling (blocking) for matrix multiply.
+lastUpdated: 2026-11-03
+sidebar:
+  order: 7
+---
+
+import MatrixAccess from '../../../components/MatrixAccess.tsx';
+import TilingViz from '../../../components/TilingViz.tsx';
+import {
+	arrayAccess1d,
+	arrayAccess2d,
+	loopInterchange,
+	matmulTinyCache,
+	tilingGrid,
+	tilingTotals,
+} from '../../../embeds/ece454/cache-optimizations';
+
+## Memory Optimizations
+
+Write code that has [**locality**](/ece454/memory-hierarchy/#why-caches-work-locality):
+
+- **Spatial:** access data that is contiguous, as much as possible.
+- **Temporal:** access the same data within short intervals of time.
+
+Locality comes from:
+
+- the proper choice of **algorithm**
+- **loop transformations**: loop reordering (interchange) and tiling (blocking)
+
+## Array Layout
+
+`T A[L];` is an array of $L$ elements of type `T`, allocated as one contiguous region of `L * sizeof(T)` bytes.
+
+| Declaration | Element size | Elements start at | Total |
+| --- | --- | --- | --- |
+| `char string[12];` | 1 B | x, x + 1, ... | 12 B |
+| `int val[5];` | 4 B | x, x + 4, x + 8, ... | 20 B |
+| `double a[3];` | 8 B | x, x + 8, x + 16 | 24 B |
+| `char *p[3];` (64-bit) | 8 B | x, x + 8, x + 16 | 24 B |
+
+A 2D array `T A[R][C];` has $R$ rows and $C$ columns of $K$-byte elements, $R \times C \times K$ bytes in total. C stores it in **row-major order**: all of row 0, then all of row 1, and so on.
+
+$$
+\texttt{A[0][0]} \dots \texttt{A[0][C-1]},\ \texttt{A[1][0]} \dots \texttt{A[1][C-1]},\ \dots,\ \texttt{A[R-1][0]} \dots \texttt{A[R-1][C-1]}
+$$
+
+So walking along a row is a stride-1 walk through memory, while walking down a column jumps $C \times K$ bytes each step.
+
+## A Tiny Cache for the Examples
+
+- 8-byte blocks, i.e. **2 four-byte ints per block**
+- 2 blocks in 1 set (2-way [set associative](/ece454/memory-hierarchy/#direct-mapped-vs-2-way-set-associative)), so the cache is **fully associative**
+- **LRU** replacement
+
+To predict a miss rate, ask:
+
+1. How many elements are there per block?
+2. Does the data structure fit in the cache?
+3. Do I reuse blocks over time?
+4. In what order am I accessing blocks?
+
+## 1D Arrays
+
+<MatrixAccess client:visible {...arrayAccess1d.props} />
+
+| Loop | Miss rate | Lesson |
+| --- | --- | --- |
+| One pass over `A[N]` | $(N/2) / N = 50\%$ | The first int of each block misses, the second hits |
+| Outer loop `k < P`, `A` fits | $(N/2) / (N P) = 1 / (2P)$ | For sequential accesses with reuse, if the data fits, the first visit suffers all the misses |
+| Outer loop `k < P`, `A` doesn't fit | $(N/2) / N = 50\%$ | If the data doesn't fit, the miss rate is the same as with no reuse (LRU evicts each block before it comes around again) |
+
+## 2D Arrays
+
+<MatrixAccess client:visible {...arrayAccess2d.props} />
+
+| Order | Data | Miss rate | Lesson |
+| --- | --- | --- | --- |
+| Row (`i` outer, `j` inner) | Fits | $(N^2/2) / N^2 = 50\%$ | Row order, no reuse: whether the data fits or not, same rate as sequential |
+| Row | Doesn't fit | $(N^2/2) / N^2 = 50\%$ | |
+| Column (`j` outer, `i` inner) | A column fits | $(N^2/2) / N^2 = 50\%$ | Column order, no reuse: when a column's data fits in the cache, same rate as sequential (the next column's elements are in the blocks just loaded) |
+| Column | A column doesn't fit | $N^2 / N^2 = 100\%$ | When a column's data doesn't fit, 100% miss rate (each block is evicted before the next column comes back to it) |
+
+## Loop Interchange
+
+This loop walks `A` in column order (`j`, the row index, changes fastest), so when a column doesn't fit in the cache it misses on **every** access (100%). Swapping the loops walks it in row order: 50%.
+
+```c
+// before: column order, 100% misses
+for (i = 0; i < N; i++)
+  for (j = 0; j < N; j++)
+    A[j][i] = i * j;
+
+// after: row order, 50% misses
+for (j = 0; j < N; j++)
+  for (i = 0; i < N; i++)
+    A[j][i] = i * j;
+```
+
+<MatrixAccess client:visible {...loopInterchange.props} />
+
+## Matrix Multiply on the Tiny Cache
+
+```c
+for (i = 0; i < N; i++)
+  for (j = 0; j < N; j++)
+    for (k = 0; k < N; k++)
+      … = A[i][k] * B[k][j];
+```
+
+Assume:
+
+- `A` and `B` do not fit in the cache, and a column of `B` does not fit at the same time as a row of `A`
+- the cache is fully associative with LRU replacement, now with **4 blocks**
+
+The trace below covers the first two elements of C ($i = 0$; $j = 0$ and $j = 1$). The `t` next to each cache slot is the time of its last use, which is what LRU compares.
+
+<MatrixAccess client:visible {...matmulTinyCache.props} />
+
+For every $(i, j)$, the 4 `B` accesses are 4 different blocks (all miss), and the row of `A` has been evicted since the last time, so its 2 blocks miss again. That is 6 misses in 8 accesses: **75%**.
+
+## Cache Miss Analysis: n x n Matrix Multiply
+
+```c
+for (i = 0; i < n; i++)
+  for (j = 0; j < n; j++)
+    for (k = 0; k < n; k++)
+      c[i][j] += a[i][k] * b[k][j];
+```
+
+Assume:
+
+- matrix elements are doubles
+- a cache block is 64 B = **8 doubles**
+- cache capacity $\ll n$: the cache can't even hold an entire row
+
+Each element of `c` reads a row of `a` and a column of `b`:
+
+| | Misses |
+| --- | --- |
+| Row of `a` (stride 1) | $n/8$ |
+| Column of `b` (each element in a different block) | $n$ |
+| **Per element of `c`** | $n/8 + n = 9n/8$ |
+
+The same holds for every element, because nothing survives in the cache from one element to the next. With $n^2$ elements:
+
+$$
+\text{misses} = \frac{9n}{8} \times n^2 = \frac{9}{8} n^3
+$$
+
+<TilingViz client:visible {...tilingGrid.props} />
+
+## Tiling (Blocking)
+
+Misses are expensive: an L1 reference takes 1-4 ns (L1 size: 32 KB), a main memory reference 100 ns (memory size: 4-256 GB). Matrix multiplication has lots of data reuse, so:
+
+- **Key idea:** use the entire cache block once it is loaded.
+- **Challenge:** the code works with both rows and columns.
+- **Solution:** operate on sub-squares of the matrices (**tiles**). One tile per matrix must fit in the cache at the same time, and each tile is heavily reused before new ones are loaded. This is **tiling** or **blocking**.
+
+### Tiled matrix multiply
+
+Each tile of C is the sum of tile-sized mini-multiplications. With 4x4 matrices and 2x2 tiles:
+
+$$
+C[0][0] = \underbrace{1 \cdot 16 + 2 \cdot 15}_{TA_{00} \times TB_{00}} + \underbrace{3 \cdot 14 + 4 \cdot 13}_{TA_{01} \times TB_{10}}
+$$
+
+```c
+void mmm(double a[][N], double b[][N], double c[][N], int T) {
+  int i, j, k, i1, j1, k1;
+  for (i = 0; i < n; i += T)
+    for (j = 0; j < n; j += T)
+      for (k = 0; k < n; k += T)
+        /* T x T mini matrix multiplications */
+        for (i1 = i; i1 < i + T; i1++)
+          for (j1 = j; j1 < j + T; j1++)
+            for (k1 = k; k1 < k + T; k1++)
+              c[i1][j1] += a[i1][k1] * b[k1][j1];
+}
+```
+
+First the tile $TC_{00}$ ($C[0][0] \dots C[T-1][T-1]$) is computed, sweeping a tile across the first row of tiles of `a` and down the first column of tiles of `b`. Then $TC_{01}$ ($C[0][T] \dots C[T-1][2T-1]$), and so on. Use **Tiled** in the figure above to step through it.
+
+:::tip[Why does tiling work?]
+`b` is still accessed column-wise, but now `b`'s cache blocks don't get replaced: the whole tile of `b` stays in the cache while it is reused.
+:::
+
+### Tiling cache miss analysis
+
+Assume a block holds 8 doubles and the cache capacity $\ll n$. With 3 arrays, 3 tiles must fit in the cache: capacity $> 3T^2$.
+
+- Loading one tile: $T^2/8$ misses.
+- Computing one tile of C reads $n/T$ tiles of `a` and $n/T$ tiles of `b`: $\frac{2n}{T} \times \frac{T^2}{8} = \frac{nT}{4}$ misses.
+- There are $(n/T)^2$ tiles of C.
+
+$$
+\text{tiled: } \frac{nT}{4} \times \left(\frac{n}{T}\right)^2 = \frac{1}{4T} n^3
+\qquad
+\text{untiled: } \frac{9}{8} n^3
+$$
+
+<TilingViz client:visible {...tilingTotals.props} />
+
+:::tip[Takeaway]
+Tiling cuts misses by a factor of $4.5T$, so use the largest $T$ for which 3 tiles still fit in the cache.
+:::

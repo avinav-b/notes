@@ -1,0 +1,249 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--__sl-font);
+}
+.section {
+	font-size: 11.5px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+.grid {
+	stroke: var(--viz-border);
+	stroke-width: 1;
+}
+.tick {
+	font-family: var(--viz-mono);
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+
+/* ---- pyramid ---- */
+.level {
+	cursor: pointer;
+	outline: none;
+}
+.rowHit {
+	fill: transparent;
+	transition: fill 300ms;
+}
+.level:hover .rowHit,
+.levelOn .rowHit {
+	fill: color-mix(in srgb, var(--sl-color-accent) 7%, transparent);
+}
+.band {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.4;
+	transition: fill 300ms, stroke 300ms;
+}
+.levelOn .band {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+.bandText {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.levelOn .bandText {
+	fill: var(--sl-color-accent-high);
+}
+.size {
+	font-family: var(--viz-mono);
+	font-size: 13px;
+	font-weight: 600;
+	fill: var(--sl-color-gray-2);
+}
+.latBar {
+	fill: var(--viz-raw);
+	opacity: 0.85;
+}
+.latRange {
+	fill: var(--viz-raw);
+	opacity: 0.4;
+}
+.levelOn .latBar {
+	opacity: 1;
+}
+.latText {
+	font-family: var(--viz-mono);
+	font-size: 12px;
+	font-weight: 600;
+	fill: var(--sl-color-gray-2);
+}
+.latTextIn {
+	font-family: var(--viz-mono);
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-bg);
+}
+
+/* ---- chip ---- */
+.chip {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.4;
+	stroke-dasharray: 5 4;
+}
+.core rect {
+	fill: var(--sl-color-gray-6);
+	stroke: var(--sl-color-gray-4);
+}
+.core text {
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.cache {
+	cursor: pointer;
+	outline: none;
+}
+.cache rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.4;
+	transition: fill 300ms, stroke 300ms;
+}
+.cache:hover rect {
+	stroke: var(--sl-color-accent);
+}
+.cacheOn rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+.cacheName {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.cacheSize {
+	font-family: var(--viz-mono);
+	font-size: 11.5px;
+	fill: var(--sl-color-gray-2);
+}
+.dram rect {
+	fill: var(--sl-color-gray-6);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.4;
+}
+.wire {
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 3;
+}
+
+/* ---- detail panel ---- */
+.detail {
+	margin-top: 0.6rem;
+	padding: 0.6rem 0.8rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	min-height: 9.6rem;
+}
+.detailHead {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.2rem 0.75rem;
+	align-items: baseline;
+	margin-bottom: 0.35rem;
+}
+.detailHead span {
+	color: var(--sl-color-gray-3);
+	font-size: 0.85rem;
+}
+.facts {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 0.15rem 0.9rem;
+	margin: 0;
+	font-size: 0.85rem;
+}
+.facts dt {
+	color: var(--sl-color-gray-3);
+}
+.facts dd {
+	margin: 0;
+}
+.seb {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4rem;
+	font-family: var(--viz-mono);
+	font-size: 0.85rem;
+}
+.sebPart {
+	padding: 0.25rem 0.55rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.35rem;
+	color: var(--sl-color-gray-2);
+}
+.sebPart b {
+	color: var(--sl-color-text);
+}
+.sebTotal {
+	border-color: var(--sl-color-accent);
+}
+.op {
+	color: var(--sl-color-gray-3);
+}
+.hint {
+	margin: 0.5rem 0 0;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.detailChip {
+	min-height: 0;
+}
+
+/* ---- prefetch view ---- */
+.pfBox rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.4;
+}
+.link {
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 3;
+}
+.pfArc {
+	fill: none;
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.2;
+	stroke-dasharray: 6 4;
+	animation: pfFlow 900ms linear infinite;
+}
+.pfHead {
+	fill: var(--sl-color-accent);
+}
+.pfLabel {
+	font-family: var(--viz-mono);
+	font-size: 11.5px;
+	font-weight: 600;
+	fill: var(--sl-color-accent-high);
+}
+@keyframes pfFlow {
+	to {
+		stroke-dashoffset: -20;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.pfArc {
+		animation: none;
+	}
+}

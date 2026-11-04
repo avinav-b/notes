@@ -1,0 +1,322 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.modes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+.message {
+	min-height: 1.6em;
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.stepNo {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.25rem;
+	height: 1.25rem;
+	margin-right: 0.45rem;
+	border-radius: 50%;
+	background: var(--sl-color-accent);
+	color: var(--sl-color-black);
+	font-size: 0.75rem;
+	font-weight: 700;
+	vertical-align: 0.05em;
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--__sl-font);
+}
+.section {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+.colHead {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+}
+.chip {
+	fill: color-mix(in srgb, var(--sl-color-gray-6) 45%, transparent);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.2;
+	stroke-dasharray: 5 4;
+}
+.box,
+.fade {
+	transition: opacity 400ms ease-in-out;
+}
+.box rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.4;
+	transition: fill 400ms, stroke 400ms;
+}
+.cpu rect,
+.mmu rect {
+	fill: var(--sl-color-gray-6);
+}
+.boxLabel {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.boxSub {
+	font-size: 11px;
+	fill: var(--sl-color-gray-2);
+}
+.osOn rect {
+	fill: var(--viz-miss-bg);
+	stroke: var(--viz-miss);
+	stroke-width: 2;
+}
+.memBox rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.4;
+}
+.memBox .frame rect {
+	stroke-width: 1.2;
+}
+
+/* page table / TLB rows and physical pages */
+.row rect,
+.frame rect {
+	fill: var(--sl-color-gray-6);
+	stroke: var(--viz-border);
+	stroke-width: 1;
+	transition: fill 400ms, stroke 400ms;
+}
+.rowText,
+.frameNo {
+	font-family: var(--viz-mono);
+	font-size: 11px;
+	fill: var(--sl-color-text);
+}
+.frameNo {
+	font-weight: 700;
+}
+.invalid rect {
+	fill: transparent;
+	stroke-dasharray: 3 3;
+}
+.invalid .rowText {
+	fill: var(--sl-color-gray-3);
+}
+.mark_cur rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 1.8;
+}
+.mark_hit rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+	stroke-width: 1.8;
+}
+.mark_new rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+	stroke-width: 1.8;
+	stroke-dasharray: none;
+}
+.mark_bad rect {
+	fill: var(--viz-miss-bg);
+	stroke: var(--viz-miss);
+	stroke-width: 1.8;
+}
+.mark_bad .rowText {
+	fill: var(--viz-miss);
+}
+
+/* arrows */
+.path path {
+	fill: none;
+	stroke-width: 1.6;
+	transition: stroke 300ms, stroke-width 300ms;
+}
+.p_idle path {
+	stroke: var(--sl-color-gray-5);
+}
+.p_done path {
+	stroke: var(--sl-color-gray-3);
+}
+.p_on path {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.6;
+}
+.dashed path {
+	stroke-dasharray: 5 4;
+}
+.headIdle {
+	fill: var(--sl-color-gray-5);
+}
+.headDone {
+	fill: var(--sl-color-gray-3);
+}
+.headOn {
+	fill: var(--sl-color-accent);
+}
+.badge circle {
+	fill: var(--sl-color-gray-5);
+	transition: fill 300ms;
+}
+.badge text {
+	font-size: 10.5px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.p_done .badge circle {
+	fill: var(--sl-color-gray-4);
+}
+.p_on .badge circle {
+	fill: var(--sl-color-accent);
+}
+.p_on .badge text {
+	fill: var(--sl-color-black);
+}
+.pathLabel {
+	font-size: 11px;
+	font-weight: 600;
+	fill: var(--sl-color-gray-3);
+}
+.p_on .pathLabel {
+	fill: var(--sl-color-accent-high);
+}
+
+/* token */
+.token rect {
+	stroke-width: 1.6;
+}
+.token text {
+	font-family: var(--viz-mono);
+	font-size: 11.5px;
+	font-weight: 700;
+}
+.tone_addr rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.tone_addr text {
+	fill: var(--sl-color-accent-high);
+}
+.tone_pte rect,
+.tone_page rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-2);
+}
+.tone_pte text,
+.tone_page text {
+	fill: var(--sl-color-text);
+}
+.tone_bad rect {
+	fill: var(--viz-miss-bg);
+	stroke: var(--viz-miss);
+}
+.tone_bad text {
+	fill: var(--viz-miss);
+}
+.tone_data rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+}
+.tone_data text {
+	fill: var(--viz-ok);
+}
+
+/* meters */
+.meters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem 1.5rem;
+	margin-top: 0.6rem;
+	font-size: 0.85rem;
+}
+.meter {
+	display: inline-flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+.meterLabel {
+	color: var(--sl-color-gray-2);
+}
+.meterNote {
+	color: var(--sl-color-gray-3);
+	font-size: 0.8rem;
+}
+.pips {
+	display: inline-flex;
+	gap: 0.25rem;
+}
+.pip {
+	width: 1.1rem;
+	height: 0.8rem;
+	border-radius: 0.2rem;
+	border: 1.5px solid var(--sl-color-gray-4);
+	transition: background 400ms, border-color 400ms;
+}
+.pipMem {
+	background: var(--viz-raw);
+	border-color: var(--viz-raw);
+}
+.pipDisk {
+	background: var(--viz-miss);
+	border-color: var(--viz-miss);
+}
+
+/* legend */
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem 1rem;
+	margin-top: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-2);
+}
+.lg {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+.sw {
+	width: 1.3rem;
+	height: 0.75rem;
+	border-radius: 0.2rem;
+	border: 1.5px solid;
+}
+.swCur {
+	background: var(--sl-color-accent-low);
+	border-color: var(--sl-color-accent);
+}
+.swOk {
+	background: var(--viz-ok-bg);
+	border-color: var(--viz-ok);
+}
+.swBad {
+	background: var(--viz-miss-bg);
+	border-color: var(--viz-miss);
+}
+.swDisk {
+	border: 1.5px dashed var(--viz-border);
+}

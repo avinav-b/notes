@@ -1,0 +1,164 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.readout {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4rem 0.9rem;
+	min-height: 1.6em;
+	margin: 0 0 0.25rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	font-size: 0.85rem;
+}
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	font-family: var(--viz-mono);
+	font-size: 0.8rem;
+}
+.peakTag,
+.pctTag {
+	padding: 0 0.45rem;
+	border-radius: 0.3rem;
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+.peakTag {
+	background: var(--sl-color-accent-low);
+	color: var(--sl-color-accent-high);
+}
+.pctTag {
+	background: var(--sl-color-gray-6);
+	color: var(--sl-color-gray-2);
+}
+.wrap {
+	width: 100%;
+	touch-action: pan-y;
+}
+.svg {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	user-select: none;
+}
+.region {
+	font-size: 11.5px;
+	fill: var(--sl-color-gray-2);
+	font-weight: 600;
+}
+.divider {
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.2;
+	stroke-dasharray: 4 4;
+}
+.axisLine {
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.5;
+}
+.axisTitle {
+	font-size: 12px;
+	fill: var(--sl-color-gray-3);
+}
+.tick {
+	font-family: var(--viz-mono);
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.guide {
+	stroke: var(--sl-color-accent);
+	stroke-width: 1;
+	opacity: 0.5;
+}
+.ideal {
+	fill: none;
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 2;
+	stroke-dasharray: 6 4;
+}
+.practical {
+	fill: none;
+	stroke: var(--sl-color-text);
+	stroke-width: 2.5;
+}
+.pathLabel {
+	font-size: 11.5px;
+	fill: var(--sl-color-gray-3);
+}
+.pathLabelP {
+	font-size: 11.5px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.peak line {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+.peak text {
+	font-size: 11.5px;
+	font-weight: 700;
+	fill: var(--sl-color-accent-high);
+}
+.pt {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-text);
+	stroke-width: 1.5;
+}
+.ptSel {
+	fill: var(--sl-color-accent);
+	stroke: var(--sl-color-accent-high);
+	stroke-width: 1.5;
+}
+.ptIdeal {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 2;
+}
+.pt,
+.ptSel {
+	transition: r 200ms;
+}
+.hit {
+	fill: transparent;
+	cursor: crosshair;
+}
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem 1.1rem;
+	margin-top: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.lg {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+.swIdeal,
+.swPractical,
+.swPeak {
+	display: inline-block;
+	width: 1.4rem;
+}
+.swIdeal {
+	border-top: 2px dashed var(--sl-color-gray-3);
+}
+.swPractical {
+	border-top: 2.5px solid var(--sl-color-text);
+}
+.swPeak {
+	width: 0;
+	height: 0.9rem;
+	border-left: 2px solid var(--sl-color-accent);
+}

@@ -1,0 +1,197 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4rem;
+}
+.controls button {
+	font-family: var(--viz-mono);
+}
+.slider {
+	flex: 1 1 8rem;
+	min-width: 6rem;
+	accent-color: var(--sl-color-accent);
+	cursor: pointer;
+}
+.on {
+	border-color: var(--sl-color-accent) !important;
+	background: var(--sl-color-accent-low) !important;
+}
+.readout {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 1rem;
+	margin: 0.75rem 0 0.25rem;
+	padding: 0.35rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+}
+.addr {
+	font-family: var(--viz-mono);
+	font-size: 0.85rem;
+	margin-right: auto;
+}
+.good,
+.bad {
+	padding: 0 0.15rem;
+	border-radius: 0.2rem;
+}
+.good {
+	color: var(--viz-ok);
+	background: var(--viz-ok-bg);
+}
+.bad {
+	color: var(--viz-frag);
+	background: var(--viz-frag-bg);
+}
+.count {
+	font-size: 0.85rem;
+	color: var(--sl-color-gray-2);
+}
+.count b {
+	display: inline-block;
+	min-width: 1.6rem;
+	margin-left: 0.3rem;
+	padding: 0 0.35rem;
+	text-align: center;
+	font-family: var(--viz-mono);
+	font-size: 1rem;
+	border-radius: 0.3rem;
+	transition: background 300ms, color 300ms;
+}
+.countGood b {
+	color: var(--viz-ok);
+	background: var(--viz-ok-bg);
+}
+.countBad b {
+	color: var(--viz-frag);
+	background: var(--viz-frag-bg);
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+.cblock rect {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.2;
+	stroke-dasharray: 5 3;
+	transition: fill 350ms, stroke 350ms;
+}
+.cblock text {
+	font-size: 12px;
+	fill: var(--sl-color-gray-3);
+}
+.cblockHit rect {
+	fill: color-mix(in srgb, var(--sl-color-accent) 12%, transparent);
+	stroke: var(--sl-color-accent);
+	stroke-dasharray: none;
+}
+.cblockHit text {
+	fill: var(--sl-color-accent-high);
+	font-weight: 700;
+}
+.byte {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-5);
+}
+.addrLabel {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.val {
+	transition: transform 350ms ease-in-out;
+}
+.val rect {
+	fill: var(--viz-alloc-bg);
+	stroke: var(--viz-alloc);
+	stroke-width: 2;
+}
+.val text {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.wordLine {
+	stroke: var(--sl-color-gray-2);
+	stroke-width: 1.5;
+}
+.blockLine {
+	stroke: var(--sl-color-accent);
+	stroke-width: 3;
+}
+.word rect {
+	fill: var(--sl-color-gray-6);
+	transition: fill 300ms;
+}
+.wordHit rect {
+	fill: var(--sl-color-accent);
+}
+.rowLabel {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	margin-top: 0.5rem;
+	font-size: 0.78rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+.legend i {
+	display: inline-block;
+	width: 0.95rem;
+	height: 0.8rem;
+	border: 1px solid var(--sl-color-gray-4);
+	border-radius: 2px;
+}
+.unit {
+	margin-left: auto;
+}
+.swVal {
+	background: var(--viz-alloc-bg);
+	border: 2px solid var(--viz-alloc) !important;
+}
+.swHit {
+	background: var(--sl-color-accent);
+	border-color: var(--sl-color-accent) !important;
+}
+.swWord,
+.swBlock {
+	width: 0 !important;
+	height: 1rem !important;
+	border: none !important;
+	border-left: 2px solid var(--sl-color-gray-2) !important;
+	border-radius: 0 !important;
+}
+.swBlock {
+	border-left: 3px solid var(--sl-color-accent) !important;
+}
+
+/* On phones, keep the figure readable and let it scroll sideways inside the card. */
+.scroll {
+	overflow-x: auto;
+}
+.scroll > svg {
+	min-width: 34rem;
+}

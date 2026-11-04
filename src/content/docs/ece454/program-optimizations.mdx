@@ -1,0 +1,260 @@
+---
+title: Program Optimizations
+description: Speeding up a vector sum step by step, the blockers that stop the compiler (procedure calls, pointer aliasing), and using instruction-level parallelism with loop unrolling and parallel unrolling.
+lastUpdated: 2026-11-03
+sidebar:
+  order: 5
+---
+
+import OptimizationLadder from '../../../components/OptimizationLadder.tsx';
+import FuSchedule from '../../../components/FuSchedule.tsx';
+import ReductionTree from '../../../components/ReductionTree.tsx';
+import { vsumLadder, vsum4Schedule, unrolledSchedule, vprodTree } from '../../../embeds/ece454/program-optimizations';
+
+## Running example: vector sum
+
+A vector is a length plus a pointer to its data:
+
+| Procedure | Does |
+| --- | --- |
+| `vec_ptr new_vec(int len)` | Create a vector of the given length |
+| `int get_vec_element(vec_ptr v, int index, int *dest)` | Store element `index` at `*dest`. Returns 0 if out of bounds, 1 on success |
+| `int *get_vec_start(vec_ptr v)` | Return a pointer to the start of the data |
+
+`vsum` adds every element and stores the result at `*dest`.
+
+**Metric: cycles per element (CPE)**, the CPU cycles the loop spends per vector element.
+
+## Optimizing vsum step by step
+
+<OptimizationLadder client:visible {...vsumLadder.props} />
+
+Each step, and why the compiler did not do it for us:
+
+- **`vsum1`**: `-O2` gives better scheduling and register allocation, but misses a lot of opportunities. Everything below is compiled with `-O2`.
+- **`vsum2`**: the compiler does not hoist `vec_len()` out of the loop because it is a procedure call (see [blockers](#procedure-calls)).
+- **`vsum3`**: [**inlining**](/ece454/compiler-optimizations/#function-inlining) replaces a call with the function's body. You should not normally have to do it by hand, but it **enables further optimizations**: here, hoisting `get_vec_start()` out of the loop. The compiler may not inline when it should:
+  - `-O2` avoids growing the code too much, so it may not think inlining is worth it.
+  - It may not know how important a loop is.
+  - It may be blocked by a missing function definition.
+- **`vsum4`**: `*dest += ...` costs a memory read and a memory write every iteration. A local `sum` is likely to live in a register, avoiding both. This is hard for the compiler to do itself because of [pointer aliasing](#pointer-aliasing).
+- **`vsum5`**: loop unrolling, see [below](#loop-unrolling).
+
+## Optimization blockers
+
+### Procedure calls
+
+The compiler treats a procedure call as a **black box**, so it does little optimization in and around calls.
+
+**Why not move `vec_len()` out of the loop?** The procedure may:
+- have **side effects**: change global state (a global or heap variable)
+- be **non-deterministic**: read global state (a global variable, `time()`)
+
+**Why not look at the code of `vec_len()`?**
+- The linker may replace it with a different version, unless it is declared `static`.
+- Interprocedural optimization is not used much because it is expensive.
+
+### Pointer aliasing
+
+Turning `*dest` into a register (`vsum3` to `vsum4`) needs the compiler to know that **no other pointer can point to `*dest`**. Otherwise that pointer could change `*dest` behind its back.
+
+**Pointer aliasing**: two different pointers point to the same location.
+
+```c
+int x = 5, y = 10;
+int *dest = &x;
+int *rand = &y;
+if (one_in_a_million) {
+  rand = dest;
+}
+// From here on the compiler must assume rand may equal dest,
+// i.e. *rand may be x, even though it is unlikely.
+```
+
+Pointers are easy to over-use in C/C++:
+- **Benefit**: direct access to storage structures.
+- **Drawback**: pointers allow address arithmetic, which makes pointer analysis even harder.
+
+:::tip[Use local variables]
+Get in the habit of introducing local variables, e.g. when accumulating in a loop. It is your way of telling the compiler not to worry about aliasing.
+:::
+
+## Instruction-level parallelism
+
+### Assumed CPU
+
+The CPU is [superscalar](/ece454/cpu-architectures/#superscalar-execution): several instructions execute in parallel on separate functional units.
+- **Units**: 1 load, 1 store, 2 integer (one may be a branch), 1 FP add, 1 FP multiply/divide.
+- Many operations take more than one cycle but are [**pipelined**](/ece552/pipelining/#pipelined-functional-units): a unit can start a new one every *cycles/issue*.
+
+| Operation | Latency (cycles) | Cycles/issue |
+| --- | --- | --- |
+| Load / store | 3 | 1 |
+| Integer add / branch | 1 | 1 |
+| Integer multiply | 4 | 1 |
+| FP multiply (single/double) | 5 | 2 |
+| FP add (single/double) | 3 | 1 |
+| Integer divide | 36 | 36 |
+| FP divide (single/double) | 38 | 38 |
+
+### The vsum4 loop in assembly
+
+Registers: `i` in `%edx`, `length` in `%esi`, `data` in `%eax`, `sum` in `%ecx`.
+
+```asm
+.L24:
+  addl (%eax,%edx,4), %ecx    # sum += data[i]   (address data + i*4)
+  incl %edx                   # i++
+  cmpl %esi, %edx             # compare i and length
+  jl .L24                     # if i < length goto .L24
+```
+
+`addl` with a memory operand is really **two operations**: a 3-cycle `load` of `data[i]`, then a 1-cycle `addl` into `sum`. An operation cannot begin until its operands are available.
+
+<FuSchedule client:visible {...vsum4Schedule.props} />
+
+- **Unlimited resources** (each op starts as soon as its operands are ready): iterations overlap in time, **CPE = 1.0**. But that needs 4 integer ops issued every cycle.
+- **Assumed CPU**: only 2 integer units, so the 4 integer ops of each iteration take 2 cycles: **CPE = 2.0**. The integer units are the bottleneck.
+
+### Loop unrolling
+
+[**Loop unrolling**](/ece454/compiler-optimizations/#loop-unrolling) combines several iterations into one loop body, and finishes the leftovers in a fix-up loop. It **amortizes the loop overhead** (`incl`, `cmpl`, `jl`) across several elements.
+
+```c
+void vsum5(vec_ptr v, int *dest) {
+  int i;
+  int length = vec_len(v);
+  int limit = length - 2;
+  int *data = get_vec_start(v);
+  int sum = 0;
+  for (i = 0; i < limit; i += 3) {
+    sum += data[i];
+    sum += data[i+1];
+    sum += data[i+2];
+  }
+  for (; i < length; i++)   // fix up
+    sum += data[i];
+  *dest = sum;
+}
+```
+
+The three loads have no dependences on each other, so they pipeline in the load unit. An iteration should finish every 3 cycles: **predicted CPE 1.0**, measured 1.33.
+
+<FuSchedule client:visible {...unrolledSchedule.props} />
+
+| Unrolling degree | 1 | 2 | 3 | 4 | 8 | 16 | Relevant FU latency |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `vsum` (integer add) | 2.00 | 1.50 | 1.33 | 1.50 | 1.25 | 1.06 | 1 cycle |
+| `vprod` (integer multiply) | 4.00 | | | | | | 4 cycles |
+| `vFPsum` (FP add) | 3.00 | | | | | | 3 cycles |
+| `vFPprod` (FP multiply) | 5.00 | | | | | | 5 cycles |
+
+- Unrolling only helps the integer sum here. The other loops are limited by their functional unit's **latency**, not by loop overhead.
+- The effect is **nonlinear** in the degree of unrolling: many subtle effects decide the exact schedule.
+
+:::caution[Model vs. measured]
+The schedules above come from a simple model: each cycle, the oldest ops whose inputs are ready start on a free unit, and nothing else limits the CPU. It gives CPE 2.00, 1.50 and 1.00 for unrolling 1, 2 and 3 times. The first two match the measured CPE. For 3 times it matches the prediction (1.0), but the measured CPE is 1.33: real hardware has limits this model leaves out.
+:::
+
+## Parallel unrolling
+
+### vprod: a chain of multiplies
+
+Swap the add for a multiply (`x *= data[i]`, compiled to `imull`). Integer multiply has a **latency of 4** but can issue every cycle.
+
+Each multiply needs the previous value of `x`, so they run strictly one after another:
+
+$$
+((((1 \cdot x_0) \cdot x_1) \cdot x_2) \cdot x_3) \cdots \qquad (x_i = \texttt{data[i]})
+$$
+
+$N$ elements at $D$ cycles per multiply take $N \cdot D = 4N$ cycles: **CPE = 4.0**, and plain unrolling does not help. The limit is now the **latency of the multiply chain**, not the number of units.
+
+To do better, break the chain. From here on, assume **unlimited hardware resources**.
+
+| Version | Loop body | CPE |
+| --- | --- | --- |
+| `vprod4` | `x *= data[i];` | 4.0 |
+| unrolled, same order | `x = (x * data[i]) * data[i+1];` | 4.0 |
+| `vprod5pu1` (parallel unrolling 1) | `x = x * (data[i] * data[i+1]);` | 2.0 |
+| `vprod5pu2` (parallel unrolling 2) | `x0 *= data[i]; x1 *= data[i+1];` then `*dest = x0 * x1;` | 2.0 |
+
+<ReductionTree client:visible {...vprodTree.props} />
+
+- **Order of operations matters.** `(x * data[i]) * data[i+1]` still feeds `x` through both multiplies, so they all run in sequence. `x * (data[i] * data[i+1])` multiplies the pair first, which does not need `x`, so it overlaps with the chain. There is still one dependent multiply per **two** elements: CPE = 2.
+- **Two accumulators** `x0` (even elements) and `x1` (odd elements) form two independent chains that run at the same time, combined once at the end.
+
+```c
+void vprod5pu2(vec_ptr v, int *dest) {
+  int length = vec_len(v);
+  int limit = length - 1;
+  int *data = get_vec_start(v);
+  int x0 = 1, x1 = 1;
+  int i;
+  for (i = 0; i < limit; i += 2) {
+    x0 *= data[i];
+    x1 *= data[i+1];
+  }
+  if (i < length)   // fix up
+    x0 *= data[i];
+  *dest = x0 * x1;
+}
+```
+
+### Requirements
+
+| Kind | Requirement |
+| --- | --- |
+| **Algorithmic** | The combining operation must be **associative and commutative**. True for integer multiplication; not strictly true for floating point, but OK for most applications. |
+| **Hardware** | Pipelined functional units and superscalar execution, plus lots of registers to hold the partial sums/products. |
+
+## Trade-offs of loop unrolling
+
+| Benefits | Drawbacks |
+| --- | --- |
+| Fewer loop operations (condition checks, index increments). This is why `vsum5` can approach CPE 1. | Bigger code. |
+| More parallelism, by reducing data dependences. | **Register pressure**: each partial sum/product needs a register (IA32 has only 6 usable integer and 8 FP registers). Without enough registers, temporaries spill to the stack, which wipes out the gains. |
+| | Often requires rewriting the loop body by hand. |
+
+## Summary
+
+| Version | Optimization | Applied to | Manual or GCC | CPE |
+| --- | --- | --- | --- | --- |
+| `vsum` | `-g` | | | 42.06 |
+| `vsum1` | `-O2` | | GCC | 31.25 |
+| `vsum2` | LICM | `vec_len()` | manual | 20.66 |
+| `vsum3` | Inlining + LICM | `get_vec_element()` | manual | 6.00 |
+| `vsum4` | Memory-reference reduction | `*dest` | manual | 2.00 |
+| `vsum5` | Unrolling (3x) | `for` loop | `-funroll-loops` | 1.33 |
+| `vprod4` | (same as `vsum4`) | | | 4.00 |
+| `vprod5pu1` | Parallel unrolling 1 | `for` loop | manual | 2.0 |
+| `vprod5pu2` | Parallel unrolling 2 | `for` loop | manual | 2.0 |
+
+:::tip[Takeaways]
+- **Before you start**, ask whether optimizing is worth the effort: profile to estimate the potential benefit.
+- **Get the most out of the compiler before going manual.** Manual optimization trades off against readable, maintainable code.
+- **Write maintainable code and let the compiler optimize it**: use lots of functions, write modular code, and enable debugging/tracing code with static flags.
+- **Limit pointers**: reduce pointer-based arrays and pointer arithmetic, and (unfortunately) function pointers and virtual functions.
+- **For highly performance-critical code**, look at the assembly for opportunities, and consider the CPU's instruction-level parallelism.
+:::
+
+## Seeing what the compiler did
+
+`objdump -d a.out` prints the instruction listing: each instruction's address, its encoding, and its assembly.
+
+```
+8048390 <main>:
+ 8048394:  55                    push   %ebp
+ 8048395:  89 e5                 mov    %esp,%ebp
+ 8048397:  83 ec 10              sub    $0x10,%esp
+ 804839a:  c7 45 f8 05 00 00 00  movl   $0x5,-0x8(%ebp)     # int i = 5;
+ 80483a1:  c7 45 fc 0a 00 00 00  movl   $0xa,-0x4(%ebp)     # int x = 10;
+```
+
+## Advanced topics
+
+| Topic | Idea |
+| --- | --- |
+| **Profile-directed feedback (PDF)** | Feed gprof-like measurements to the compiler so it makes smarter choices, e.g. handles the `if (one_in_a_million)` case well. |
+| **Just-in-time compilation (JIT)** | Runs simple versions of many basic compiler optimizations at runtime, using online PDF (e.g. the Java JIT). |
+| **Automatic parallelization** | A current hot topic: exploiting multicores automatically. |

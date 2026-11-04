@@ -1,0 +1,206 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.seg {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+.on {
+	border-color: var(--sl-color-accent) !important;
+	background: var(--sl-color-accent-low) !important;
+}
+.code {
+	margin: 0.75rem 0 0;
+	padding: 0.35rem 0.6rem;
+	font-family: var(--viz-mono);
+	font-size: 0.8rem;
+	background: var(--sl-color-bg);
+	border: 1px solid var(--viz-border);
+	border-radius: 0.4rem;
+	white-space: pre-wrap;
+	color: var(--sl-color-gray-2);
+}
+.codeNow {
+	color: var(--sl-color-accent-high);
+	font-weight: 700;
+}
+.msg {
+	min-height: 1.5em;
+	margin: 0.5rem 0 0.25rem;
+	padding: 0.35rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+.byte {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-5);
+	transition: opacity 500ms;
+}
+.byteOut {
+	opacity: 0.25;
+}
+.tick4 {
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.2;
+}
+.tick8 {
+	stroke: var(--sl-color-gray-2);
+	stroke-width: 2;
+}
+.off {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.pad {
+	stroke: var(--viz-frag);
+	stroke-width: 1;
+	animation: fadeIn 500ms ease-in-out;
+}
+.hatchBg {
+	fill: var(--viz-frag-bg);
+}
+.hatchLine {
+	stroke: var(--viz-frag);
+	stroke-width: 1.4;
+}
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+}
+.field {
+	transition: transform 650ms ease-in-out, opacity 400ms ease-in-out;
+}
+.field rect {
+	fill: var(--viz-alloc-bg);
+	stroke: var(--viz-alloc);
+	stroke-width: 1.5;
+	transition: fill 400ms, stroke 400ms;
+}
+.field text {
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.fieldNow rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+.hidden {
+	opacity: 0;
+}
+.sizeBar {
+	transition: none;
+}
+.sizeFill {
+	fill: var(--sl-color-accent);
+	transform-box: fill-box;
+	transform-origin: left;
+	transition: transform 600ms ease-in-out;
+}
+.sizeText {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.padText {
+	font-weight: 500;
+	fill: var(--viz-frag);
+}
+.arrTitle {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.elem {
+	transition: transform 650ms ease-in-out;
+}
+.elemBox {
+	stroke: var(--sl-color-gray-2);
+	stroke-width: 1.5;
+	transition: width 650ms ease-in-out;
+}
+.elemField {
+	fill: var(--viz-alloc-bg);
+	stroke: var(--viz-alloc);
+	stroke-width: 1;
+}
+.elemName {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.dots {
+	font-size: 16px;
+	fill: var(--sl-color-gray-3);
+}
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	margin-top: 0.5rem;
+	font-size: 0.78rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+.legend i {
+	display: inline-block;
+	width: 0.95rem;
+	height: 0.8rem;
+	border: 1px solid var(--sl-color-gray-4);
+	border-radius: 2px;
+}
+.unit {
+	margin-left: auto;
+}
+.swField {
+	background: var(--viz-alloc-bg);
+	border-color: var(--viz-alloc) !important;
+}
+.swNow {
+	background: var(--sl-color-accent-low);
+	border-color: var(--sl-color-accent) !important;
+}
+.swPad {
+	background: repeating-linear-gradient(45deg, var(--viz-frag-bg) 0 3px, var(--viz-frag) 3px 4px);
+}
+.swTick {
+	width: 0 !important;
+	height: 1rem !important;
+	border: none !important;
+	border-left: 2px solid var(--sl-color-gray-2) !important;
+	border-radius: 0 !important;
+}
+
+/* On phones, keep the figure readable and let it scroll sideways inside the card. */
+.scroll {
+	overflow-x: auto;
+}
+.scroll > svg {
+	min-width: 34rem;
+}

@@ -1,0 +1,175 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	margin-top: 0.75rem;
+	font-family: var(--viz-mono);
+}
+
+.cI {
+	fill: var(--viz-series-1);
+	font-weight: 700;
+}
+.cJ {
+	fill: var(--viz-series-2);
+	font-weight: 700;
+}
+.cK {
+	fill: var(--viz-series-3);
+	font-weight: 700;
+}
+.strokeI {
+	stroke: var(--viz-series-1);
+}
+.strokeJ {
+	stroke: var(--viz-series-2);
+}
+
+.pick {
+	cursor: pointer;
+}
+.cell {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.2;
+	transition:
+		fill 350ms ease-in-out,
+		stroke 350ms ease-in-out;
+}
+.cellLayer {
+	fill: color-mix(in srgb, var(--viz-series-1) 10%, var(--sl-color-bg));
+}
+.cellRow {
+	fill: color-mix(in srgb, var(--viz-series-2) 18%, var(--sl-color-bg));
+}
+.cellCur {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.5;
+}
+.cellNum {
+	font-size: 15px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+	pointer-events: none;
+}
+.cellNumCur {
+	fill: var(--sl-color-accent-high);
+}
+.layerLbl {
+	font-size: 12px;
+}
+.depth {
+	stroke: var(--sl-color-gray-5);
+	stroke-dasharray: 3 3;
+}
+
+.axis {
+	stroke-width: 1.5;
+}
+.axI {
+	stroke: var(--viz-series-1);
+}
+.axJ {
+	stroke: var(--viz-series-2);
+}
+.axK {
+	stroke: var(--viz-series-3);
+}
+.headFill {
+	fill: var(--sl-color-gray-3);
+}
+.axisLbl {
+	font-size: 14px;
+}
+
+.formula text {
+	font-size: 17px;
+}
+.fName {
+	fill: var(--sl-color-text);
+	font-weight: 700;
+}
+.fDim {
+	fill: var(--sl-color-gray-3);
+}
+.fResult {
+	font-size: 22px !important;
+	font-weight: 700;
+	fill: var(--sl-color-accent-high);
+}
+
+.rowLbl {
+	font-size: 12px;
+	fill: var(--sl-color-gray-3);
+	font-family: var(--__sl-font);
+	font-weight: 700;
+}
+.stripIdx {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+	pointer-events: none;
+}
+.stripAddr {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+	pointer-events: none;
+}
+
+.group {
+	opacity: 0.45;
+	transition: opacity 400ms ease-in-out;
+}
+.groupCur {
+	opacity: 1;
+}
+.group text {
+	font-size: 13px;
+}
+.bracket {
+	fill: none;
+	stroke-width: 2;
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem 1.1rem;
+	margin-top: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span::before {
+	content: '';
+	display: inline-block;
+	width: 0.9rem;
+	height: 0.75rem;
+	margin-right: 0.4rem;
+	vertical-align: -0.1em;
+	border: 1px solid var(--sl-color-gray-4);
+	border-radius: 2px;
+}
+.lgCur::before {
+	background: var(--sl-color-accent-low);
+	border: 2px solid var(--sl-color-accent) !important;
+}
+.lgRow::before {
+	background: color-mix(in srgb, var(--viz-series-2) 18%, var(--sl-color-bg));
+}
+.lgLayer::before {
+	background: color-mix(in srgb, var(--viz-series-1) 10%, var(--sl-color-bg));
+}

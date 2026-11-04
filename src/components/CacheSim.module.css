@@ -1,0 +1,411 @@
+.root {
+	--tag: var(--viz-wx);
+	--index: var(--viz-wm);
+	--offset: var(--sl-color-gray-3);
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.modeOn {
+	border-color: var(--sl-color-accent) !important;
+	background: var(--sl-color-accent-low) !important;
+	color: var(--sl-color-accent-high) !important;
+}
+
+.message {
+	min-height: 1.6em;
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+	overflow: visible;
+}
+.section {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+.addrName {
+	font-family: var(--viz-mono);
+	text-transform: none;
+	letter-spacing: 0;
+	font-size: 13px;
+	fill: var(--sl-color-accent-high);
+}
+.side {
+	font-family: var(--__sl-font);
+	font-size: 12.5px;
+	font-weight: 600;
+	fill: var(--sl-color-gray-2);
+}
+.sideDim {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	fill: var(--sl-color-gray-3);
+}
+
+/* ---- address bits ---- */
+.bit rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.2;
+	transition: fill 400ms ease-in-out, stroke 400ms ease-in-out;
+}
+.bit text {
+	font-size: 14px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.f_tag rect {
+	stroke: var(--tag);
+	fill: color-mix(in srgb, var(--tag) 16%, transparent);
+}
+.f_index rect {
+	stroke: var(--index);
+	fill: color-mix(in srgb, var(--index) 18%, transparent);
+}
+.f_offset rect {
+	stroke: var(--offset);
+	fill: color-mix(in srgb, var(--offset) 14%, transparent);
+}
+.brace {
+	fill: none;
+	stroke-width: 1.5;
+}
+.fieldName {
+	font-family: var(--__sl-font);
+	font-size: 13px;
+	font-weight: 700;
+}
+.fieldBits {
+	font-size: 12px;
+}
+.fl_tag .brace {
+	stroke: var(--tag);
+}
+.fl_tag text {
+	fill: var(--tag);
+}
+.fl_index .brace {
+	stroke: var(--index);
+}
+.fl_index text {
+	fill: var(--index);
+}
+.fl_offset .brace {
+	stroke: var(--offset);
+}
+.fl_offset text {
+	fill: var(--offset);
+}
+
+.request rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.4;
+	transition: stroke 300ms;
+}
+.request text {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.requestOn rect {
+	stroke: var(--sl-color-accent);
+	fill: var(--sl-color-accent-low);
+}
+
+.indexArrow {
+	fill: none;
+	stroke: var(--index);
+	stroke-width: 2.2;
+	transition: d 500ms ease-in-out;
+}
+.headIndex {
+	fill: var(--index);
+}
+
+/* ---- cache ---- */
+.colHead text {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.setLabel {
+	font-size: 12.5px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+	transition: fill 300ms;
+}
+.setLabelOn {
+	fill: var(--index);
+}
+.selRow {
+	fill: color-mix(in srgb, var(--index) 9%, transparent);
+	stroke: var(--index);
+	stroke-width: 1.5;
+}
+.gap {
+	font-size: 14px;
+	fill: var(--sl-color-gray-4);
+	letter-spacing: 0.2em;
+}
+
+.line rect {
+	transition: fill 400ms ease-in-out, stroke 400ms ease-in-out;
+}
+.vBox,
+.tagBox,
+.dataBox {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.2;
+}
+.vText {
+	font-size: 12.5px;
+	fill: var(--sl-color-gray-2);
+}
+.tagText {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.tagCompare {
+	stroke: var(--tag);
+	stroke-width: 2;
+}
+.tagTextOn {
+	fill: var(--tag);
+}
+.dataText {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.byteTick {
+	stroke: var(--sl-color-gray-5);
+	stroke-width: 1;
+}
+.invalid .dataBox,
+.invalid .tagBox {
+	stroke-dasharray: 4 3;
+	fill: none;
+}
+.invalid .vText {
+	fill: var(--sl-color-gray-4);
+}
+.lineHit .dataBox,
+.lineHit .tagBox,
+.lineHit .vBox {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+	stroke-width: 2;
+}
+.lineMiss .dataBox,
+.lineMiss .tagBox,
+.lineMiss .vBox {
+	stroke: var(--viz-miss);
+	stroke-width: 2;
+	stroke-dasharray: none;
+}
+.lineMiss .dataBox {
+	fill: var(--viz-miss-bg);
+}
+.lru {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+
+/* A missed block flies in from its spot in memory; the victim floats off. */
+.fly {
+	animation: fly 700ms ease-in-out both;
+}
+.flyBox {
+	fill: var(--viz-miss-bg);
+	stroke: var(--viz-miss);
+	stroke-width: 1.5;
+}
+@keyframes fly {
+	from {
+		transform: translate(var(--dx), var(--dy));
+	}
+	to {
+		transform: translate(0, 0);
+	}
+}
+.victim {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--viz-miss);
+	text-decoration: line-through;
+	animation: evict 700ms ease-in-out both;
+	pointer-events: none;
+}
+@keyframes evict {
+	from {
+		opacity: 1;
+		transform: translate(0, 0);
+	}
+	to {
+		opacity: 0;
+		transform: translate(0, -26px);
+	}
+}
+
+.badgeOk circle {
+	fill: var(--viz-ok);
+}
+.badgeNo circle {
+	fill: var(--viz-miss);
+}
+.badgeOk svg,
+.badgeNo svg {
+	color: var(--sl-color-bg);
+}
+
+/* ---- memory ---- */
+.mem rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-5);
+	stroke-width: 1.2;
+	transition: fill 400ms, stroke 400ms;
+}
+.mem text {
+	font-size: 12.5px;
+	font-weight: 600;
+	fill: var(--sl-color-gray-2);
+}
+.memAddr {
+	font-size: 11.5px !important;
+	font-weight: 400 !important;
+	fill: var(--sl-color-gray-3) !important;
+}
+.memCached rect {
+	fill: var(--viz-cached-bg);
+	stroke: var(--viz-cached);
+}
+.memWant rect {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.4;
+}
+.memWant text {
+	fill: var(--sl-color-text);
+}
+
+/* ---- tally ---- */
+.tallyCount {
+	font-family: var(--viz-mono);
+	text-transform: none;
+	letter-spacing: 0;
+	font-weight: 600;
+	fill: var(--sl-color-gray-3);
+}
+.tally rect {
+	fill: none;
+	stroke: var(--sl-color-gray-5);
+	stroke-dasharray: 3 3;
+	transition: fill 400ms, stroke 400ms;
+}
+.tallyLabel {
+	font-size: 11.5px;
+	fill: var(--sl-color-gray-3);
+}
+.tallyKind {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	font-weight: 600;
+}
+.tallyHit rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+	stroke-dasharray: none;
+}
+.tallyHit .tallyLabel,
+.tallyHit .tallyKind {
+	fill: var(--viz-ok);
+}
+.tallyMiss rect {
+	fill: var(--viz-miss-bg);
+	stroke: var(--viz-miss);
+	stroke-dasharray: none;
+}
+.tallyMiss .tallyLabel,
+.tallyMiss .tallyKind {
+	fill: var(--viz-miss);
+}
+.tallyCur rect {
+	stroke-width: 2.4;
+	stroke: var(--sl-color-accent);
+}
+
+/* ---- legend ---- */
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	margin-top: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span::before {
+	content: '';
+	display: inline-block;
+	width: 0.85rem;
+	height: 0.85rem;
+	margin-right: 0.35rem;
+	vertical-align: -0.12em;
+	border-radius: 0.2rem;
+	border: 1.5px solid;
+}
+.lgTag::before {
+	border-color: var(--tag);
+	background: color-mix(in srgb, var(--tag) 16%, transparent);
+}
+.lgIndex::before {
+	border-color: var(--index);
+	background: color-mix(in srgb, var(--index) 18%, transparent);
+}
+.lgOffset::before {
+	border-color: var(--offset);
+	background: color-mix(in srgb, var(--offset) 14%, transparent);
+}
+.lgHit::before {
+	border-color: var(--viz-ok);
+	background: var(--viz-ok-bg);
+}
+.lgMiss::before {
+	border-color: var(--viz-miss);
+	background: var(--viz-miss-bg);
+}
+.lgCached::before {
+	border-color: var(--viz-cached);
+	background: var(--viz-cached-bg);
+}
+.sectionSub {
+	font-family: var(--viz-mono);
+	font-weight: 500;
+	text-transform: none;
+	letter-spacing: 0;
+	fill: var(--sl-color-gray-3);
+}

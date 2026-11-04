@@ -1,0 +1,125 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin-bottom: 0.5rem;
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+.space {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-2);
+	stroke-width: 2;
+}
+.kernel rect {
+	stroke: var(--sl-color-gray-3);
+}
+.kernel text,
+.stack text,
+.mmap text,
+.heap text,
+.seg text {
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.hatchBg {
+	fill: var(--sl-color-gray-6);
+}
+.hatchLine {
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.4;
+}
+.stack rect,
+.mmap rect,
+.seg rect {
+	fill: var(--viz-alloc-bg);
+	stroke: var(--sl-color-gray-3);
+}
+.heap rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+	transition: y 500ms ease-in-out, height 500ms ease-in-out;
+}
+.grow {
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 2;
+}
+.arrowHead {
+	fill: var(--sl-color-gray-2);
+}
+.ptr line {
+	stroke: var(--sl-color-gray-2);
+	stroke-width: 1.8;
+}
+.ptr text {
+	font-size: 12px;
+	fill: var(--sl-color-gray-2);
+}
+.brk {
+	transition: transform 500ms ease-in-out;
+}
+.brk line {
+	stroke: var(--sl-color-accent);
+}
+.brk text {
+	fill: var(--sl-color-accent-high);
+	font-weight: 700;
+}
+.note,
+.addr {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	fill: var(--sl-color-gray-3);
+}
+.area {
+	fill: var(--viz-alloc-bg);
+}
+.line {
+	fill: none;
+	stroke: var(--viz-alloc);
+	stroke-width: 2;
+}
+.axis {
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.2;
+}
+.pname {
+	font-family: var(--__sl-font);
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.pdesc {
+	font-family: var(--__sl-font);
+	font-size: 11.5px;
+	fill: var(--sl-color-gray-3);
+}
+.caption {
+	margin: 0.25rem 0 0;
+	font-size: 0.78rem;
+	color: var(--sl-color-gray-3);
+	text-align: center;
+}
+
+/* On phones, keep the figure readable and let it scroll sideways inside the card. */
+.scroll {
+	overflow-x: auto;
+}
+.scroll > svg {
+	min-width: 34rem;
+}

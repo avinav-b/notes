@@ -1,0 +1,212 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.seg {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+.on {
+	border-color: var(--sl-color-accent) !important;
+	background: var(--sl-color-accent-low) !important;
+}
+.ops {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.35rem;
+	margin-top: 0.75rem;
+}
+.op {
+	font-family: var(--viz-mono);
+	font-size: 0.78rem;
+	padding: 0.15rem 0.45rem;
+	border-radius: 0.3rem;
+	border: 1px solid var(--viz-border);
+	background: var(--sl-color-bg);
+	color: var(--sl-color-gray-2);
+	transition: border-color 300ms, background 300ms, opacity 300ms;
+}
+.opNow {
+	border-color: var(--sl-color-accent);
+	background: var(--sl-color-accent-low);
+	color: var(--sl-color-text);
+	font-weight: 700;
+}
+.opDone {
+	opacity: 0.5;
+}
+.free {
+	margin-left: auto;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.free b {
+	font-family: var(--viz-mono);
+	color: var(--sl-color-text);
+	margin-left: 0.25rem;
+}
+.msg {
+	min-height: 1.5em;
+	margin: 0.5rem 0 0.25rem;
+	padding: 0.35rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+.rowBg {
+	fill: none;
+	stroke: transparent;
+	stroke-width: 1.5;
+	transition: fill 350ms, stroke 350ms;
+}
+.rowNow .rowBg {
+	fill: color-mix(in srgb, var(--sl-color-accent) 10%, transparent);
+	stroke: var(--sl-color-accent);
+}
+.cls {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.rowNow .cls {
+	fill: var(--sl-color-accent-high);
+}
+.link {
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.4;
+	animation: fadeIn 500ms ease-in-out;
+}
+.arrowHead {
+	fill: var(--sl-color-gray-3);
+}
+.empty {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-style: italic;
+	fill: var(--sl-color-gray-4);
+}
+.trayLine {
+	stroke: var(--sl-color-gray-5);
+	stroke-dasharray: 4 3;
+}
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+}
+.blk {
+	transition: transform 650ms ease-in-out;
+	animation: fadeIn 450ms ease-in-out;
+}
+.body {
+	fill: var(--sl-color-bg);
+	transition: fill 400ms;
+}
+.inUse .body {
+	fill: var(--viz-alloc-bg);
+}
+.fresh .body {
+	fill: var(--viz-ok-bg);
+}
+.outline {
+	fill: none;
+	stroke: var(--sl-color-gray-2);
+	stroke-width: 1.5;
+	transition: stroke 300ms;
+}
+.fresh .outline {
+	stroke: var(--viz-ok);
+}
+.chkOk .outline {
+	stroke: var(--viz-ok);
+	stroke-width: 3;
+}
+.chkNo .outline {
+	stroke: var(--viz-frag);
+	stroke-width: 3;
+}
+.wordLine {
+	stroke: var(--sl-color-gray-5);
+	stroke-width: 1;
+}
+.pad {
+	stroke: none;
+}
+.hatchBg {
+	fill: var(--viz-frag-bg);
+}
+.hatchLine {
+	stroke: var(--viz-frag);
+	stroke-width: 1.4;
+}
+.label {
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	margin-top: 0.5rem;
+	font-size: 0.78rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+.legend i {
+	display: inline-block;
+	width: 0.95rem;
+	height: 0.8rem;
+	border: 1px solid var(--sl-color-gray-3);
+	border-radius: 2px;
+}
+.unit {
+	margin-left: auto;
+}
+.swFree {
+	background: var(--sl-color-bg);
+}
+.swUse {
+	background: var(--viz-alloc-bg);
+}
+.swFresh {
+	background: var(--viz-ok-bg);
+	border-color: var(--viz-ok) !important;
+}
+.swPad {
+	background: repeating-linear-gradient(45deg, var(--viz-frag-bg) 0 3px, var(--viz-frag) 3px 4px);
+}
+.swNow {
+	background: color-mix(in srgb, var(--sl-color-accent) 10%, transparent);
+	border-color: var(--sl-color-accent) !important;
+}
+
+/* On phones, keep the figure readable and let it scroll sideways inside the card. */
+.scroll {
+	overflow-x: auto;
+}
+.scroll > svg {
+	min-width: 34rem;
+}
