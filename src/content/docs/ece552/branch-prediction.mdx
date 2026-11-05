@@ -1,0 +1,314 @@
+---
+title: Control Hazards and Branch Prediction
+description: How a pipeline handles branches, from stalling to speculation, and how direction predictors, the BTB and the return address stack guess the next PC.
+lastUpdated: 2026-11-05
+sidebar:
+  order: 3
+---
+
+import ControlHazardPipeline from '../../../components/ControlHazardPipeline.tsx';
+import CpiBars from '../../../components/CpiBars.tsx';
+import BranchPredictorSim from '../../../components/BranchPredictorSim.tsx';
+import CounterFsm from '../../../components/CounterFsm.tsx';
+import PredictorTables from '../../../components/PredictorTables.tsx';
+import HybridPredictor from '../../../components/HybridPredictor.tsx';
+import BtbLookup from '../../../components/BtbLookup.tsx';
+import {
+	alwaysStall,
+	speculationRecovery,
+	branchCpi,
+	oneBitSim,
+	counterFsm,
+	twoBitSim,
+	correlatedSim,
+	predictorTables,
+	hybridPredictor,
+	btbLookup,
+	fetchPrediction,
+} from '../../../embeds/ece552/branch-prediction';
+
+## Control Hazards
+
+The pipeline works well when there is no transfer of control: **F** just fetches the next sequential instruction. The problem is when the sequential flow is disrupted.
+
+A branch `br (Rj op Rk) displ` needs the ALU for two things:
+- **Compare** `Rj` and `Rk`, and set a flag with the result.
+- **Compute the target** address, `PC + displ`, and modify the PC if necessary.
+
+So an ALU is added to the D or X stage to compute the target. In our pipeline the branch decision is known at the **end of X**. By then, the two instructions fetched behind the branch are already in F and D, and if the branch is taken, both are wrong. The PC has to be corrected and the right instruction fetched.
+
+### Option 1: always stall
+
+At decode, the pipeline knows the instruction is a branch, so it stalls: it inserts nops for 2 cycles until the branch resolves. Control stalls are written `c*`.
+
+<ControlHazardPipeline client:visible {...alwaysStall.props} />
+
+### Option 2: only pay the penalty for taken branches
+
+Assume the branch is **not taken** (at fetch, the pipeline can't even tell it's a branch yet) and keep fetching sequentially. The 2-cycle penalty is only paid when the branch turns out to be taken (see Control Speculation and Recovery below).
+
+### Control hazard CPI
+
+Assume 20% of instructions are branches, 80% are other instructions, 75% of branches are taken, and $\text{CPI}_\text{base} = 1$.
+
+| Policy | $\text{CPI}_\text{base + branch}$ | Slowdown |
+| --- | --- | --- |
+| Always stall | $1 + 0.2 \times 2 = 1.4$ | 40% |
+| Only pay the 2 cycles for taken branches | $1 + 0.2 \times 0.75 \times 2 = 1.3$ | 30% |
+
+## Control Speculation and Recovery
+
+**Speculate:** predict the branch outcome. The simplest prediction is the one above: predict not taken.
+
+**Mis-speculation recovery** is what to do on a wrong guess:
+- The branch resolves in X. The younger instructions in F and D haven't changed any permanent state yet.
+- So flush the instructions in the F/D and D/X pipeline registers. These 2 instructions are cancelled (changed into nops) before they reach a stage where they update a register or memory.
+
+<ControlHazardPipeline client:visible {...speculationRecovery.props} />
+
+## Speculation
+
+| Term | Meaning |
+| --- | --- |
+| **Speculation** | "Engagement in risky transactions on the chance of profit" |
+| **Speculative execution** | Executing before all parameters are known with certainty |
+| **Correct speculation** | Avoids stalls and improves performance |
+| **Incorrect speculation** (mis-speculation) | Must flush/abort the incorrect instructions, and undo any incorrect changes they made: recover the pre-speculative state |
+
+:::tip[The speculation game]
+Speculation pays off when
+
+$$
+\%_\text{correct} \times \text{gain} > (1 - \%_\text{correct}) \times \text{penalty}
+$$
+:::
+
+### Control speculation
+
+Control hazards are handled with **control speculation**. The unknown parameter is: are these the correct instructions to execute next?
+
+1. Guess the branch target, and start fetching at the guessed position.
+2. Execute the branch to verify (check) the guess.
+   - Correct speculation: keep going.
+   - Mis-speculation: flush the mis-speculated instructions.
+3. Don't write registers or memory until the prediction is verified.
+
+For the in-order 5-stage pipeline:
+
+| | |
+| --- | --- |
+| **Gain** | 2 cycles (relative to stalling) |
+| **Penalty** | 0 cycles: mis-speculation is no worse than stalling |
+| **$\%_\text{correct}$** | The branch prediction accuracy: about 85% for static (compiler) prediction, about 95% for dynamic (hardware) prediction |
+
+## Branch Prediction
+
+The simple strategy assumes branches are not taken, but taken branches are **more common**. We want a predictive strategy: one that yields a taken or not-taken prediction with a high probability of being right.
+
+This matters more in:
+- **Deeper pipelines**, where the branch outcome is not known for 10 to 20 cycles.
+- [**Out-of-order execution**](/ece552/dynamic-scheduling/#motivation-dynamic-scheduling), which is heavily dependent on prediction.
+
+### Branch prediction performance
+
+Again assume branches are 20% of instructions (load 20%, store 10%, other 50%) and 75% of branches are taken. With dynamic branch prediction at 95% accuracy, only the 5% of mispredicted branches pay the 2 cycles:
+
+$$
+\text{CPI} = 1 + 2 \times 0.2 \times 0.05 = 1.02
+$$
+
+<CpiBars client:visible {...branchCpi.props} />
+
+## Dynamic Branch Prediction
+
+Learn from the past, predict the future: record history in a hardware structure. A branch predictor has two parts:
+
+| Part | Applies to | Predicts | |
+| --- | --- | --- | --- |
+| **Direction predictor** | Conditional branches only | Taken or not taken | Hard |
+| **Target predictor** | All control transfers | The target PC. Done in the F stage, so it also determines whether the instruction is a control instruction before the D stage. | Easy |
+
+### Anatomy of a branch predictor
+
+| Part | Question / options |
+| --- | --- |
+| **Event selection** | Which instructions to predict: all instructions, or only branches? |
+| **Prediction index** | What indexes the predictor: the PC and/or global/local history |
+| **Prediction mechanism** | Saturating counters, Markov, perceptrons, etc. |
+| **Feedback** | Using the branch outcome, update the prediction mechanism and update the history. Also: recovery on a misprediction. |
+
+## Branch Direction Prediction
+
+Prediction happens in the **fetch** stage. The pipeline doesn't know yet whether the instruction is a branch, but it can disregard the prediction if it isn't.
+
+The **direction predictor (DIRP)** maps a conditional branch's PC to a taken / not-taken (T/N) decision. This is difficult to do well: individual branches are often unbiased or only weakly biased.
+
+### Branch Prediction Buffer (BPB): the 1-bit predictor
+
+The simplest direction predictor:
+- The PC indexes a table of bits (0 = N, 1 = T), with no tags.
+- Essentially: the branch will go the same way it went last time.
+
+The problem: consider the **inner loop branch** below. The PC selects one row of the table, and that branch's outcomes are T, T, T, N for every outer iteration.
+
+```c
+for (i = 0; i < 100; i++)
+    for (j = 0; j < 3; j++)
+        // whatever
+```
+
+<BranchPredictorSim client:visible {...oneBitSim.props} />
+
+The 1-bit predictor has **2 built-in mispredictions per inner loop**: the exit (predicted T, actually N), and the first iteration of the next inner loop (predicted N because of that exit).
+
+### Two-bit saturating counters
+
+**Two-bit saturating counters** (2bc) [Smith'81] replace each single-bit prediction with a counter: (0, 1, 2, 3) = (N, n, t, T), where N is strongly not taken and T is strongly taken. The DIRP is forced to mispredict **twice** before "changing its mind".
+
+<CounterFsm client:visible {...counterFsm.props} />
+
+Other, more complex state diagrams are possible, to predict different patterns correctly.
+
+On the same loop:
+
+<BranchPredictorSim client:visible {...twoBitSim.props} />
+
+- It fixes the pathology of changing its mind too quickly: only 1 misprediction per inner loop (the exit).
+- It requires some training: the first two branches are mispredicted while the counter warms up.
+
+### Storing and accessing predictions
+
+Predictions are stored like a cache: the table has $2^k$ rows of 1- or 2-bit counters, indexed by $k$ bits of the PC.
+- **No tags:** they would cost far more than the data (1 or 2 bits per entry).
+- **Aliasing:** two branches with different PCs can access the same counter. This is OK, because it is only a prediction.
+
+:::note[Example: k = 10]
+Using 10 PC bits: $2^{10} \times 2 = 2048$ bits.
+
+With tags, each tag would be $32 - 10 - 2 = 20$ bits (the 2 lowest PC bits are always 0, and the 10 bits above them are the index), so the table would need $2^{10} \times (2 + 20) = 22$ Kbits.
+:::
+
+## Correlated Branch Prediction
+
+A 2-bit counter only has a small amount of history about one branch (a **local** scheme). What about:
+
+```c
+if (aa == 2)    // branch 1
+    aa = 0;
+if (bb == 3)    // branch 2
+    bb = 0;
+if (aa != bb)   // branch 3
+    ...
+```
+
+Branch 3 is clearly correlated with the behaviour of branches 1 and 2. A predictor that only uses a branch's own history cannot capture this; we need a **global** scheme.
+
+### History register
+
+- A **global history register (GHR)** records the last $k$ branch outcomes: every branch shifts its outcome in.
+- The $k$-bit history is used instead of the PC to index the BPB of $2^k$ counters.
+- This is called a **two-level predictor**.
+
+The **correlated (two-level) predictor** [Patt]:
+- Exploits the observation that branch outcomes are correlated.
+- Maintains a separate prediction per (PC, BHR), where the **branch history register (BHR)** holds the recent branch outcomes.
+
+### Working example
+
+Assume the program has one branch: the same inner loop branch as before. A plain BPB has one 1-bit DIRP entry. A BPB with a 2-bit BHR has 4 1-bit entries, one per history pattern. The BHR is initialized to NN.
+
+<BranchPredictorSim client:visible {...correlatedSim.props} />
+
+- **2-bit BHR:** not better than before (2 mispredictions per loop). The BHR is not long enough to capture the pattern: history TT is followed by T once and by N once in every inner loop.
+- **3-bit BHR:** 8 1-bit entries, of which only 4 patterns are ever active (NTT, TNT, TTN, TTT). After training, every pattern always has the same outcome: **perfect accuracy in steady state**.
+
+### Design choices
+
+| Choice | Trade-offs |
+| --- | --- |
+| **One global BHR, or one per PC (local)?** | Each one captures different kinds of behaviours/patterns. Global is often better; it can still capture local patterns for tight loops. |
+| **How many history bits (BHR size)?** | Tricky: a long BHR is good for some branches, a short one is better for others.<br />BPB utilization decreases with a longer BHR: many history patterns are never seen.<br />Using the PC and BHR together lets multiple PCs dynamically share BPB entries.<br />A long BHR needs a longer training period. |
+
+## Two-Level Predictors
+
+| Level | Holds | Global or per-address |
+| --- | --- | --- |
+| **First level** | History: a register or a table | **G**lobal, or **P**er-address (indexed by PC bits) |
+| **Second level** | Prediction table (2-bit counters) | **g**lobal, or **p**er-address (one table per PC group) |
+
+So there are four combinations. With 8 history bits, 6 PC bits indexing a private history table, and 2 PC bits selecting one of 4 private predictor tables:
+
+<PredictorTables client:visible {...predictorTables.props} />
+
+| Scheme | Size |
+| --- | --- |
+| **GAg** | $2^8 \times 2 + 8 = 2^9 + 8 = 520$ bits |
+| **GAp** | $2^8 \times 2^2 \times 2 + 8 = 2^{11} + 8 = 2056$ bits |
+| **PAg** | $2^6 \times 2^3 + 2^8 \times 2 = 2^9 + 2^9 = 1024$ bits |
+| **PAp** | $2^6 \times 2^3 + 2^8 \times 2 \times 2^2 = 2^9 + 2^{11} = 512 + 2048 = 2560$ bits |
+
+## Hybrid (Tournament) Predictor
+
+The **hybrid (tournament) predictor** [McFarling'93] attacks the correlated predictor's BPB utilization problem. The idea is to combine two predictors:
+- A **simple BPB** predicts history-independent branches.
+- A **correlated predictor** predicts only the branches that need history.
+- A **chooser** assigns each branch to one predictor or the other. Branches start in the simple BPB, and move once they pass a misprediction threshold.
+
+<HybridPredictor client:visible {...hybridPredictor.props} />
+
+- The correlated predictor can be made smaller, since it handles fewer branches.
+- 90 to 95% accuracy.
+
+There are lots of other direction prediction strategies, e.g. perceptron-based predictors (used in recent AMD processors). Lab 2 explores these further.
+
+## Branch Target Buffer (BTB)
+
+We also need to predict the branch **target**. The **branch target buffer (BTB)** is a small cache of targets, looked up with the PC in the fetch stage:
+
+| PC bits | Use |
+| --- | --- |
+| **[9:2]** | Index: picks the BTB row |
+| **[19:10]** | Partial tag, compared with the row's tag |
+| **[31:14]** | Upper bits of the predicted target (the row stores only target bits [13:2]) |
+
+- **Hit:** this is a control instruction, and it is going to this target PC (if taken).
+- **Miss:** not a control instruction, or one never seen before, or one that was evicted.
+- **Partial tags and data** are fine: full tags aren't necessary, because the target PC is just a guess. Aliasing is OK.
+
+<BtbLookup client:visible {...btbLookup.props} />
+
+Real sizes: the Pentium 4 BTB has 4K entries, 4-way set-associative; the Zen 4 BTB has 1.5K (L1) to 7K (L2) entries.
+
+### Why does a BTB work?
+
+Because control instruction targets are stable. A **direct** control instruction has a constant target; an **indirect** one has its target in a register.
+
+| Control instruction | Stable target, so the BTB works? |
+| --- | --- |
+| Direct conditional branches | Yes |
+| Direct calls | Yes |
+| Direct jumps | Yes |
+| Indirect conditional branches | No |
+| Indirect calls, dynamically linked | Yes |
+| Indirect calls, dynamically dispatched (virtual) | No |
+| Indirect conditional jumps (switches) | No |
+| Returns (indirect) | No, but see the RAS |
+
+## Return Address Stack (RAS)
+
+Return addresses are easy to predict without a BTB. A hardware **return address stack (RAS)** tracks the call sequence:
+- A call pushes PC + 4 onto the RAS.
+- The prediction for a return is the top of the stack, `RAS[TOS]`.
+
+**How can you tell an instruction is a return before decoding it?** Attach **pre-decode bits** to the I$. They are written after the first time the instruction executes. Useful bits: is it a return? Is it a conditional branch?
+
+## Summary
+
+All of next-PC prediction happens in the fetch stage: the I$ supplies the instruction and its pre-decode bits, while the DIRP, BTB, RAS and a +4 adder each propose a next PC.
+
+<BtbLookup client:visible {...fetchPrediction.props} />
+
+- Branch prediction is a performance requirement for pipelined processors.
+- The importance of accuracy increases with the depth and width of the pipeline.
+- The basic building block is the 2-bit saturating counter.
+- Predict both the direction and the target. (In Lab 2 you implement several direction predictors.)

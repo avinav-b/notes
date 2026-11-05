@@ -1,0 +1,310 @@
+---
+title: Speculation and Precise State
+description: Precise interrupts and exceptions, the reorder buffer, the load/store queue, and register renaming and recovery in the MIPS R10K.
+lastUpdated: 2026-11-05
+sidebar:
+  order: 5
+---
+
+import ExceptionTimeline from '../../../components/ExceptionTimeline.tsx';
+import StageSplit from '../../../components/StageSplit.tsx';
+import RobLsqDemo from '../../../components/RobLsqDemo.tsx';
+import RenameDemo from '../../../components/RenameDemo.tsx';
+import R10kSim from '../../../components/R10kSim.tsx';
+import {
+	simpleException,
+	oooExceptions,
+	stageSplit,
+	robLsq,
+	renameOutOfRegs,
+	r10kExample,
+	r10kRollback,
+} from '../../../embeds/ece552/speculation';
+
+## Interrupts and Exceptions in the Pipeline
+
+| | Source | Examples |
+| --- | --- | --- |
+| **Interrupt** | External | Timer, I/O device request |
+| **Exception** | Internal | Divide by zero, page fault, memory protection violation, illegal instruction |
+
+They can occur at any stage in the pipeline except W:
+
+| Exception | Stage |
+| --- | --- |
+| Page fault | F or M |
+| Illegal opcode | D |
+| Divide by zero | X |
+
+Upon detecting an interrupt, the operating system saves the processor state and runs the interrupt handling routine, which aborts or corrects.
+
+### Precise State
+
+When instruction *i* raises an exception:
+
+| Instructions | What happens |
+| --- | --- |
+| Before *i* (*i*-1, *i*-2, ...) in program order, in the pipeline | Complete normally; their results are part of the saved processor state |
+| *i* and the instructions after it, already in the pipeline | Converted into NOPs |
+| Saved PC | The PC of *i*: the program will restart at *i* |
+
+This is called **precise state** or **precise interrupts**.
+
+### Handling Precise Exceptions
+
+This is straightforward for a simple pipeline. When an exception is detected:
+- a flag is inserted into the pipeline register
+- the instruction is converted to a nop
+- the exception is handled when the flag reaches the **M/W** pipeline register
+
+Why wait until M/W? Exceptions are handled in **program order**, not temporal order.
+
+<ExceptionTimeline client:visible {...simpleException.props} />
+
+### Out-of-Order Writeback Breaks It
+
+With multi-cycle functional units, a younger instruction can write back before an older one faults.
+
+<ExceptionTimeline client:visible {...oooExceptions.props} />
+
+**Store page fault:** make it appear as if `DIV.S` finished and `S.S`, `ADD.S` haven't started:
+1. Allow `DIV.S` to write back
+2. Flush `S.S` and `ADD.S`. But `ADD.S` already wrote back! Either:
+   - keep an "undo" register file: complicated
+   - force writeback to be in order: slow
+3. Invoke the exception handler
+4. Restart `S.S`
+
+**Two exceptions in flight** (`S.S` page fault, `DIV.S` divide by zero):
+- Exceptions must be handled in program order (`S.S` first). The handler for `S.S` must see the program as if the second `DIV.S` hasn't started.
+- So we must defer exceptions until writeback **and** force in-order writeback.
+
+:::tip[Bottom line]
+Maintaining precise state is important but hard.
+:::
+
+## Speculation and Precise Interrupts
+
+Why discuss these together? Sequential (von Neumann) semantics for interrupts:
+- all instructions before the interrupt should complete
+- all instructions after the interrupt should look as if they never started
+
+We want basically the same thing for a [**mispredicted branch**](/ece552/branch-prediction/#control-speculation-and-recovery).
+
+What makes precise interrupts difficult?
+- Out-of-order completion means we must undo post-interrupt writebacks.
+- The same goes for mispredicted branches. In an in-order pipeline, a branch completes before younger instructions write back. Out of order, not necessarily.
+
+:::tip
+Precise interrupts and mis-speculation recovery are the same problem, so they get the same solution.
+:::
+
+### What Precise State Requires
+
+| Feature | Requires the ability to abort and restart at every... |
+| --- | --- |
+| Speculative execution | branch |
+| Precise synchronous (program-internal) interrupts | load, store, div, ... |
+| Precise asynchronous (external) interrupts | instruction |
+
+We will bite the bullet and implement the ability to abort and restart execution at every instruction. This is called **precise state**.
+
+## The Problem with Precise State
+
+**Writeback** combines two separate functions:
+1. It forwards values to younger instructions: okay if out of order.
+2. It writes values to registers: we would like this to be in order.
+
+We had a similar problem in **decode**, which we solved by splitting it into in-order **dispatch (D)** and out-of-order **issue (S)**, separated by the instruction buffer (the reservation stations).
+
+### Example: 1st Store Has a Page Fault
+
+In the [Tomasulo loop example](/ece552/dynamic-scheduling/#loop-example-sax), the first `S.S` page faults when it writes back in cycle 18. By then, four younger instructions have already written back:
+
+| Insn | W | |
+| --- | --- | --- |
+| `S.S f4 -> #100(r1)` | c18 | page fault |
+| `SUBI r1,4 -> r1` | **c7** | already written |
+| `BNEZ r1,Loop` | **c8** | already done |
+| `L.S #0(r1) -> f0` | **c12** | already written |
+| `MUL.S f0,f2 -> f4` | **c17** | already written |
+
+It would not be easy to work out how to revert the state to as if nothing after the store happened.
+
+Precise interrupts need the state of the machine to look as if no instruction beyond the faulting instruction had issued. Tomasulo has in-order dispatch, out-of-order execution and out-of-order completion. We need to "fix" the out-of-order completion so that we can find the precise exception point.
+
+## Reorder Buffer (ROB)
+
+```
+i1: mult r0,r2 -> r4
+i2: mult r4,r8 -> r6
+i3: add  r2,r12 -> r8
+i4: add  r14,r16 -> r4
+```
+
+`i3` and `i4` are simple ops and will likely compute their results before `i1` and `i2`. We need to make sure results are stored back to registers in program order.
+
+Conceptually, the ROB is a FIFO queue containing, per instruction:
+- a flag indicating if the instruction has completed
+- the new and old register mapping
+
+We replace the instruction buffer with the reorder buffer: it conceptually buffers completed results en route to the register file. Decode sends instructions into the ROB before issue, and completed results go to the ROB before anything is actually written.
+
+So we split writeback into two stages: **complete (C)** and **retire (R)**.
+
+<StageSplit {...stageSplit.props} />
+
+### Complete (C) and Retire (R)
+
+| Stage | Also called | Does | Order |
+| --- | --- | --- | --- |
+| **Complete (C)** | First part of writeback (W1) | The completed instruction writes its result into the physical register file | Out of order: a wait does not back-propagate to younger instructions |
+| **Retire (R)** | Commit, graduate (W2) | The ROB returns the old physical register to the free list | In order: a stall back-propagates to younger instructions |
+
+### Load/Store Queue (LSQ)
+
+The ROB makes register writes in order, but what about stores? Do we just carry on as usual and write to the data cache (D$) in X? No! Imprecise memory is worse than imprecise registers.
+
+We use a **load/store queue (LSQ)**:
+- a completed store writes to the LSQ
+- when the store retires, the head of the LSQ is written to the D$/memory
+- when a load executes, it accesses the LSQ and D$ in parallel
+  - forward the value from the LSQ if there exists an older store with a matching address (the youngest such store)
+
+<RobLsqDemo client:visible {...robLsq.props} />
+
+## Register Renaming in R10K
+
+### Example: Running Out of Registers
+
+- Names: `r1`, `r2`, `r3`
+- Locations: `p1` to `p7`
+- Original mapping: `r1→p1`, `r2→p2`, `r3→p3`; `p4` to `p7` are free
+
+<RenameDemo client:visible {...renameOutOfRegs.props} />
+
+How is the instruction after `div` renamed? We are out of free locations (physical registers). The real question is: how and when are physical registers freed?
+
+The answer, below: when the *next* instruction that writes the same architectural register retires, the ROB frees the old register (its `Told`). Until then, an older instruction might still need it, or we might have to roll back to it.
+
+### True Register Renaming
+
+- **Architectural register file?** Gone: registers are names only.
+- **Physical register file** holds all values.
+  - \# of physical registers > \# of architectural registers
+  - the map table maps each architectural register to a physical register
+  - removes WAR/WAW hazards
+  - replaces the RS copies in [Tomasulo](/ece552/dynamic-scheduling/#valuecopy-based-register-renaming)
+- **Fundamental change to the map table:** mappings can never be empty, since there is no architectural register file. (In Tomasulo, an empty entry meant the value in the architectural register file was up to date.)
+- **Free list** keeps track of unallocated physical registers. The ROB is responsible for returning registers to the free list.
+
+Conceptually, this is "true register renaming".
+
+### MIPS R10K: ROB + Physical Register File
+
+One big **physical register file** holds all data, with no copies.
+- **+** The register file is close to the FUs, so the data path is small and fast.
+- **−** The ROB and RS sit "on the side", used only for control and tags.
+
+| Structure | Holds |
+| --- | --- |
+| Tags | New tags (again). Tomasulo: RS ID; R10K: **PR#** |
+| **ROB** | `T`: the physical register for this instruction's logical output<br />`Told`: the physical register previously mapped to that logical output |
+| **Reservation station** | `T`, `S1`, `S2`: output and input PR#s (`+` means ready) |
+| **Map table** | `T+`: a PR# (never empty) plus a ready bit |
+| **Free list** | `T`: PR#s |
+
+:::note
+There are no values in the ROB, the RS, or on the CDB. Values live only in the physical register file.
+:::
+
+### R10K Pipeline
+
+The R10K pipeline is **F, D, S, X, C, R**.
+
+| Stage | Does |
+| --- | --- |
+| **D** (dispatch) | Structural hazard on the RS, ROB or physical registers? Stall.<br />Allocate RS and ROB entries and a new physical register (`T`).<br />Read the PR tags for the input registers and store them in the RS (`S1`, `S2`).<br />Read the old PR tag for the output register and store it in the ROB (`Told`).<br />Store the new output tag (`T`) in the RS and ROB, and in the map table. |
+| **S** (issue) | Wait until all input tags are ready (`+`), then issue. |
+| **X** (execute) | Free the RS entry. In Tomasulo this happened at W; it can be earlier because the RS# is not the tag. |
+| **C** (complete) | Write the destination PR.<br />Set the output register's ready bit in the map table.<br />Set the ready bits for matching input tags in the RS. |
+| **R** (retire) | ROB head not complete? Stall (wait).<br />Handle any exceptions.<br />If a store, write its value from the LSQ into the D$/memory.<br />Free the ROB (and LSQ) entry.<br />Free the previous physical register (`Told`). |
+
+### Example
+
+```
+Loop: L.S   #0(r1) -> f0
+      MUL.S f0,f2 -> f4
+      S.S   f4 -> #0(r1)
+      SUBI  r1,#4 -> r1
+      BNEZ  r1,Loop
+```
+
+Assumptions, from the lecture:
+- 7-entry ROB; RS: 2 add, 2 mult, 2 load, 2 store; branch RS not shown
+- one instruction dispatches and one issues per cycle (issue reads the register file); an instruction can issue in the same cycle its input completes
+- the first `L.S` misses in the cache (8 cycles in X); later loads hit (1 cycle) but wait for the D$; `MUL.S` takes 4 cycles
+- the branch is predicted taken, so the second iteration dispatches straight away
+- a physical register freed at retire is re-allocated from the following cycle
+
+<R10kSim client:visible {...r10kExample.props} />
+
+Things to watch for:
+- **c3:** stores are not allocated a physical register.
+- **c6:** unlike Tomasulo, the RS is freed at the end of X: the RS ID is not the tag.
+- **c7:** `MUL.S` stalls because there is no free physical register. `SUBI` completes: it broadcasts its tag (no value on the CDB), sets the ready bits in the map table and RS, and its value is written to the physical register file.
+- **c12:** `L.S` #1 is the oldest instruction (head of the ROB) and complete, so it retires: `PR#1` returns to the free list and its ROB entry is freed.
+- **c13:** `MUL.S` #2 is now the oldest but not complete, so it can't retire. `MUL.S` #7 gets the newly freed `PR#1`.
+- **c15:** structural hazard: no more ROB entries.
+- **c17:** store X is only the address computation. A store does not update memory until it retires (c19).
+
+### Completion vs. Retirement
+
+| # | Insn | Complete | Retire | |
+| --- | --- | --- | --- | --- |
+| 1 | `L.S` | c11 | c12 | long latency |
+| 2 | `MUL.S` | c16 | c17 | RAW |
+| 3 | `S.S` | c18 | c19 | |
+| 4 | `SUBI` | c7 | c20 | |
+| 5 | `BNEZ` | c9 | c21 | |
+| 6 | `L.S` | c12 | c22 | 1 cycle |
+| 7 | `MUL.S` | c19 | c23 | RAW |
+| 8 | `S.S` | c21 | c24 | |
+| 9 | `SUBI` | c22 | c25 | |
+| 10 | `BNEZ` | c24 | c26 | |
+
+Out-of-order execution, **out-of-order completion, in-order retirement**.
+
+:::caution
+Performance suffers here because there are not enough physical registers: `MUL.S` #7 could not dispatch until c13.
+:::
+
+How does in-order retirement help with exceptions (precise state)?
+
+## Precise State in R10K
+
+- Physical registers are written out of order (at C). That's OK: there is no architectural register file.
+- We can "free" written registers and "restore" old ones, by manipulating the **map table** and the **free list**, not the register file.
+
+### Restoring Precise State
+
+Two ways of restoring the map table and free list:
+
+| Option | How | Trade-off |
+| --- | --- | --- |
+| **I: serial rollback** | Walk the ROB from the tail back to the faulting instruction, undoing one entry at a time using `T` and `Told` | Slow, but simple |
+| **II: checkpoint** | Single-cycle restoration from a checkpoint | Fast, but checkpoints are expensive |
+
+**Modern processor compromise:** make the common case fast.
+- Checkpoint only low-confidence branches.
+- Use serial recovery for page faults and interrupts: rollbacks are rare.
+
+### Serial Rollback
+
+To undo one ROB entry: set its output register's map table entry back to `Told`, and return `T` to the free list.
+
+Below, the first `S.S` page faults. Its exception is handled only when it reaches the ROB head; then the ROB is unwound from the tail, one entry per cycle.
+
+<R10kSim client:visible {...r10kRollback.props} />
+
+After the rollback, the map table is exactly what it was right after `S.S` dispatched (`f0→PR#5`, `f4→PR#6`, `r1→PR#4`): everything before the store is done, nothing after it ever happened. The handler runs, then execution restarts at `S.S`.

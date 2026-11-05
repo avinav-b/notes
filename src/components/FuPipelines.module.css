@@ -1,0 +1,57 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+}
+.scroll {
+	overflow-x: auto;
+}
+.svg {
+	display: block;
+	width: 100%;
+	min-width: 30rem;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+.stage rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.5;
+}
+.stage text {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.blocked rect {
+	fill: var(--viz-war-bg);
+	stroke: var(--viz-war);
+	stroke-width: 1.5;
+}
+.blocked line {
+	stroke: var(--viz-war);
+	stroke-width: 1;
+	opacity: 0.6;
+}
+.wire {
+	fill: none;
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.6;
+}
+.head {
+	fill: var(--sl-color-gray-3);
+}
+.unit {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.note {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}

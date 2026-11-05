@@ -1,0 +1,363 @@
+.root {
+	outline: none;
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.toggle {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+.message {
+	min-height: 1.6em;
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.scroll {
+	overflow-x: auto;
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+
+.now {
+	fill: var(--sl-color-accent-low);
+	opacity: 0.7;
+	transition: x 400ms ease-in-out;
+}
+.head {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+}
+.headNow {
+	fill: var(--sl-color-accent-high);
+}
+.axis {
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.6;
+}
+.grid {
+	stroke: var(--viz-border);
+	stroke-width: 1;
+}
+.label {
+	font-size: 12.5px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+	transition: fill 500ms ease-in-out;
+}
+
+.cell {
+	font-size: 14px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+	transition: fill 500ms ease-in-out;
+}
+.cellNow {
+	fill: var(--sl-color-accent-high);
+}
+.pop {
+	animation: pop 350ms ease-out;
+}
+@keyframes pop {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+/* Stalls */
+.cStall,
+.dStall {
+	fill: var(--viz-raw);
+	font-size: 12px;
+}
+.sStall,
+.pStall {
+	fill: var(--viz-war);
+	font-size: 12px;
+}
+.cellBg {
+	stroke-width: 1.2;
+}
+.cStallBg,
+.dStallBg {
+	fill: var(--viz-raw-bg);
+	stroke: var(--viz-raw);
+	stroke-dasharray: 3 2;
+}
+.sStallBg,
+.pStallBg {
+	fill: var(--viz-war-bg);
+	stroke: var(--viz-war);
+}
+
+/* Squashed rows turn gray, and their label is struck through. */
+.nop {
+	fill: var(--sl-color-gray-4);
+	font-size: 16px;
+}
+.squashed .label,
+.squashed .cell {
+	fill: var(--sl-color-gray-4);
+}
+.strike {
+	stroke: var(--viz-wrong);
+	stroke-width: 2;
+	stroke-dasharray: 1;
+	stroke-dashoffset: 1;
+	transition: stroke-dashoffset 600ms ease-in-out;
+}
+.strikeOn {
+	stroke-dashoffset: 0;
+}
+.cancelled {
+	fill: var(--sl-color-gray-4);
+}
+.cancelLine {
+	stroke: var(--viz-wrong);
+	stroke-width: 2;
+}
+
+/* Speculative region */
+.spec rect {
+	stroke-width: 1.8;
+	transition: fill 500ms ease-in-out, stroke 500ms ease-in-out, opacity 400ms ease-in-out;
+}
+.specOpen rect {
+	fill: var(--viz-spec-bg);
+	stroke: var(--viz-spec);
+	stroke-dasharray: 5 3;
+}
+.specOk rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+}
+.specBad rect {
+	fill: var(--viz-wrong-bg);
+	stroke: var(--viz-wrong);
+}
+.hidden {
+	opacity: 0;
+}
+
+.ring {
+	fill: none;
+	stroke: var(--viz-wrong);
+	stroke-width: 2;
+	animation: pop 400ms ease-out;
+}
+
+/* Arrows */
+.arrow {
+	stroke-width: 2;
+	animation: pop 450ms ease-out;
+}
+.arrow path {
+	fill: none;
+}
+.arrow_redirect {
+	stroke: var(--viz-ok);
+	fill: var(--viz-ok);
+}
+.arrow_ok {
+	stroke: var(--viz-ok);
+	fill: var(--viz-ok);
+}
+.arrow_wrong {
+	stroke: var(--viz-wrong);
+	fill: var(--viz-wrong);
+}
+.head_redirect,
+.head_ok {
+	fill: var(--viz-ok);
+}
+.head_wrong {
+	fill: var(--viz-wrong);
+}
+
+/* Cycles-lost meter */
+.penalty {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	margin-top: 0.6rem;
+	font-size: 0.85rem;
+	color: var(--sl-color-gray-2);
+	transition: opacity 400ms ease-in-out;
+}
+.penaltyHidden {
+	opacity: 0.45;
+}
+.slots {
+	display: inline-flex;
+	gap: 0.25rem;
+}
+.slots i {
+	display: inline-block;
+	width: 1.6rem;
+	height: 1.1rem;
+	border-radius: 0.25rem;
+	border: 1.5px solid var(--viz-border);
+	transition: background 500ms ease-in-out, border-color 500ms ease-in-out;
+}
+.slotLost {
+	background: var(--viz-war-bg);
+	border-color: var(--viz-war) !important;
+}
+.slotFree {
+	background: transparent;
+}
+.lostNum {
+	color: var(--viz-war);
+	font-size: 1rem;
+}
+.okNum {
+	color: var(--viz-ok);
+	font-size: 1rem;
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	margin-top: 0.6rem;
+	font-size: 0.78rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span {
+	display: inline-flex;
+	align-items: center;
+}
+.lg {
+	display: inline-block;
+	min-width: 1.6rem;
+	margin-right: 0.35rem;
+	padding: 0 0.2rem;
+	border-radius: 0.25rem;
+	border: 1.2px solid;
+	font-family: var(--viz-mono);
+	font-style: normal;
+	font-weight: 700;
+	text-align: center;
+}
+.lgC {
+	color: var(--viz-raw);
+	background: var(--viz-raw-bg);
+	border-style: dashed;
+}
+.lgS {
+	color: var(--viz-war);
+	background: var(--viz-war-bg);
+}
+.lgNop {
+	color: var(--sl-color-gray-4);
+	border-color: var(--sl-color-gray-5);
+}
+.lgBox {
+	display: inline-block;
+	width: 1.4rem;
+	height: 0.9rem;
+	margin-right: 0.35rem;
+	border-radius: 0.25rem;
+}
+.lgSpec {
+	background: var(--viz-spec-bg);
+	border: 1.5px dashed var(--viz-spec);
+}
+.lgRing {
+	display: inline-block;
+	width: 0.9rem;
+	height: 0.9rem;
+	margin-right: 0.35rem;
+	border-radius: 50%;
+	border: 2px solid var(--viz-wrong);
+}
+.lgArrow {
+	display: inline-block;
+	width: 1.4rem;
+	margin-right: 0.35rem;
+	border-top: 2.5px solid;
+}
+.lgRedirect,
+.lgOk {
+	border-color: var(--viz-ok);
+}
+.lgWrong {
+	border-color: var(--viz-wrong);
+}
+
+/* Value row (e.g. what a register holds) */
+.trackLabel {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.chip rect,
+.chipOk rect,
+.chipBad rect {
+	stroke-width: 1.3;
+	transition: fill 400ms ease-in-out, stroke 400ms ease-in-out;
+}
+.chip text,
+.chipOk text,
+.chipBad text {
+	font-size: 10.5px;
+	font-weight: 700;
+}
+.chip rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+}
+.chip text {
+	fill: var(--sl-color-gray-2);
+}
+.chipOk rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+}
+.chipOk text {
+	fill: var(--viz-ok);
+}
+.chipBad rect {
+	fill: var(--viz-wrong-bg);
+	stroke: var(--viz-wrong);
+}
+.chipBad text {
+	fill: var(--viz-wrong);
+}
+.lgBad {
+	color: var(--viz-wrong);
+	background: var(--viz-wrong-bg);
+}
+.lgGood {
+	color: var(--viz-ok);
+	background: var(--viz-ok-bg);
+}
+.lgSpecOk {
+	background: var(--viz-ok-bg);
+	border: 1.5px solid var(--viz-ok);
+}
+.lgSpecBad {
+	background: var(--viz-wrong-bg);
+	border: 1.5px solid var(--viz-wrong);
+}

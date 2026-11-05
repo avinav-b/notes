@@ -142,6 +142,32 @@
 	--viz-frag-bg: rgba(244, 114, 182, 0.16);
 }
 
+/* ECE552 Pipelining / Branch Prediction: a misprediction or wrong value (correct uses --viz-ok), and
+   speculative work (fetched on a guess, not yet verified). Squashed work uses the gray scale. */
+:root {
+	--viz-wrong: #dc2626;
+	--viz-wrong-bg: #fee2e2;
+	--viz-spec: #0369a1;
+	--viz-spec-bg: #e0f2fe;
+}
+:root[data-theme='dark'] {
+	--viz-wrong: #f87171;
+	--viz-wrong-bg: rgba(248, 113, 113, 0.17);
+	--viz-spec: #38bdf8;
+	--viz-spec-bg: rgba(56, 189, 248, 0.14);
+}
+
+/* ECE552 Dynamic Scheduling / Speculation and Precise State: an exception / interrupt (page fault, divide by zero) and the
+   instruction that raised it. Flushed or rolled-back work uses the gray scale, as on Branch Prediction. */
+:root {
+	--viz-fault: #e11d48;
+	--viz-fault-bg: #ffe4e6;
+}
+:root[data-theme='dark'] {
+	--viz-fault: #fb7185;
+	--viz-fault-bg: rgba(251, 113, 133, 0.17);
+}
+
 /* Keep inline math in table cells on one line (it broke mid-formula on phones). */
 table .katex {
 	white-space: nowrap;

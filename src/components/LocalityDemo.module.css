@@ -1,0 +1,277 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.seg {
+	display: inline-flex;
+	gap: 0.3rem;
+}
+.on {
+	border-color: var(--sl-color-accent) !important;
+	color: var(--sl-color-accent-high) !important;
+	background: var(--sl-color-accent-low) !important;
+}
+.message {
+	min-height: 1.6em;
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.45rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.wrap {
+	width: 100%;
+}
+.svg {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	user-select: none;
+}
+.svg text {
+	font-family: var(--viz-mono);
+	font-size: 12px;
+}
+
+.rowLbl,
+.rowLblTop {
+	font-family: var(--__sl-font) !important;
+	font-size: 13px !important;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.sub,
+.tally {
+	font-family: var(--__sl-font) !important;
+	font-size: 11.5px !important;
+	font-weight: 500;
+	fill: var(--sl-color-gray-3);
+}
+.tally {
+	font-family: var(--viz-mono) !important;
+}
+
+/* Access chips */
+.chipTodo rect,
+.chipHit rect,
+.chipMiss rect,
+.chipHitNow rect,
+.chipMissNow rect {
+	stroke-width: 1.5;
+	transition: fill 300ms, stroke 300ms;
+}
+.chipTodo rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-5);
+}
+.chipTodo text {
+	fill: var(--sl-color-gray-3);
+}
+.chipHit rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+}
+.chipMiss rect {
+	fill: var(--viz-miss-bg);
+	stroke: var(--viz-miss);
+}
+.chipHitNow rect,
+.chipMissNow rect {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.5;
+}
+.chipHitNow rect {
+	fill: var(--viz-ok-bg);
+}
+.chipMissNow rect {
+	fill: var(--viz-miss-bg);
+}
+.chipHit text,
+.chipMiss text,
+.chipHitNow text,
+.chipMissNow text {
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.chipOut {
+	font-family: var(--__sl-font) !important;
+	font-size: 10.5px !important;
+	font-weight: 600 !important;
+}
+.chipHit .chipOut,
+.chipHitNow .chipOut {
+	fill: var(--viz-ok);
+}
+.chipMiss .chipOut,
+.chipMissNow .chipOut {
+	fill: var(--viz-miss);
+}
+
+/* Cache */
+.slot {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.5;
+}
+.empty {
+	font-family: var(--__sl-font) !important;
+	fill: var(--sl-color-gray-4);
+	font-style: italic;
+}
+.cell rect,
+.cellHit rect,
+.cellMiss rect,
+.cellNeighbour rect {
+	stroke-width: 1.5;
+	transition: fill 300ms, stroke 300ms;
+}
+.cell rect {
+	fill: var(--viz-cached-bg);
+	stroke: var(--viz-cached);
+}
+.cellNeighbour rect {
+	fill: var(--viz-cached-bg);
+	stroke: var(--viz-cached);
+	stroke-dasharray: 4 2;
+}
+.cellHit rect {
+	fill: var(--viz-ok-bg);
+	stroke: var(--sl-color-accent);
+	stroke-width: 3;
+	animation: pulse 700ms ease-in-out;
+}
+.cellMiss rect {
+	fill: var(--viz-miss-bg);
+	stroke: var(--sl-color-accent);
+	stroke-width: 3;
+}
+.cell text,
+.cellNeighbour text,
+.cellHit text,
+.cellMiss text {
+	fill: var(--sl-color-text);
+	font-weight: 700;
+}
+.fly {
+	transform-box: fill-box;
+	transform-origin: left top;
+	animation: fly 700ms ease-in-out both;
+}
+@keyframes fly {
+	from {
+		transform: translate(var(--dx), var(--dy)) scale(var(--sx), 1);
+	}
+	to {
+		transform: none;
+	}
+}
+@keyframes pulse {
+	0%,
+	100% {
+		stroke-width: 3;
+	}
+	50% {
+		stroke-width: 6;
+	}
+}
+.blockTag,
+.blockTagNow {
+	font-family: var(--__sl-font) !important;
+	font-size: 11px !important;
+	fill: var(--sl-color-gray-3);
+}
+.blockTagNow {
+	fill: var(--sl-color-accent-high);
+	font-weight: 700;
+}
+
+/* Memory */
+.memBlock,
+.memBlockCached {
+	fill: none;
+	stroke-width: 1.5;
+	transition: stroke 300ms;
+}
+.memBlock {
+	stroke: var(--sl-color-gray-4);
+}
+.memBlockCached {
+	stroke: var(--viz-cached);
+	stroke-width: 2.5;
+}
+.mem rect,
+.memNow rect {
+	stroke: var(--sl-color-gray-5);
+	transition: fill 300ms;
+}
+.mem rect {
+	fill: var(--sl-color-bg);
+}
+.mem text {
+	fill: var(--sl-color-gray-2);
+}
+.memNow rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.5;
+}
+.memNow text {
+	fill: var(--sl-color-accent-high);
+	font-weight: 700;
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem 1.1rem;
+	margin-top: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.lg {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+.swNow,
+.swHit,
+.swMiss,
+.swNeighbour,
+.swCached {
+	display: inline-block;
+	width: 1rem;
+	height: 0.75rem;
+	border-radius: 2px;
+	border: 1.5px solid;
+}
+.swNow {
+	border: 2.5px solid var(--sl-color-accent);
+	background: var(--sl-color-accent-low);
+}
+.swHit {
+	background: var(--viz-ok-bg);
+	border-color: var(--viz-ok);
+}
+.swMiss {
+	background: var(--viz-miss-bg);
+	border-color: var(--viz-miss);
+}
+.swNeighbour {
+	background: var(--viz-cached-bg);
+	border-color: var(--viz-cached);
+	border-style: dashed;
+}
+.swCached {
+	background: var(--viz-cached-bg);
+	border-color: var(--viz-cached);
+}

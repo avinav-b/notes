@@ -1,0 +1,370 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+
+.seg {
+	display: inline-flex;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.4rem;
+	overflow: hidden;
+}
+.seg button {
+	border: 0 !important;
+	border-radius: 0 !important;
+}
+.seg button + button {
+	border-left: 1px solid var(--viz-border) !important;
+}
+.seg .segOn {
+	background: var(--sl-color-accent-low);
+	color: var(--sl-color-accent-high);
+}
+
+.message {
+	min-height: 2.6em;
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.45rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+
+.scroll {
+	overflow-x: auto;
+}
+.svgNarrow {
+	min-width: 440px;
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+	overflow: visible;
+}
+
+.section {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+.sectionSub {
+	font-weight: 500;
+	text-transform: none;
+	letter-spacing: 0;
+	fill: var(--sl-color-gray-3);
+}
+.endLabel {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-accent-high);
+}
+.endLabelDim {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	fill: var(--sl-color-gray-4);
+}
+
+/* ---- Program list ---- */
+.progBg {
+	fill: transparent;
+	stroke: transparent;
+	transition:
+		fill 400ms ease-in-out,
+		stroke 400ms ease-in-out;
+}
+.progCur .progBg {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-accent);
+}
+.progDot {
+	stroke-width: 1.6;
+	transition:
+		fill 400ms ease-in-out,
+		stroke 400ms ease-in-out;
+}
+.progIdx {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.progText {
+	font-size: 12.5px;
+	fill: var(--sl-color-text);
+	transition: fill 400ms ease-in-out;
+}
+.stWait .progDot {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+}
+.stFlight .progDot {
+	fill: var(--sl-color-bg);
+	stroke: var(--viz-raw);
+	stroke-dasharray: 2 2;
+}
+.stDone .progDot {
+	fill: var(--viz-ok);
+	stroke: var(--viz-ok);
+}
+.stRetired .progDot {
+	fill: var(--sl-color-gray-4);
+	stroke: var(--sl-color-gray-4);
+}
+.stRetired .progText {
+	fill: var(--sl-color-gray-3);
+}
+.stFlushed .progDot {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+}
+.stFlushed .progText {
+	fill: var(--sl-color-gray-4);
+	text-decoration: line-through;
+}
+
+/* ---- Queues ---- */
+.track {
+	fill: none;
+	stroke: var(--viz-border);
+	stroke-dasharray: 5 4;
+}
+
+.entry {
+	transition:
+		transform 650ms ease-in-out,
+		opacity 550ms ease-in-out;
+}
+.entryBox {
+	fill: var(--sl-color-bg);
+	stroke: var(--viz-raw);
+	stroke-width: 1.5;
+	stroke-dasharray: 4 3;
+	transition:
+		fill 400ms ease-in-out,
+		stroke 400ms ease-in-out;
+}
+.entryIdx {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.entryOp {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.entryVal {
+	font-size: 11.5px;
+	fill: var(--sl-color-gray-3);
+}
+.stDone .entryBox {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+	stroke-dasharray: none;
+}
+.stDone .entryVal {
+	fill: var(--viz-ok);
+	font-weight: 700;
+}
+.iconOk {
+	color: var(--viz-ok);
+}
+.entryCur .entryBox {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.5;
+}
+.faulted .entryBox {
+	fill: var(--viz-fault-bg);
+	stroke: var(--viz-fault);
+	stroke-dasharray: none;
+}
+.faulted .entryVal {
+	fill: var(--viz-fault);
+	font-weight: 700;
+}
+.iconFault {
+	color: var(--viz-fault);
+}
+.entryGone {
+	opacity: 0;
+}
+.entryFlushed {
+	opacity: 0.45;
+}
+.entryFlushed .entryBox {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-dasharray: 3 3;
+}
+.entryFlushed.faulted .entryBox {
+	stroke: var(--viz-fault);
+}
+.entryFlushed .entryIdx,
+.entryFlushed .entryOp,
+.entryFlushed .entryVal {
+	text-decoration: line-through;
+	fill: var(--sl-color-gray-4);
+}
+.toMem {
+	opacity: 0;
+}
+
+/* Lookup lines when a load searches the LSQ */
+.lookupMem {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.5;
+	stroke-dasharray: 4 4;
+}
+.lookupHit {
+	fill: none;
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.2;
+}
+.headAccent {
+	fill: var(--sl-color-accent);
+}
+
+/* ---- Committed state ---- */
+.cell rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--viz-border);
+	stroke-width: 1.2;
+	transition:
+		fill 400ms ease-in-out,
+		stroke 400ms ease-in-out;
+}
+.cellName {
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.cellVal {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+	animation: valIn 500ms ease-in-out;
+}
+.cellEmpty {
+	fill: var(--sl-color-gray-4);
+	font-weight: 500;
+	animation: none;
+}
+.cellFresh rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+.cellStale rect {
+	stroke: var(--sl-color-gray-4);
+	stroke-dasharray: 4 3;
+}
+.cellStale .cellVal {
+	fill: var(--sl-color-gray-4);
+	text-decoration: line-through;
+}
+.staleNote {
+	font-family: var(--__sl-font);
+	font-size: 10.5px;
+	fill: var(--sl-color-gray-3);
+}
+@keyframes valIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+/* ---- Flying value ---- */
+.fly {
+	animation: fly 800ms ease-in-out both;
+}
+.fly circle {
+	fill: var(--sl-color-accent);
+}
+.fly text {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-black);
+}
+@keyframes fly {
+	0% {
+		transform: translate(var(--x0), var(--y0));
+		opacity: 1;
+	}
+	85% {
+		opacity: 1;
+	}
+	100% {
+		transform: translate(var(--x1), var(--y1));
+		opacity: 0;
+	}
+}
+
+/* ---- Legend ---- */
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	margin-top: 0.6rem;
+	font-size: 0.78rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+.legend i {
+	display: inline-block;
+	width: 0.95rem;
+	height: 0.75rem;
+	border-radius: 0.2rem;
+}
+.lgFlight {
+	border: 1.5px dashed var(--viz-raw);
+}
+.lgDone {
+	background: var(--viz-ok-bg);
+	border: 1.5px solid var(--viz-ok);
+}
+.lgRetired {
+	background: var(--sl-color-gray-4);
+}
+.lgCur {
+	border: 2px solid var(--sl-color-accent);
+}
+.lgFault {
+	background: var(--viz-fault-bg);
+	border: 1.5px solid var(--viz-fault);
+}
+.lgFlushed {
+	border: 1.5px dashed var(--sl-color-gray-4);
+	opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.entry,
+	.cellVal {
+		transition: none;
+		animation: none;
+	}
+	.fly {
+		display: none;
+	}
+}

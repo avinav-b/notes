@@ -1,0 +1,23 @@
+---
+title: Prefetching
+description: Hardware prefetching, and the tradeoff of when to prefetch so that prefetched blocks don't evict useful ones.
+lastUpdated: 2026-11-05
+sidebar:
+  order: 7
+---
+
+import DeadBlockPrefetch from '../../../components/DeadBlockPrefetch.tsx';
+import { whenToPrefetch } from '../../../embeds/ece552/prefetching';
+
+## Hardware Prefetching
+
+### When to Prefetch?
+
+This is a design tradeoff. Some options are:
+
+- on every reference
+- on every miss
+
+Ideally, we want to prefetch when we know a resident block has become **dead**, so we avoid evicting useful blocks.
+
+<DeadBlockPrefetch client:visible {...whenToPrefetch.props} />

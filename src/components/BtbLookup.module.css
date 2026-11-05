@@ -1,0 +1,333 @@
+.root {
+	outline: none;
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.message {
+	min-height: 1.6em;
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.scroll {
+	overflow-x: auto;
+}
+.svg {
+	display: block;
+	width: 100%;
+	min-width: 34rem;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+.svg rect,
+.svg circle,
+.svg path {
+	transition: fill 400ms ease-in-out, stroke 400ms ease-in-out;
+}
+
+.title {
+	font-family: var(--__sl-font);
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.small {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.pcValue {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.field rect,
+.fieldOn rect {
+	stroke-width: 1.5;
+}
+.field rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+}
+.fieldOn rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.fieldBits {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.fieldVal {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.sub {
+	fill: var(--sl-color-gray-5);
+}
+.subOn {
+	fill: var(--sl-color-accent);
+}
+
+.box,
+.boxOn {
+	stroke-width: 1.5;
+}
+.box {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+}
+.boxOn {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.insn {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.pill rect,
+.pillOn rect {
+	stroke-width: 1.2;
+}
+.pill rect {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+}
+.pill text {
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.pillOn rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.pillOn text {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-accent-high);
+}
+
+.colHead {
+	font-family: var(--__sl-font);
+	font-size: 10.5px;
+	fill: var(--sl-color-gray-3);
+}
+.rowBg {
+	fill: transparent;
+	stroke: var(--viz-border);
+}
+.rowOn .rowBg {
+	fill: var(--sl-color-accent-low);
+}
+.cellIdx {
+	font-size: 12px;
+	fill: var(--sl-color-gray-3);
+}
+.rowOn .cellIdx {
+	fill: var(--sl-color-accent-high);
+	font-weight: 700;
+}
+.cell {
+	font-size: 12.5px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.cellPlain {
+	fill: transparent;
+	stroke: transparent;
+}
+.cmpHit,
+.cellTarget {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+	stroke-width: 1.5;
+}
+.cmpMiss {
+	fill: var(--viz-wrong-bg);
+	stroke: var(--viz-wrong);
+	stroke-width: 1.5;
+}
+.tableBorder {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.4;
+}
+
+.wire,
+.wireOn {
+	fill: none;
+	stroke-width: 1.8;
+}
+.wire {
+	stroke: var(--sl-color-gray-5);
+}
+.wireOn {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.2;
+}
+.headOn {
+	fill: var(--sl-color-accent);
+}
+.eq,
+.eqHit,
+.eqMiss {
+	stroke-width: 1.8;
+}
+.eq {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+}
+.eqHit {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+}
+.eqMiss {
+	fill: var(--viz-wrong-bg);
+	stroke: var(--viz-wrong);
+}
+.eqText {
+	font-size: 18px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.hitText,
+.missText {
+	font-family: var(--__sl-font);
+	font-size: 13px;
+	font-weight: 700;
+}
+.hitText {
+	fill: var(--viz-ok);
+}
+.missText {
+	fill: var(--viz-wrong);
+}
+
+.ras rect,
+.rasOn rect,
+.rasPush rect {
+	stroke-width: 1.4;
+}
+.ras rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+}
+.ras text,
+.rasOn text,
+.rasPush text {
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.rasOn rect,
+.rasPush rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.rasPush {
+	animation: drop 500ms ease-out;
+}
+.rasOn {
+	animation: lift 600ms ease-in-out forwards;
+}
+@keyframes drop {
+	from {
+		transform: translateY(-14px);
+		opacity: 0;
+	}
+	to {
+		transform: none;
+		opacity: 1;
+	}
+}
+@keyframes lift {
+	from {
+		transform: none;
+	}
+	to {
+		transform: translateY(-6px);
+	}
+}
+
+.cand rect,
+.candOn rect {
+	stroke-width: 1.5;
+}
+.cand rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+}
+.candOn rect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.candLabel {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	font-weight: 600;
+	fill: var(--sl-color-gray-3);
+}
+.candOn .candLabel {
+	fill: var(--sl-color-accent-high);
+}
+.candVal {
+	font-size: 12.5px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.next {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.5;
+}
+.nextOn {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+	stroke-width: 2;
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	margin-top: 0.6rem;
+	font-size: 0.78rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+.lgOn,
+.lgHit,
+.lgMiss {
+	display: inline-block;
+	width: 0.9rem;
+	height: 0.9rem;
+	border-radius: 0.2rem;
+}
+.lgOn {
+	background: var(--sl-color-accent-low);
+	border: 1.5px solid var(--sl-color-accent);
+}
+.lgHit {
+	background: var(--viz-ok-bg);
+	border: 1.5px solid var(--viz-ok);
+}
+.lgMiss {
+	background: var(--viz-wrong-bg);
+	border: 1.5px solid var(--viz-wrong);
+}

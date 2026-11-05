@@ -1,0 +1,267 @@
+---
+title: Performance
+description: How to measure and compare processors, from latency and throughput, benchmarks and averages, to the iron law, CPI and Amdahl's law.
+lastUpdated: 2026-11-05
+sidebar:
+  order: 1
+---
+
+import CarBusRace from '../../../components/CarBusRace.tsx';
+import CpiStack from '../../../components/CpiStack.tsx';
+import AmdahlCurve from '../../../components/AmdahlCurve.tsx';
+import { carBusRace, cpiExample, cpiBranchVsCache, cpiClockTradeoff, amdahlCores } from '../../../embeds/ece552/performance';
+
+## Metrics
+
+To have a meaningful discussion about architectures, we need **metrics** to evaluate them, and to know how those metrics are affected by **Moore's Law**: devices per chip double every 18 to 24 months. It is slowing, but it has been a significant historical trend.
+
+| Metric | Notes |
+| --- | --- |
+| **Performance** | The focus of this course |
+| **Cost** | |
+| **Power** | Important; some exposure in the labs |
+| **Reliability** | |
+
+Metrics are often more important in combination than on their own: performance/cost (MIPS/$) and performance/power (MIPS/W, or GOPS/W for a TPU). They are the basis for both design decisions and purchasing decisions.
+
+## Latency vs Throughput
+
+| Metric | Definition |
+| --- | --- |
+| **Latency** (execution time) | Time required to finish a fixed task |
+| **Throughput** (bandwidth) | Number of tasks completed in a fixed time |
+
+- They are very different: throughput can exploit parallelism, latency cannot (the bread-baking analogy).
+- They are often contradictory.
+- Choose the definition that matches your goals. Most often, that is throughput.
+
+### Example: car vs bus
+
+Move people from A to B, 10 miles away:
+
+| | Capacity | Speed | Latency | Throughput |
+| --- | --- | --- | --- | --- |
+| **Car** | 5 | 60 mph | 10 min | 15 people/hour |
+| **Bus** | 60 | 20 mph | 30 min | 60 people/hour |
+
+The car's latency is 10 miles / 60 mph = 10 min, and it makes 3 round trips per hour, carrying 5 people each time.
+
+<CarBusRace client:visible {...carBusRace.props} />
+
+## Comparing Performance
+
+Processor A is **X times faster** than B if:
+
+$$
+\text{Latency}(P,A) = \frac{\text{Latency}(P,B)}{X}
+$$
+
+$$
+\text{Throughput}(P,A) = \text{Throughput}(P,B) \times X
+$$
+
+Processor A is **X% faster** than B if:
+
+$$
+\text{Latency}(P,A) = \frac{\text{Latency}(P,B)}{1 + \frac{X}{100}}
+$$
+
+$$
+\text{Throughput}(P,A) = \text{Throughput}(P,B) \times \left(1 + \frac{X}{100}\right)
+$$
+
+For the car and bus:
+
+- **Latency:** the car is 3 times (200%) faster than the bus.
+- **Throughput:** the bus is 4 times (300%) faster than the car.
+
+## Benchmarks: What Is P?
+
+$P$ is the **program**. "Latency(A)" makes no sense on its own: a processor executes _some_ program. But which one?
+
+| Program | Pros | Cons |
+| --- | --- | --- |
+| **Actual target workload** | Accurate | Not portable, not repeatable, overly specific<br />Hard to pinpoint problems |
+| **Representative benchmark programs** | Portable and repeatable, pretty accurate | Hard to pinpoint problems<br />May not be exactly what you run |
+| **Small kernel benchmarks** (micro-benchmarks) | Portable and repeatable, easy to run<br />Easy to pinpoint problems | Not representative of the complex behaviours in real programs |
+
+## Adding and Averaging
+
+You can add latencies, but not throughputs:
+
+$$
+\text{Latency}(P_1 + P_2, A) = \text{Latency}(P_1, A) + \text{Latency}(P_2, A)
+$$
+
+$$
+\text{Throughput}(P_1 + P_2, A) \mathrel{\char"2260} \text{Throughput}(P_1, A) + \text{Throughput}(P_2, A)
+$$
+
+**Example:** drive 1 km at 30 kph, then 1 km at 90 kph. The average speed is **not** 60 kph. The two legs take 0.033 h and 0.011 h, so:
+
+$$
+\text{average} = \frac{1\text{ km} + 1\text{ km}}{0.033\text{ h} + 0.011\text{ h}} = 45\text{ kph}
+$$
+
+As a formula:
+
+$$
+\text{Throughput}(P_1 + P_2, A) = \frac{2}{\frac{1}{\text{Throughput}(P_1, A)} + \frac{1}{\text{Throughput}(P_2, A)}}
+$$
+
+The same goes for means (averages):
+
+| Mean | Formula | Use for |
+| --- | --- | --- |
+| **Arithmetic** | $\frac{1}{N} \sum_{P=1}^{N} \text{Latency}(P)$ | Units proportional to time, e.g. latency |
+| **Harmonic** | $N \,/\, \sum_{P=1}^{N} \frac{1}{\text{Throughput}(P)}$ | Units inversely proportional to time, e.g. throughput |
+| **Geometric** | $\sqrt[N]{\prod_{P=1}^{N} \text{Speedup}(P)}$ | Unitless quantities, e.g. speedups |
+
+:::caution
+Use the right average for the metric.
+:::
+
+## Iron Law of Performance
+
+Performance has multiple aspects; the iron law isolates them:
+
+$$
+\text{Latency}(P, A) = \frac{\text{seconds}}{\text{program}} = \frac{\text{instructions}}{\text{program}} \times \frac{\text{cycles}}{\text{instruction}} \times \frac{\text{seconds}}{\text{cycle}}
+$$
+
+| Term | Is the | A function of |
+| --- | --- | --- |
+| **Instructions / program** | Dynamic instruction count | Program, compiler, ISA |
+| **Cycles / instruction** | CPI | Program, compiler, ISA, **microarchitecture** |
+| **Seconds / cycle** | Clock period | Microarchitecture, technology parameters |
+
+For low latency (better performance), minimize all three. This is hard: they often pull against each other.
+
+:::tip
+To improve performance, optimize each component. This course focuses mostly on **CPI**.
+:::
+
+## Cycles per Instruction (CPI)
+
+- CPI is the cycles per instruction for the **average instruction**.
+- **IPC** = 1 / CPI.
+- Different instructions have different cycle costs, e.g. an integer add typically takes 1 cycle, an FP divide takes more than 10.
+- So CPI assumes you know something about the instruction frequencies: $\text{CPI} = \sum_i \text{frequency}_i \times \text{cycles}_i$.
+
+:::caution
+This kind of calculation ignores dependences completely: use it for back-of-the-envelope arguments only.
+:::
+
+### Example 1
+
+A program executes equal numbers of integer, FP and memory operations. Integer takes 1 cycle, memory 2, FP 3.
+
+$$
+\text{CPI} = \tfrac{1}{3} \cdot 1 + \tfrac{1}{3} \cdot 2 + \tfrac{1}{3} \cdot 3 = 2
+$$
+
+<CpiStack client:visible {...cpiExample.props} />
+
+### Example 2: Branch Prediction or a Bigger Cache?
+
+| Instruction | Frequency | Cycles |
+| --- | --- | --- |
+| Integer ALU | 50% | 1 |
+| Load | 20% | 5 |
+| Store | 10% | 1 |
+| Branch | 20% | 2 |
+
+Which change improves performance more?
+
+- **A.** [Branch prediction](/ece552/branch-prediction/#branch-prediction), to reduce the branch cost to 1 cycle.
+- **B.** A bigger data cache, to reduce the load cost to 3 cycles.
+
+| | CPI |
+| --- | --- |
+| **Base** | $0.5 \cdot 1 + 0.2 \cdot 5 + 0.1 \cdot 1 + 0.2 \cdot 2 = 2$ |
+| **A** | $0.5 \cdot 1 + 0.2 \cdot 5 + 0.1 \cdot 1 + 0.2 \cdot 1 = 1.8$ |
+| **B** | $0.5 \cdot 1 + 0.2 \cdot 3 + 0.1 \cdot 1 + 0.2 \cdot 2 = 1.6$ |
+
+**B** wins.
+
+<CpiStack client:visible {...cpiBranchVsCache.props} />
+
+### Example 3: CPI vs Clock
+
+| Operation | Frequency | Cycles |
+| --- | --- | --- |
+| ALU | 45% | 1 |
+| Load | 20% | 1 |
+| Store | 15% | 2 |
+| Branch | 20% | 2 |
+
+**A.** You can reduce stores to 1 cycle, but it slows the clock down by 20% (frequency 100% to 80%, so the period goes from $T$ to $T / 0.8$).
+
+- Old CPI $= 0.45 \cdot 1 + 0.2 \cdot 1 + 0.15 \cdot 2 + 0.2 \cdot 2 = 1.35$
+- New CPI $= 0.45 \cdot 1 + 0.2 \cdot 1 + 0.15 \cdot 1 + 0.2 \cdot 2 = 1.2$
+
+$$
+\text{Speedup} = \frac{\text{old time}}{\text{new time}} = \frac{IC \cdot 1.35 \cdot T}{IC \cdot 1.2 \cdot \frac{1}{0.8} T} = \frac{0.8 \cdot 1.35}{1.2} = 0.9
+$$
+
+A **slowdown**: the instruction count $IC$ cancels, and the CPI gain doesn't pay for the slower clock.
+
+**B.** Now suppose ALU ops were originally 2 cycles and stores 1 cycle, and you could reduce ALU ops to 1 cycle, again slowing the clock by 20%.
+
+- Old CPI $= 0.45 \cdot 2 + 0.2 \cdot 1 + 0.15 \cdot 1 + 0.2 \cdot 2 = 1.65$
+- New CPI $= 0.45 \cdot 1 + 0.2 \cdot 1 + 0.15 \cdot 1 + 0.2 \cdot 2 = 1.2$
+
+$$
+\text{Speedup} = \frac{IC \cdot 1.65 \cdot T}{IC \cdot 1.2 \cdot \frac{1}{0.8} T} = 1.1
+$$
+
+A **speedup**.
+
+<CpiStack client:visible {...cpiClockTradeoff.props} />
+
+:::tip
+This is an example of **Amdahl's law**: don't speed up a small fraction to the detriment of the rest.
+:::
+
+## Measuring CPI
+
+- **Execution time:** the Unix `time` command gives wall clock, CPU and system time.
+- **CPI** = CPU time / (clock period $\times$ dynamic instruction count).
+- We want **CPI breakdowns** ($\text{CPI}_\text{CPU}$, $\text{CPI}_\text{MEM}$, etc.) to see what to fix.
+
+| Way to get a CPI breakdown | How |
+| --- | --- |
+| **Hardware event counters** | Calculate CPI from the counter frequencies and event costs |
+| **Cycle-level microarchitecture simulation** (e.g. SimpleScalar, used in labs 0, 1, 3 and 4) | Measures the breakdown "exactly", provided it models the microarchitecture faithfully and runs realistic workloads. The method of choice for many microarchitects (and you) |
+
+## Improving CPI
+
+This course is more about improving CPI than frequency.
+
+- **Historically**, the clock accounted for 70%+ of performance improvement, achieved with deeper pipelines.
+- **This has changed:** deep pipelining is not power efficient, and physical speed limits are approaching. 1 GHz in 1999, 2 GHz in 2001, 3 GHz in 2002, 5 GHz in 2008; an Intel Core Ultra 9 (Arrow Lake, 2024) runs at 3.2 to 5.7 GHz.
+- **Techniques in this course:** [caching](/ece552/caches/), [speculation](/ece552/speculation/), multiple issue, [out-of-order issue](/ece552/dynamic-scheduling/#motivation-dynamic-scheduling), multiprocessing, and more.
+
+Moore's Law helps because reducing CPI requires transistors: parallelism by definition needs "more transistors", but the best example is caches.
+
+## Amdahl's Law
+
+The performance rule of thumb (and its tyranny):
+
+- $f$: the fraction that can run in parallel (be sped up)
+- $1 - f$: the fraction that must run serially
+
+$$
+\text{Speedup} = \frac{1}{(1 - f) + \frac{f}{n}}
+\qquad
+\lim_{n \to \infty} \text{Speedup} = \frac{1}{1 - f}
+$$
+
+<AmdahlCurve client:visible {...amdahlCores.props} />
+
+- In this ideal model, scaling is pretty good for a modest number of cores.
+- A large number of cores requires a lot of parallelism.
+
+:::tip
+Amdahl's law is not just about parallelism: $f$ is the fraction that you can speed up, by any means. Your performance will always be limited by the $1 - f$ part.
+:::

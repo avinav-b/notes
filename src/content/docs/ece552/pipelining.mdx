@@ -1,9 +1,9 @@
 ---
 title: Pipelining
-description: From the sequential model to single-cycle, multi-cycle and pipelined processors, and how a pipeline handles data hazards with stalls and bypassing.
-lastUpdated: 2026-10-01
+description: From the sequential model to single-cycle, multi-cycle and pipelined processors, and how a pipeline handles data and structural hazards with stalls and bypassing.
+lastUpdated: 2026-11-05
 sidebar:
-  order: 1
+  order: 2
 ---
 
 import CpuDatapath from '../../../components/CpuDatapath.tsx';
@@ -11,6 +11,8 @@ import ExecTimeline from '../../../components/ExecTimeline.tsx';
 import PipelineSim from '../../../components/PipelineSim.tsx';
 import PipelineDiagram from '../../../components/PipelineDiagram.tsx';
 import BypassPaths from '../../../components/BypassPaths.tsx';
+import FuPipelines from '../../../components/FuPipelines.tsx';
+import ControlHazardPipeline from '../../../components/ControlHazardPipeline.tsx';
 import {
 	singleCycle,
 	multiCycle,
@@ -29,6 +31,9 @@ import {
 	loadUseDiagram,
 	loadUseNoWxDiagram,
 	loadUseSim,
+	fuPipelines,
+	wawHazard,
+	structuralHazard,
 } from '../../../embeds/ece552/pipelining';
 
 ## The Sequential Model
@@ -93,7 +98,7 @@ The basic datapath is: fetch, decode, execute.
 There is no good way to make a single instruction faster, i.e. decrease its **latency**.
 
 :::tip
-We ultimately don't care about latency. We just want programs to go faster. Turns out there are meaningful ways to increase [**throughput**](/ece454/performance/#latency-vs-throughput) in a CPU.
+We ultimately don't care about latency. We just want programs to go faster. Turns out there are meaningful ways to increase [**throughput**](/ece552/performance/#latency-vs-throughput) in a CPU.
 :::
 
 ## Pipelining
@@ -163,8 +168,9 @@ Showing that an instruction does a pipeline step, for example X, in cycle 4, mea
 
 | Principle | Meaning |
 | --- | --- |
-| **Balance** | All stages should take approximately the same time.<br />Instructions must pass through all stages in the same order, even if the stage is not needed. |
+| **Balance** | All stages should take approximately the same time. It doesn't make sense to optimize any stage that is not the longest.<br />Instructions must pass through all stages in the same order, even if the stage is not needed. |
 | **Buffering** | Not all stages take the same time, so instructions will sit and wait until the next stage is ready to accept them. |
+| **Independent computations** | No relationships between work units, to minimize pipeline stalls. |
 
 ## Pipelining Performance
 
@@ -202,25 +208,46 @@ $$
 \text{clock period} = \frac{50\ \text{ns}}{5\ \text{stages}} + \text{overhead} = 12\ \text{ns}
 $$
 
-CPI = 1: each instruction takes 5 cycles, **but** 1 instruction completes every cycle, so performance is 12 ns/instr. Actually, CPI = 1 + some penalty for pipelining; say CPI = 1.5, giving $12 \times 1.5 = 18$ ns/instr.
+[CPI](/ece552/performance/#cycles-per-instruction-cpi) = 1: each instruction takes 5 cycles, **but** 1 instruction completes every cycle, so performance is 12 ns/instr. Actually, CPI = 1 + some penalty for pipelining; say CPI = 1.5, giving $12 \times 1.5 = 18$ ns/instr.
 
 **Why is the pipeline clock period greater than (delay through datapath) / (# of pipeline stages)?**
 - pipeline registers add delay
 - pipeline stages themselves have different delays: the clock period must account for the longest stage
 - extra bypass logic
 
+These factors have implications for the ideal number of pipeline stages.
+
 **Why is pipeline CPI greater than 1?**
 - CPI for a scalar in-order pipeline will be 1 + stall penalties
 - Stalls are used to remove hazards
 
+| Term | Meaning |
+| --- | --- |
+| **Hazard** | A condition that jeopardizes the sequential illusion |
+| **Stall** | A pipeline delay introduced to restore the sequential illusion |
+
+### Calculating pipeline CPI
+
+Each kind of stall adds (frequency of the stall) $\times$ (stall cycles). The penalties simply add, since stalls generally don't overlap in in-order pipelines:
+
+$$
+\text{CPI} = 1 + \text{stall-freq}_1 \times \text{stall-cyc}_1 + \text{stall-freq}_2 \times \text{stall-cyc}_2 + \dots
+$$
+
+:::tip[Make the common case fast (MCCF)]
+Long penalties are OK if they happen rarely, e.g. a 10-cycle stall on 1% of instructions: $1 + 0.01 \times 10 = 1.1$.
+
+Stalls also have implications for the ideal number of pipeline stages.
+:::
+
 ## Pipeline Management
 
-Proper pipeline management requires two **pipeline operations**. These are achieved using control signals.
+Proper pipeline management requires two **pipeline operations**. These are achieved using control signals: the pipeline registers' write-enable and clear signals.
 
-| Operation | What it does |
-| --- | --- |
-| **Stall** | Stop an instruction in its current stage. Younger instructions must wait for the older instructions to complete. |
-| **Flush** | Remove an instruction from the current stage. |
+| Operation | What it does | Implementation |
+| --- | --- | --- |
+| **Stall** | Stop an instruction in its current stage. Younger instructions must wait for the older instructions to complete. | De-assert the write enables of the pipeline registers |
+| **Flush** | Remove an instruction from the current stage. Used for [control hazards](/ece552/branch-prediction/#control-hazards). | Assert the clear signals |
 
 :::caution
 Both **stalls** and **flushes** must also propagate to all younger instructions.
@@ -237,7 +264,7 @@ There are two kinds of dependence:
 - **Data dependence:** two instructions use the same value or storage.
 - **Control dependence:** one instruction affects whether another instruction executes or not.
 
-Hazards can be fixed by **stalling**.
+Hazards can be fixed by **stalling**: the instruction stays in the same stage for multiple cycles.
 
 ## Read-after-write (RAW) Hazards
 
@@ -248,7 +275,7 @@ sub r1, r4 -> r2
 or r6, r3 -> r1
 ```
 
-The `sub` instruction absolutely requires that the `add` instruction completes and writes to the `r1` register first.
+The `sub` instruction absolutely requires that the `add` instruction completes and writes to the `r1` register first. If we swapped the `add` and the `sub`, the `sub` would use the wrong value.
 
 A **true dependence** is one where the actual data is depended on. Using a different register doesn't solve this.
 
@@ -264,7 +291,9 @@ The `add` instruction is writing to `r3`, which is needed by the next three inst
 
 <PipelineSim client:visible {...rawSim.props} />
 
-As you can see in the animation above, the `lw` and `addi` instructions read the wrong value, because the `add` instruction has not finished writing to the register file in time for them to read it.
+As you can see in the animation above, the `lw` and `addi` instructions read the wrong value, because the `add` instruction has not finished writing to the register file in time for them to read it. The `sw` reads `r3` in the same cycle the `add` writes it, so it gets the right value (see internal forwarding below).
+
+Independent operations, like `add r1, r2 -> r3` followed by `add r4, r5 -> r6`, share no registers and flow through the pipeline without any problem.
 
 ### Internal Forwarding
 
@@ -275,6 +304,20 @@ We will generally assume this to be true unless told otherwise.
 :::
 
 ### Detecting and stalling a RAW
+
+**Stall logic** detects the hazard and stalls the reader in D. It stalls while either source of the instruction in D is the destination of an instruction in X or M:
+
+```
+(F/D.rs1 && (F/D.rs1 == D/X.rd || F/D.rs1 == X/M.rd)) ||
+(F/D.rs2 && (F/D.rs2 == D/X.rd || F/D.rs2 == X/M.rd))
+```
+
+The condition is re-evaluated every cycle until it is no longer true. While it holds, the hazard logic de-asserts the write enables of the PC and F/D registers (so F and D hold their instructions) and inserts a nop into D/X.
+
+| | |
+| --- | --- |
+| **+** | Low cost, simple |
+| **−** | IPC degradation: RAW dependences are common |
 
 In a pipeline diagram, we will denote a stall by writing `d*` for a data stall, and `p*` for a propagated stall.
 
@@ -304,9 +347,21 @@ The data being written must be written to the register file. But there is no nee
 
 <BypassPaths client:visible {...bypassPaths.props} />
 
+**Bypass logic** is similar to, but separate from, the stall logic:
+- Stall logic controls the pipeline registers (latches); bypass logic controls the mux inputs.
+- They complement one another: if you can't bypass, you must stall.
+
+For example, the mux in front of ALU input A picks its source like this:
+
+| Condition | Mux input |
+| --- | --- |
+| `X/M.rd == D/X.rs1` | 0: MX bypass |
+| `M/W.rd == D/X.rs1` | 1: WX bypass |
+| otherwise | 2: the register file value |
+
 #### Bypassing in Pipeline Diagrams
 
-If bypasses exist, draw the bypass arrow in the diagram.
+If bypasses exist, draw the bypass arrow in the diagram. The "from" and "to" stages of a bypass execute in the same cycle.
 
 Here is an example of a RAW dependency and pipeline diagram showing the MX bypass:
 ```asm
@@ -364,6 +419,23 @@ Additionally, observe how using an MX bypass for a load-use RAW hazard would inc
 
 <PipelineSim client:visible {...loadUseSim.props} />
 
+So even with full bypassing, stall logic is unavoidable. The load-use stall condition, checked while the load is in X and its user is in D:
+
+```
+Stall = (D/X.op == LW) &&
+        ((F/D.rs1 == D/X.rd) || (F/D.rs2 == D/X.rd && F/D.op != SW))
+```
+
+A store's `rs2` is its data, which is only needed in M, so the WM bypass covers it without a stall.
+
+#### Performance impact of the load-use penalty
+
+Assume branches are 20% of instructions, loads 20%, stores 10% and other 50%, and 50% of loads are followed by a dependent instruction that needs a 1-cycle stall (the insertion of 1 nop):
+
+$$
+\text{CPI} = 1 + (1 \times 0.2 \times 0.5) = 1.1
+$$
+
 ## Write-after-write (WAW) Hazards
 
 Take the following instructions:
@@ -375,18 +447,100 @@ or r3, r6 -> r1
 
 There is a potential write after write hazard on `r1` between the `add` and the `or`.
 
-These dependences are [**artificial**](/ece552/dynamic-scheduling/#register-renaming) (i.e. no actual logical dependence): we could simply just replace the `r1` in the `or` with another register, e.g. `r8`.
+For the compiler, this is a scheduling problem: reordering the `add` and the `or` would leave the wrong value in `r1`.
 
-WAW hazards **do not affect** in-order pipelines where every instruction spends exactly one cycle in X, because instructions cannot 'leapfrog' each other in the pipeline: they will all reach the write phase in order.
+These dependences are [**artificial**](/ece552/dynamic-scheduling/#register-renaming) (i.e. no value flows through the dependence): we could simply just replace the `r1` in the `or` with another register, e.g. `r8`.
+
+WAW hazards **do not affect** in-order pipelines where every instruction spends exactly one cycle in X, because instructions cannot 'leapfrog' each other in the pipeline: they will all reach the write phase in order. They **can** happen with multi-cycle operations, which spend multiple cycles in execute (see Handling WAW Hazards below).
 
 ## Write-after-read (WAR) Hazards
 
-Similar to the WAW hazards, this is an [artificial dependence](/ece552/dynamic-scheduling/#register-renaming) which can be resolved by replacing the register used.
+```asm
+add r3, r2 -> r1
+sub r4, r5 -> r2
+or r1, r3 -> r6
+```
 
-Also, WAR hazards **do not affect** this simple in-order pipeline.
+The `sub` writes `r2`, which the older `add` reads. For the compiler, this is a scheduling problem: reordering them would make the `add` use the wrong value.
+
+Similar to the WAW hazards, this is an [artificial dependence](/ece552/dynamic-scheduling/#register-renaming) which can be resolved by replacing the register used: use a different output register for the `sub`, e.g. `r8`.
+
+Also, WAR hazards **do not affect** this simple in-order pipeline. They can happen with out-of-order execution.
+
+## Data Hazards: Summary
+
+Real instruction sequences pass values via registers and memory. There are three kinds of data dependences:
+
+| Read-after-write (RAW) | Write-after-read (WAR) | Write-after-write (WAW) |
+| --- | --- | --- |
+| **True dependence** | **Anti-dependence** | **Output dependence** |
+| `add r2, r3 -> r1`<br />`sub r1, r4 -> r2` | `add r2, r3 -> r1`<br />`sub r5, r4 -> r2` | `add r2, r3 -> r1`<br />`or r6, r3 -> r1` |
+
+- Where's the fourth? There is no read-after-read dependence: reading a value twice doesn't serialize anything.
+- There is only one dependence between any two instructions (RAW has priority).
+- A dependence is a property of the program and the ISA.
+
+**Data hazards** are a function of the data dependences *and* the pipeline:
+- They are the potential for executing dependent instructions in the wrong order.
+- They require both instructions to be in the pipeline ("in flight") at the same time.
 
 ## Pipelined Functional Units
 
 The pipeline we have looked at so far is shallow and simple. Real pipelines are much deeper.
 
-For example, the execute stage itself is usually a deep pipeline with many stages in real CPUs.
+For example, the execute stage itself is usually a deep pipeline with many stages in real CPUs. Each stage can be decomposed into several stages. Looking at X:
+
+| Operations | Latency |
+| --- | --- |
+| Fast integer arithmetic and logic | 1 cycle |
+| Slow integer arithmetic: multiply, divide | Pipelined across multiple cycles |
+| Floating point add, multiply | Pipelined |
+| Floating point divide, square root | Multiple cycles, but not pipelined |
+
+<FuPipelines client:visible {...fuPipelines.props} />
+
+How many stages does a unit have, and what is the minimum number of cycles between independent instructions of the same type (no RAW dependency)? For example, in the Intel Pentium Pro:
+
+| Unit | Stages | New instruction every |
+| --- | --- | --- |
+| Integer multiply | 4 | cycle |
+| FP add | 3 | cycle |
+| FP multiply | 5 | 2 cycles |
+
+### Hazards with multi-cycle operations
+
+| Hazard | With long operations |
+| --- | --- |
+| **RAW** | Stalls are more frequent |
+| **WAW** | Now possible: instructions no longer reach W in order |
+| **WAR** | Still not possible: registers are always read in D |
+
+### Handling WAW Hazards
+
+Below, the `ADD.S` finishes before the older `DIV.S`, so `f2` ends up holding the `DIV.S` result, and the later reader of `f2` gets the wrong value.
+
+<ControlHazardPipeline client:visible {...wawHazard.props} />
+
+| Option | | |
+| --- | --- | --- |
+| **I: Stall the younger instruction (`ADD.S`) at W** | Simple, intuitive | Lower performance, cascading stalls |
+| **II: Cancel the older instruction's (`DIV.S`) writeback** | No performance loss | Complex: what if an instruction in between (e.g. a `S.S` that reads the `DIV.S` result) causes an exception? |
+
+## Structural Hazards
+
+A **structural hazard** is when a resource is needed twice in one cycle. For example, multiple writebacks in one cycle, or a shared instruction/data cache.
+
+<ControlHazardPipeline client:visible {...structuralHazard.props} />
+
+Structural hazards can be fixed by **stalling**: add stall logic to stall the pipeline when the hazard occurs. Structural stalls are written `s*`.
+
+**Which one should stall, the `lw` or the `and`?** Stall the younger instruction (the `and`):
+
+| | |
+| --- | --- |
+| **+** | Low cost, simple |
+| **−** | Increases CPI |
+
+:::tip[Avoid structural hazards by design]
+The best fix is proper ISA/pipeline design: each instruction uses every structure exactly once, for at most one cycle, and always in the same stage relative to F.
+:::

@@ -1,0 +1,302 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 1rem;
+}
+.seg {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 0.3rem;
+}
+.fBtn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	font-family: var(--viz-mono);
+}
+.dot {
+	display: inline-block;
+	width: 0.6rem;
+	height: 0.6rem;
+	border-radius: 50%;
+	background: var(--c);
+}
+.on {
+	border-color: var(--c) !important;
+	color: var(--sl-color-text) !important;
+	background: color-mix(in srgb, var(--c) 18%, transparent) !important;
+	font-weight: 700;
+}
+.onPlain {
+	border-color: var(--sl-color-accent) !important;
+	color: var(--sl-color-accent-high) !important;
+	background: var(--sl-color-accent-low) !important;
+}
+.slider {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex: 1 1 10rem;
+}
+.sliderName {
+	font-family: var(--viz-mono);
+	font-weight: 700;
+	color: var(--sl-color-accent-high);
+}
+.slider input {
+	flex: 1;
+	min-width: 5rem;
+	accent-color: var(--sl-color-accent);
+	cursor: pointer;
+}
+.sliderValue {
+	min-width: 2em;
+	font-family: var(--viz-mono);
+	color: var(--sl-color-gray-2);
+	text-align: right;
+}
+
+.readout {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.2rem 0.9rem;
+	margin: 0.8rem 0 0.25rem;
+}
+.big {
+	font-size: 2rem;
+	font-weight: 700;
+	font-family: var(--viz-mono);
+	color: var(--c);
+	line-height: 1.1;
+}
+.formula {
+	font-family: var(--viz-mono);
+	color: var(--sl-color-gray-2);
+}
+.limitText {
+	margin-left: auto;
+	font-family: var(--viz-mono);
+	font-size: 0.85rem;
+	color: var(--sl-color-gray-3);
+}
+
+.wrap {
+	width: 100%;
+	touch-action: pan-y;
+}
+.svg {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	user-select: none;
+}
+.svg rect,
+.svg line {
+	transition:
+		width 300ms ease-in-out,
+		height 300ms ease-in-out,
+		x 300ms ease-in-out,
+		y 300ms ease-in-out,
+		x1 300ms ease-in-out,
+		x2 300ms ease-in-out,
+		y1 300ms ease-in-out,
+		y2 300ms ease-in-out;
+}
+
+.rowName {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.par {
+	fill: color-mix(in srgb, var(--c) 30%, var(--viz-surface));
+	stroke: var(--c);
+	stroke-width: 1.5;
+}
+.ser {
+	fill: var(--sl-color-gray-5);
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.5;
+}
+.idle {
+	fill: none;
+	stroke: var(--sl-color-gray-5);
+	stroke-dasharray: 3 3;
+}
+.saved {
+	fill: none;
+	stroke: var(--sl-color-gray-4);
+	stroke-dasharray: 3 3;
+}
+.laneLine {
+	stroke: var(--c, var(--sl-color-gray-3));
+	stroke-width: 0.6;
+	opacity: 0.5;
+}
+.guide {
+	stroke: var(--sl-color-gray-4);
+	stroke-dasharray: 2 3;
+}
+.inLabel,
+.inLabelSer,
+.underLabel,
+.idleLbl,
+.timeLbl,
+.timeLblAcc {
+	font-size: 11.5px;
+	font-weight: 600;
+}
+.inLabel,
+.inLabelSer {
+	fill: var(--sl-color-text);
+	font-family: var(--viz-mono);
+}
+.underLabel {
+	fill: var(--sl-color-gray-2);
+}
+.idleLbl {
+	fill: var(--sl-color-gray-3);
+	font-weight: 500;
+}
+.timeLbl {
+	fill: var(--sl-color-gray-3);
+	font-family: var(--viz-mono);
+}
+.timeLblAcc {
+	fill: var(--sl-color-text);
+	font-family: var(--viz-mono);
+	font-weight: 700;
+}
+
+.gridLine {
+	stroke: var(--sl-color-gray-6);
+}
+.tick {
+	font-family: var(--viz-mono);
+	font-size: 11px;
+	fill: var(--sl-color-gray-3);
+}
+.axisTitle {
+	font-size: 12px;
+	fill: var(--sl-color-gray-3);
+}
+.axisLine {
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.5;
+}
+.ideal {
+	stroke: var(--sl-color-text);
+	stroke-width: 2;
+	stroke-dasharray: 4 4;
+}
+.limit {
+	stroke: var(--c);
+	stroke-width: 1.5;
+	stroke-dasharray: 8 4;
+	opacity: 0.8;
+}
+.limitLbl {
+	font-family: var(--viz-mono);
+	font-size: 11.5px;
+	font-weight: 700;
+	fill: var(--c);
+	paint-order: stroke;
+	stroke: var(--viz-surface);
+	stroke-width: 4px;
+}
+.nGuide {
+	stroke: var(--sl-color-accent);
+	stroke-width: 1;
+	opacity: 0.6;
+}
+.curve,
+.curveOn {
+	fill: none;
+	stroke: var(--c);
+	stroke-linejoin: round;
+	transition:
+		d 400ms ease-in-out,
+		stroke-width 200ms,
+		opacity 200ms;
+}
+.curve {
+	stroke-width: 1.75;
+	opacity: 0.45;
+}
+.curveOn {
+	stroke-width: 3;
+}
+.pt,
+.ptOn {
+	fill: var(--c);
+	transition:
+		cx 300ms ease-in-out,
+		cy 300ms ease-in-out,
+		r 200ms;
+}
+.pt {
+	opacity: 0.6;
+}
+.ptOn {
+	stroke: var(--sl-color-bg);
+	stroke-width: 2;
+}
+.hit {
+	fill: transparent;
+	cursor: crosshair;
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem 1.1rem;
+	margin-top: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.lg {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+.swPar,
+.swSer,
+.swSaved {
+	display: inline-block;
+	width: 1rem;
+	height: 0.75rem;
+	border-radius: 2px;
+}
+.swPar {
+	background: color-mix(in srgb, var(--c) 30%, var(--viz-surface));
+	border: 1.5px solid var(--c);
+}
+.swSer {
+	background: var(--sl-color-gray-5);
+	border: 1.5px solid var(--sl-color-gray-3);
+}
+.swSaved {
+	border: 1.5px dashed var(--sl-color-gray-4);
+}
+.swIdeal,
+.swLimit {
+	display: inline-block;
+	width: 1.4rem;
+}
+.swIdeal {
+	border-top: 2px dashed var(--sl-color-text);
+}
+.swLimit {
+	border-top: 2px dashed var(--c);
+}

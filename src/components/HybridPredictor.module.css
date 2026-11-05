@@ -1,0 +1,115 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.bar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+.message {
+	min-height: 1.6em;
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+}
+.scroll {
+	overflow-x: auto;
+}
+.svg {
+	display: block;
+	width: 100%;
+	max-width: 38rem;
+	min-width: 26rem;
+	height: auto;
+	margin-inline: auto;
+	font-family: var(--viz-mono);
+}
+.svg * {
+	transition: fill 450ms ease-in-out, stroke 450ms ease-in-out, opacity 450ms ease-in-out;
+}
+.box rect,
+.boxRect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.5;
+}
+.box text,
+.boxText {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.vText {
+	font-size: 13px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.caption {
+	font-family: var(--__sl-font);
+	font-size: 11.5px;
+	font-weight: 600;
+	fill: var(--sl-color-gray-3);
+}
+.bus,
+.wire,
+.wireNeutral,
+.wireOut {
+	fill: none;
+	stroke-width: 1.8;
+}
+.bus,
+.wireNeutral {
+	stroke: var(--sl-color-gray-3);
+}
+.wireOut {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.4;
+}
+.on .wire {
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.4;
+}
+.on .boxRect {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.off {
+	opacity: 0.45;
+}
+.off .wire {
+	stroke: var(--sl-color-gray-4);
+}
+.xor {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.5;
+}
+.xorMark {
+	stroke: var(--sl-color-gray-2);
+	stroke-width: 1.5;
+}
+.headOn {
+	fill: var(--sl-color-accent);
+}
+.headOff {
+	fill: var(--sl-color-gray-4);
+}
+.mux {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-2);
+	stroke-width: 1.6;
+}
+.muxText {
+	font-family: var(--__sl-font);
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-accent-high);
+}

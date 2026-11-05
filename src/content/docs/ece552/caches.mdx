@@ -1,0 +1,53 @@
+---
+title: Caches
+description: Why processors need caches (the processor-memory gap), temporal and spatial locality, and the policies for handling cache writes.
+lastUpdated: 2026-11-05
+sidebar:
+  order: 6
+---
+
+import MemoryGapChart from '../../../components/MemoryGapChart.tsx';
+import LocalityDemo from '../../../components/LocalityDemo.tsx';
+import { memoryGap, locality } from '../../../embeds/ece552/caches';
+
+So far, our [pipelines](/ece552/pipelining/) have treated the data cache (D$) as a magic cache that always returns data and never misses. This is just not true.
+
+## The Processor-Memory Gap
+
+Processors get faster more quickly than memory.
+
+<MemoryGapChart client:visible {...memoryGap.props} />
+
+There is an unobtainable goal, memory that is:
+
+- as fast as the processor
+- as large as all running programs need
+- cost effective
+
+We cannot realistically achieve all three at once, but maybe we can achieve 2 out of 3.
+
+## Locality
+
+| Locality | Definition | How a cache exploits it |
+| --- | --- | --- |
+| **Temporal** | Recently referenced data is likely to be referenced again soon | **Reactive:** keep recently used data in a small but fast memory |
+| **Spatial** | A program is more likely to reference data that is near previously referenced data in the memory space | **Proactive:** fetch data in large chunks (blocks), so nearby data is cached too |
+
+<LocalityDemo client:visible {...locality.props} />
+
+## Cache Writes
+
+### Write-Through vs Write-Back
+
+| | Write-through | Write-back |
+| --- | --- | --- |
+| **Pros** | Conceptually simpler<br />Uniform miss latency | Key advantage: uses less bandwidth<br />Next level doesn't have to handle small writes |
+| **Cons** | Requires more bus bandwidth<br />Next level must handle small writes | Conceptually more complex<br />Miss latency is not uniform |
+| **Used in** | Sometimes L1 | Intel and AMD; second-level caches and beyond are generally write-back |
+
+### Write-Allocate vs No-Write-Allocate
+
+| Policy | On a write miss | Pros |
+| --- | --- | --- |
+| **Write-allocate** | Read the block from the lower level, then write the value into the cache | Decreases the number of read misses |
+| **No-write-allocate** | Just write to the lower level | |

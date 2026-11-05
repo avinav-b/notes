@@ -77,3 +77,107 @@ export const loadUseSim = embed('PipelineSim', 'Load-use hazard with full bypass
 		},
 	],
 });
+
+export const fuPipelines = embed('FuPipelines', 'Execute stage with pipelined functional units', 286);
+
+const WAW_ROWS = {
+	div: 'DIV.S f0, f1 -> f2',
+	add: 'ADD.S f0, f1 -> f2',
+	use: 'ADD.S f2, f3 -> f4',
+};
+export const wawHazard = embed('ControlHazardPipeline', 'WAW hazard with multi-cycle operations, and two fixes', 478, {
+	minCycles: 10,
+	scenarios: [
+		{
+			label: 'WAW hazard',
+			rows: [
+				{ label: WAW_ROWS.div, cells: 'F D X/ X/ X/ X/ X/ W' },
+				{ label: WAW_ROWS.add, cells: '. F D X+ X+ W' },
+				{ label: '...', cells: '.' },
+				{ label: WAW_ROWS.use, cells: '. . . . . . . F D X+' },
+			],
+			arrows: [{ from: [0, 8], to: [3, 9], kind: 'wrong' }],
+			track: { label: 'f2 holds', cells: '. . . . . ADD.S ADD.S DIV.S! DIV.S! DIV.S!' },
+			notes: {
+				1: 'DIV.S spends 5 cycles in the divider (X/).',
+				4: 'The younger ADD.S only needs 2 cycles in the adder (X+).',
+				6: 'ADD.S writes f2 first, out of order.',
+				8: 'DIV.S overwrites f2 with the older value.',
+				9: 'The later reader gets DIV.S’s f2: wrong.',
+			},
+		},
+		{
+			label: 'Option I: stall ADD.S',
+			rows: [
+				{ label: WAW_ROWS.div, cells: 'F D X/ X/ X/ X/ X/ W' },
+				{ label: WAW_ROWS.add, cells: '. F D X+ X+ w* w* w* W' },
+				{ label: '...', cells: '.' },
+				{ label: WAW_ROWS.use, cells: '. . . . . . . F D X+' },
+			],
+			arrows: [{ from: [1, 9], to: [3, 9], kind: 'ok' }],
+			track: { label: 'f2 holds', cells: '. . . . . . . DIV.S ADD.S~ ADD.S~' },
+			notes: {
+				1: 'DIV.S spends 5 cycles in the divider (X/).',
+				6: 'ADD.S waits to write back until DIV.S has (w*).',
+				8: 'DIV.S writes f2.',
+				9: 'ADD.S writes last: the reader gets the right f2.',
+			},
+		},
+		{
+			label: 'Option II: cancel DIV.S write',
+			rows: [
+				{ label: WAW_ROWS.div, cells: 'F D X/ X/ X/ X/ X/ W!' },
+				{ label: WAW_ROWS.add, cells: '. F D X+ X+ W' },
+				{ label: '...', cells: '.' },
+				{ label: WAW_ROWS.use, cells: '. . . . . . . F D X+' },
+			],
+			arrows: [{ from: [1, 6], to: [3, 9], kind: 'ok' }],
+			track: { label: 'f2 holds', cells: '. . . . . ADD.S~ ADD.S~ ADD.S~ ADD.S~ ADD.S~' },
+			notes: {
+				1: 'DIV.S spends 5 cycles in the divider (X/).',
+				6: 'ADD.S writes f2 on time.',
+				8: 'DIV.S’s write is cancelled: f2 keeps ADD.S’s value.',
+				9: 'The reader gets the right f2, with no stalls.',
+			},
+		},
+	],
+});
+
+const STRUCT_ROWS = ['LW #0(r1) -> r2', 'ADD r4, r3 -> r1', 'SUB r5, r3 -> r1', 'AND r3, r4 -> r6'];
+export const structuralHazard = embed('ControlHazardPipeline', 'Structural hazard on a shared memory, fixed by stalling', 451, {
+	scenarios: [
+		{
+			label: 'Hazard',
+			rows: [
+				{ label: STRUCT_ROWS[0], cells: 'F D X M W' },
+				{ label: STRUCT_ROWS[1], cells: '. F D X M W' },
+				{ label: STRUCT_ROWS[2], cells: '. . F D X M W' },
+				{ label: STRUCT_ROWS[3], cells: '. . . F D X M W' },
+			],
+			rings: [
+				[0, 4],
+				[3, 4],
+			],
+			notes: {
+				1: 'One shared memory serves both instruction fetch and data.',
+				4: 'Cycle 4: LW reads data (M) while AND is fetched (F).',
+			},
+		},
+		{
+			label: 'Stall the younger AND',
+			rows: [
+				{ label: STRUCT_ROWS[0], cells: 'F D X M W' },
+				{ label: STRUCT_ROWS[1], cells: '. F D X M W' },
+				{ label: STRUCT_ROWS[2], cells: '. . F D X M W' },
+				{ label: STRUCT_ROWS[3], cells: '. . . s* F D X M W' },
+			],
+			penalty: 1,
+			penaltyAt: 4,
+			notes: {
+				1: 'One shared memory serves both instruction fetch and data.',
+				4: 'AND waits a cycle (s*) so LW can use the memory.',
+				5: 'AND is fetched in cycle 5: 1 cycle lost.',
+			},
+		},
+	],
+});

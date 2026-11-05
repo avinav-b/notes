@@ -189,7 +189,7 @@ Data now exists in several copies (L1, L2, main memory, disk), and they must be 
 
 | Case | Policy | What it does | Good for |
 | --- | --- | --- | --- |
-| **Write hit** | **Write-through** | Write to the cache and immediately to memory | |
+| **Write hit** | [**Write-through**](/ece552/caches/#cache-writes) | Write to the cache and immediately to memory | |
 | | **Write-back** | Defer the write to memory until the line is replaced. Needs a **dirty bit** (whether the line differs from memory) | |
 | **Write miss** | **Write-allocate** | Load the block into the cache, then update the line | More reads and writes to the location follow |
 | | **No-write-allocate** | Write immediately to memory | Streaming writes (written once, not read again soon) |

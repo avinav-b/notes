@@ -1,0 +1,231 @@
+.root {
+	outline: none;
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+.toggle {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+.message {
+	min-height: 1.6em;
+	margin: 0.75rem 0 0.5rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.5;
+}
+.fsm {
+	max-width: 30rem;
+	margin: 0 auto 0.5rem;
+}
+.scroll {
+	overflow-x: auto;
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--viz-mono);
+}
+
+.group {
+	font-family: var(--__sl-font);
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+}
+.groupSep {
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.2;
+	stroke-dasharray: 3 3;
+}
+.now {
+	fill: var(--sl-color-accent-low);
+	opacity: 0.7;
+	transition: x 400ms ease-in-out;
+}
+.grid {
+	stroke: var(--viz-border);
+	stroke-width: 1;
+}
+.axis {
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.6;
+}
+.rowLabel {
+	font-size: 12px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+	transition: fill 300ms ease-in-out;
+}
+.rowLabelSel {
+	fill: var(--sl-color-accent-high);
+}
+
+.val {
+	font-size: 14px;
+	font-weight: 600;
+	fill: var(--sl-color-gray-4);
+}
+.valUsed {
+	font-weight: 800;
+	fill: var(--sl-color-text);
+}
+.valMiss {
+	fill: var(--viz-wrong);
+}
+.usedBox {
+	stroke-width: 1.6;
+	transition: fill 400ms ease-in-out, stroke 400ms ease-in-out;
+}
+.pendingBox {
+	fill: var(--sl-color-accent-low);
+	stroke: var(--sl-color-accent);
+}
+.hitBox {
+	fill: var(--viz-ok-bg);
+	stroke: var(--viz-ok);
+}
+.missBox {
+	fill: var(--viz-wrong-bg);
+	stroke: var(--viz-wrong);
+}
+.star {
+	font-size: 14px;
+	font-weight: 800;
+	fill: var(--viz-wrong);
+}
+.out {
+	font-size: 14px;
+	font-weight: 800;
+	fill: var(--sl-color-text);
+}
+.pop {
+	animation: pop 350ms ease-out;
+}
+@keyframes pop {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+/* BHR register */
+.regLabel {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-3);
+}
+.regCell {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.2;
+}
+.regBit {
+	font-size: 13px;
+	font-weight: 800;
+	fill: var(--sl-color-text);
+	transition: transform 500ms ease-in-out;
+	animation: pop 450ms ease-out;
+}
+.regNew {
+	fill: var(--sl-color-accent-high);
+}
+.selArrow {
+	fill: none;
+	stroke: var(--sl-color-accent);
+	stroke-width: 1.8;
+	animation: pop 300ms ease-out;
+}
+.selHead {
+	fill: var(--sl-color-accent);
+}
+
+/* Misprediction meter */
+.meter {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4rem 0.75rem;
+	margin-top: 0.6rem;
+	font-size: 0.85rem;
+	color: var(--sl-color-gray-2);
+}
+.squares {
+	display: inline-flex;
+	gap: 0.6rem;
+}
+.squareGroup {
+	display: inline-flex;
+	gap: 0.18rem;
+}
+.squareGroup i {
+	display: inline-block;
+	width: 0.95rem;
+	height: 0.95rem;
+	border-radius: 0.2rem;
+	border: 1.5px solid var(--viz-border);
+	transition: background 400ms ease-in-out, border-color 400ms ease-in-out;
+}
+.sqHit {
+	background: var(--viz-ok-bg);
+	border-color: var(--viz-ok) !important;
+}
+.sqMiss {
+	background: var(--viz-wrong);
+	border-color: var(--viz-wrong) !important;
+}
+.sqTodo {
+	background: transparent;
+}
+.missCount {
+	font-family: var(--viz-mono);
+	color: var(--sl-color-text);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	margin-top: 0.6rem;
+	font-size: 0.78rem;
+	color: var(--sl-color-gray-3);
+}
+.legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+.lgPending,
+.lgHit,
+.lgMiss {
+	display: inline-block;
+	width: 0.9rem;
+	height: 0.9rem;
+	border-radius: 0.2rem;
+}
+.lgPending {
+	background: var(--sl-color-accent-low);
+	border: 1.5px solid var(--sl-color-accent);
+}
+.lgHit {
+	background: var(--viz-ok-bg);
+	border: 1.5px solid var(--viz-ok);
+}
+.lgMiss {
+	background: var(--viz-wrong-bg);
+	border: 1.5px solid var(--viz-wrong);
+}

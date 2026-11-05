@@ -1,0 +1,131 @@
+.root {
+	margin: 1.5rem 0;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+}
+.svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	font-family: var(--__sl-font);
+}
+.front {
+	fill: var(--viz-front);
+}
+.back {
+	fill: var(--viz-back);
+}
+.band {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	fill: var(--sl-color-gray-2);
+}
+.bandSub {
+	font-weight: 500;
+	text-transform: none;
+	letter-spacing: 0;
+	fill: var(--sl-color-gray-3);
+}
+.box rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.3;
+}
+.label {
+	font-size: 12.5px;
+	font-weight: 700;
+	fill: var(--sl-color-text);
+}
+.sub {
+	font-size: 11.5px;
+	fill: var(--sl-color-gray-2);
+}
+.note {
+	font-size: 12px;
+	font-style: italic;
+	fill: var(--sl-color-gray-2);
+}
+.stack rect {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-gray-4);
+	stroke-width: 1.3;
+}
+.stack line {
+	stroke: var(--sl-color-gray-5);
+	stroke-width: 1;
+}
+.stack .tagCol {
+	fill: var(--viz-raw-bg);
+	stroke: var(--viz-raw);
+	stroke-dasharray: 3 2;
+}
+.tagNote {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--viz-raw);
+}
+.issue {
+	fill: var(--sl-color-gray-6);
+	stroke: var(--sl-color-gray-4);
+}
+.issueText {
+	font-size: 11px;
+	font-weight: 700;
+	fill: var(--sl-color-gray-2);
+}
+.wire {
+	fill: none;
+	stroke: var(--sl-color-gray-3);
+	stroke-width: 1.5;
+}
+.headWire {
+	fill: var(--sl-color-gray-3);
+}
+.cdb {
+	fill: none;
+	stroke: var(--sl-color-accent);
+	stroke-width: 2.5;
+	stroke-linejoin: round;
+}
+.headCdb {
+	fill: var(--sl-color-accent);
+}
+.cdbTagBg {
+	fill: var(--sl-color-bg);
+	stroke: var(--sl-color-accent);
+	stroke-width: 1.5;
+}
+.cdbText {
+	font-family: var(--viz-mono);
+	font-size: 11.5px;
+	font-weight: 700;
+	fill: var(--sl-color-accent-high);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 1rem;
+	margin-top: 0.6rem;
+	font-size: 0.78rem;
+	color: var(--sl-color-gray-3);
+}
+.legend > span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+.lgWire,
+.lgCdb {
+	display: inline-block;
+	width: 1.4rem;
+	border-top: 2px solid var(--sl-color-gray-3);
+}
+.lgCdb {
+	border-top: 3px solid var(--sl-color-accent);
+}

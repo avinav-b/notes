@@ -1,0 +1,217 @@
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+
+.scrub {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	flex: 1 1 10rem;
+	min-width: 8rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.scrub input {
+	flex: 1;
+	min-width: 0;
+	accent-color: var(--sl-color-accent);
+	cursor: pointer;
+}
+
+.message {
+	min-height: 2.2em;
+	margin: 0.75rem 0 0.6rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.45;
+}
+
+/* The tables scroll sideways inside the card if the column is too narrow for them. */
+.scroll {
+	overflow-x: auto;
+	container-type: inline-size;
+}
+.board {
+	position: relative;
+	display: grid;
+	gap: 0.6rem 0.75rem;
+	min-width: 20rem;
+	align-items: start;
+}
+.withLs {
+	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-areas:
+		'insn map'
+		'cdb cdb'
+		'rs ls';
+}
+.noLs {
+	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-areas:
+		'insn map'
+		'cdb cdb'
+		'rs rs';
+}
+@container (max-width: 34rem) {
+	.withLs,
+	.noLs {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas: 'insn' 'map' 'cdb' 'rs' 'ls';
+	}
+}
+
+.insn {
+	font-weight: 600;
+}
+.insnActive {
+	color: var(--sl-color-accent-high);
+	box-shadow: inset 3px 0 0 var(--sl-color-accent);
+}
+.rowChg td {
+	background: var(--sl-color-accent-low);
+}
+.ghostGap {
+	margin-right: 0.35rem;
+}
+
+/* ---- CDB: a box on a bus that runs the width of the board ---- */
+.cdbRow {
+	display: flex;
+	align-items: center;
+	gap: 0;
+	min-width: 0;
+}
+.cdbBox {
+	display: inline-flex;
+	align-items: stretch;
+	flex: none;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.4rem;
+	background: var(--sl-color-bg);
+	font-family: var(--viz-mono);
+	font-size: 0.74rem;
+	overflow: hidden;
+	transition:
+		border-color 400ms ease-in-out,
+		background-color 400ms ease-in-out;
+}
+.cdbLabel {
+	padding: 0.2rem 0.5rem;
+	font-family: var(--__sl-font);
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	color: var(--sl-color-gray-2);
+	background: var(--sl-color-gray-6);
+	border-right: 1px solid var(--viz-border);
+	display: flex;
+	align-items: center;
+}
+.cdbField {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	min-width: 4.5rem;
+	padding: 0.2rem 0.5rem;
+	font-weight: 700;
+}
+.cdbField + .cdbField {
+	border-left: 1px solid var(--viz-border);
+}
+.cdbKey {
+	font-family: var(--__sl-font);
+	font-size: 0.66rem;
+	font-weight: 700;
+	color: var(--sl-color-gray-3);
+}
+.cdbOn {
+	border-color: var(--sl-color-accent);
+	background: var(--sl-color-accent-low);
+}
+.cdbOn .cdbField {
+	color: var(--sl-color-accent-high);
+}
+.bus {
+	flex: 1;
+	height: 3px;
+	border-radius: 2px;
+	background: var(--sl-color-gray-5);
+	transform-origin: left center;
+}
+.busOn {
+	background: var(--sl-color-accent);
+	animation: busSweep 450ms ease-in-out;
+}
+@keyframes busSweep {
+	from {
+		transform: scaleX(0);
+	}
+	to {
+		transform: scaleX(1);
+	}
+}
+
+/* ---- Broadcast lines ---- */
+.overlay {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	overflow: visible;
+}
+.line,
+.lineSrc {
+	fill: none;
+	stroke: var(--sl-color-accent);
+	stroke-dasharray: 1;
+	stroke-dashoffset: 1;
+	animation: draw 500ms ease-in-out forwards;
+}
+.line {
+	stroke-width: 2;
+	opacity: 0.85;
+}
+.lineSrc {
+	stroke-width: 3;
+	animation-duration: 350ms;
+}
+.head {
+	fill: var(--sl-color-accent);
+}
+@keyframes draw {
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.line,
+	.lineSrc,
+	.busOn {
+		animation: none;
+		stroke-dashoffset: 0;
+	}
+}
+
+/* A broadcast whose destination register has been renamed since: the map table ignores it. */
+.stale {
+	display: inline-block;
+	margin-left: 0.3rem;
+	padding: 0 0.3rem;
+	border: 1px dashed var(--sl-color-gray-4);
+	border-radius: 0.25rem;
+	color: var(--sl-color-gray-3);
+	font-size: 0.68rem;
+	line-height: 1.3;
+}

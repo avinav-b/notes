@@ -21,7 +21,7 @@ $$
 \text{CPU time} = \text{instructions} \times \text{CPI} \times \text{cycle time}
 $$
 
-This page is about the tricks CPUs play to lower CPI. ECE552 covers them in more depth.
+This page is about the tricks CPUs play to lower CPI. [ECE552](/ece552/pipelining/) covers them in more depth.
 
 :::note[Moore's law]
 In 1965 Gordon Moore (director of research at Fairchild) observed that the number of transistors on a chip was doubling every two years.
@@ -92,7 +92,7 @@ Out-of-order execution also **masks cache-miss delays**: the CPU can start a loa
 <OooTimeline client:visible {...cacheMiss.props} />
 
 :::caution[Out-of-order is hard to get right]
-The CPU must detect and stall for every dependence, or the program executes incorrectly. For example, what if an instruction writes a register too early? What if an interrupt or exception occurs in between?
+The CPU must detect and stall for every dependence, or the program executes incorrectly. For example, what if an instruction writes a register too early? What if an [interrupt or exception](/ece552/speculation/#interrupts-and-exceptions-in-the-pipeline) occurs in between?
 :::
 
 ## Packing the Issue Slots

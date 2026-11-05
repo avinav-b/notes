@@ -8,6 +8,10 @@ import '../../../../styles/custom.css';
 import AddressTranslation from '../../../../components/AddressTranslation.tsx';
 import AmatBar from '../../../../components/AmatBar.tsx';
 import AmdahlExplorer from '../../../../components/AmdahlExplorer.tsx';
+import AmdahlCurve from '../../../../components/AmdahlCurve.tsx';
+import LocalityDemo from '../../../../components/LocalityDemo.tsx';
+import DeadBlockPrefetch from '../../../../components/DeadBlockPrefetch.tsx';
+import MemoryGapChart from '../../../../components/MemoryGapChart.tsx';
 import ArrayLayout from '../../../../components/ArrayLayout.tsx';
 import BasicBlocks from '../../../../components/BasicBlocks.tsx';
 import BuddyAllocator from '../../../../components/BuddyAllocator.tsx';
@@ -43,6 +47,23 @@ import ThroughputCurve from '../../../../components/ThroughputCurve.tsx';
 import TilingViz from '../../../../components/TilingViz.tsx';
 import TlbReach from '../../../../components/TlbReach.tsx';
 import VirtualMapping from '../../../../components/VirtualMapping.tsx';
+import BranchPredictorSim from '../../../../components/BranchPredictorSim.tsx';
+import CarBusRace from '../../../../components/CarBusRace.tsx';
+import CounterFsm from '../../../../components/CounterFsm.tsx';
+import CpiStack from '../../../../components/CpiStack.tsx';
+import BtbLookup from '../../../../components/BtbLookup.tsx';
+import ControlHazardPipeline from '../../../../components/ControlHazardPipeline.tsx';
+import R10kSim from '../../../../components/R10kSim.tsx';
+import RobLsqDemo from '../../../../components/RobLsqDemo.tsx';
+import ExceptionTimeline from '../../../../components/ExceptionTimeline.tsx';
+import StageSplit from '../../../../components/StageSplit.tsx';
+import TomasuloSim from '../../../../components/TomasuloSim.tsx';
+import TomasuloOrg from '../../../../components/TomasuloOrg.tsx';
+import CompletionOrder from '../../../../components/CompletionOrder.tsx';
+import PredictorTables from '../../../../components/PredictorTables.tsx';
+import CpiBars from '../../../../components/CpiBars.tsx';
+import FuPipelines from '../../../../components/FuPipelines.tsx';
+import HybridPredictor from '../../../../components/HybridPredictor.tsx';
 import { embeds, type EmbedEntry } from '../../../../embeds';
 
 export function getStaticPaths() {
@@ -73,6 +94,10 @@ const p = props as any;
 		{c === 'AddressTranslation' && <AddressTranslation client:load {...p} />}
 		{c === 'AmatBar' && <AmatBar client:load {...p} />}
 		{c === 'AmdahlExplorer' && <AmdahlExplorer client:load {...p} />}
+		{c === 'AmdahlCurve' && <AmdahlCurve client:load {...p} />}
+		{c === 'LocalityDemo' && <LocalityDemo client:load {...p} />}
+		{c === 'DeadBlockPrefetch' && <DeadBlockPrefetch client:load {...p} />}
+		{c === 'MemoryGapChart' && <MemoryGapChart client:load {...p} />}
 		{c === 'ArrayLayout' && <ArrayLayout client:load {...p} />}
 		{c === 'BasicBlocks' && <BasicBlocks client:load {...p} />}
 		{c === 'BuddyAllocator' && <BuddyAllocator client:load {...p} />}
@@ -108,6 +133,23 @@ const p = props as any;
 		{c === 'TilingViz' && <TilingViz client:load {...p} />}
 		{c === 'TlbReach' && <TlbReach client:load {...p} />}
 		{c === 'VirtualMapping' && <VirtualMapping client:load {...p} />}
+		{c === 'TomasuloSim' && <TomasuloSim client:load {...p} />}
+		{c === 'TomasuloOrg' && <TomasuloOrg {...p} />}
+		{c === 'CompletionOrder' && <CompletionOrder {...p} />}
+		{c === 'RobLsqDemo' && <RobLsqDemo client:load {...p} />}
+		{c === 'R10kSim' && <R10kSim client:load {...p} />}
+		{c === 'ExceptionTimeline' && <ExceptionTimeline client:load {...p} />}
+		{c === 'StageSplit' && <StageSplit {...p} />}
+		{c === 'ControlHazardPipeline' && <ControlHazardPipeline client:load {...p} />}
+		{c === 'BtbLookup' && <BtbLookup client:load {...p} />}
+		{c === 'CpiStack' && <CpiStack client:load {...p} />}
+		{c === 'CounterFsm' && <CounterFsm client:load {...p} />}
+		{c === 'CarBusRace' && <CarBusRace client:load {...p} />}
+		{c === 'BranchPredictorSim' && <BranchPredictorSim client:load {...p} />}
+		{c === 'PredictorTables' && <PredictorTables client:load {...p} />}
+		{c === 'CpiBars' && <CpiBars client:load {...p} />}
+		{c === 'FuPipelines' && <FuPipelines client:load {...p} />}
+		{c === 'HybridPredictor' && <HybridPredictor client:load {...p} />}
 	</body>
 </html>
 

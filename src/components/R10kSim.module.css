@@ -1,0 +1,512 @@
+/* Same look as TomasuloSim / OooTables.module.css (copied, so the two simulators read as siblings). */
+.root {
+	margin-block: 1.5rem;
+	padding: 1rem;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.75rem;
+	background: var(--viz-surface);
+	color: var(--sl-color-text);
+	font-size: 0.9rem;
+	outline: none;
+	--rh: 1.65rem; /* table row height */
+	--th: 1.45rem; /* table header height */
+}
+.root:focus-visible {
+	box-shadow: 0 0 0 2px var(--sl-color-accent);
+}
+
+/* ---- Controls ---- */
+.seg {
+	display: inline-flex;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.4rem;
+	overflow: hidden;
+}
+.seg button {
+	border: 0 !important;
+	border-radius: 0 !important;
+}
+.seg button + button {
+	border-left: 1px solid var(--viz-border) !important;
+}
+.seg .segOn {
+	background: var(--sl-color-accent-low);
+	color: var(--sl-color-accent-high);
+}
+.scrub {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	flex: 1 1 10rem;
+	min-width: 8rem;
+	font-size: 0.8rem;
+	color: var(--sl-color-gray-3);
+}
+.scrub input {
+	flex: 1;
+	min-width: 0;
+	accent-color: var(--sl-color-accent);
+	cursor: pointer;
+}
+
+.message {
+	min-height: 2.2em;
+	margin: 0.75rem 0 0.6rem;
+	padding: 0.4rem 0.75rem;
+	border-left: 3px solid var(--sl-color-accent);
+	background: var(--sl-color-bg);
+	border-radius: 0 0.4rem 0.4rem 0;
+	line-height: 1.45;
+}
+
+/* ---- Layout ---- */
+.scroll {
+	overflow-x: auto;
+}
+.board {
+	position: relative;
+	min-width: 34rem;
+	display: grid;
+	grid-template-columns: minmax(18.2rem, 1fr) auto;
+	grid-template-areas:
+		'rob rob'
+		'rs map'
+		'rs cdb'
+		'rs free'
+		'rs .';
+	gap: 0.6rem 0.75rem;
+	align-items: start;
+	font-family: var(--viz-mono);
+	font-size: 0.74rem;
+	line-height: 1.25;
+}
+.robBox {
+	grid-area: rob;
+}
+.rsBox {
+	grid-area: rs;
+}
+.mapBox {
+	grid-area: map;
+}
+.cdbBox {
+	grid-area: cdb;
+}
+.freeBox {
+	grid-area: free;
+}
+
+/* ---- Panels (titled tables) ---- */
+.panel {
+	min-width: 0;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.45rem;
+	background: var(--sl-color-bg);
+	overflow: hidden;
+}
+.panelTitle {
+	padding: 0.2rem 0.55rem;
+	font-family: var(--__sl-font);
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: var(--sl-color-gray-2);
+	background: var(--sl-color-gray-6);
+	border-bottom: 1px solid var(--viz-border);
+	white-space: nowrap;
+}
+.count {
+	display: inline-block;
+	margin-left: 0.3rem;
+	padding: 0 0.35rem;
+	border-radius: 0.6rem;
+	background: var(--sl-color-bg);
+	color: var(--sl-color-text);
+	letter-spacing: 0;
+}
+
+.robGrid,
+.rsGrid,
+.mapGrid {
+	position: relative;
+	display: grid;
+	grid-template-rows: var(--th);
+	grid-auto-rows: var(--rh);
+}
+.robGrid {
+	grid-template-columns: 1.6rem 1.7rem minmax(9rem, 1.4fr) repeat(2, minmax(3.2rem, 0.7fr)) repeat(2, minmax(2.6rem, 0.5fr)) minmax(3.6rem, 0.7fr) repeat(2, minmax(2.6rem, 0.5fr));
+}
+.rsGrid {
+	grid-template-columns: minmax(2.8rem, 0.9fr) minmax(2.2rem, 0.6fr) minmax(2.8rem, 0.9fr) minmax(3rem, 1fr) minmax(3.7rem, 1.1fr) minmax(3.7rem, 1.1fr);
+}
+.mapGrid {
+	grid-template-columns: 2.6rem 1fr;
+}
+.row {
+	display: contents;
+}
+.th {
+	display: flex;
+	align-items: center;
+	padding: 0 0.4rem;
+	font-family: var(--__sl-font);
+	font-size: 0.68rem;
+	font-weight: 700;
+	color: var(--sl-color-gray-3);
+	border-bottom: 1px solid var(--viz-border);
+	white-space: nowrap;
+}
+.td,
+.ptrCell {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0 0.4rem;
+	border-top: 1px solid color-mix(in srgb, var(--viz-border) 55%, transparent);
+	white-space: nowrap;
+	overflow: hidden;
+	transition:
+		background-color 450ms ease-in-out,
+		box-shadow 450ms ease-in-out,
+		color 450ms ease-in-out,
+		opacity 450ms ease-in-out;
+}
+.thR,
+.tdR {
+	border-left: 1px dashed var(--viz-border);
+}
+.insn {
+	font-weight: 600;
+}
+.strong {
+	font-weight: 700;
+}
+.rsIdle .td:not(.strong) {
+	color: var(--sl-color-gray-4);
+}
+
+/* ROB row states */
+.row_retired .td {
+	color: var(--sl-color-gray-4);
+	opacity: 0.6;
+}
+.row_undone .td {
+	color: var(--sl-color-gray-4);
+	text-decoration: line-through;
+	opacity: 0.75;
+}
+.row_undone .undoTag {
+	text-decoration: none;
+	color: var(--sl-color-gray-2);
+	font-weight: 700;
+}
+.rowFault .td {
+	background: var(--viz-fault-bg);
+}
+.faultIcon {
+	flex: none;
+	color: var(--viz-fault);
+}
+
+/* Changed this cycle: accent wash with an inset outline. */
+.chg {
+	background: var(--sl-color-accent-low) !important;
+	box-shadow: inset 0 0 0 1px var(--sl-color-accent);
+	opacity: 1 !important;
+}
+
+/* Head / tail pointers slide between rows */
+.ptr {
+	position: absolute;
+	left: 0.25rem;
+	width: 1.1rem;
+	height: 1.1rem;
+	top: calc(var(--th) + var(--slot) * var(--rh) + (var(--rh) - 1.1rem) / 2);
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	font-family: var(--__sl-font);
+	font-size: 0.66rem;
+	font-weight: 700;
+	transition:
+		top 500ms ease-in-out,
+		left 500ms ease-in-out;
+}
+.ptrH {
+	background: var(--sl-color-accent);
+	color: var(--sl-color-black);
+	z-index: 1;
+}
+.ptrT {
+	border: 1.5px solid var(--sl-color-accent);
+	color: var(--sl-color-accent-high);
+	background: var(--sl-color-bg);
+}
+.ptrShare {
+	left: 0.85rem;
+}
+
+.next {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	min-height: 1.8rem;
+	padding: 0.15rem 0.55rem;
+	border-top: 1px solid var(--viz-border);
+}
+.nextLabel {
+	font-family: var(--__sl-font);
+	font-size: 0.68rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--sl-color-gray-3);
+}
+.mono {
+	font-family: var(--viz-mono);
+}
+/* Something is stuck behind something else (structural hazard). */
+.blocked {
+	display: inline-block;
+	padding: 0 0.3rem;
+	border-radius: 0.25rem;
+	font-family: var(--__sl-font);
+	font-size: 0.66rem;
+	font-weight: 700;
+	color: var(--viz-war);
+	background: var(--viz-war-bg);
+	border: 1px solid var(--viz-war);
+	line-height: 1.35;
+}
+.nextStop {
+	font-family: var(--__sl-font);
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: var(--viz-fault);
+}
+
+/* Physical register tags: dashed = waiting on that result, "+" = ready. */
+.tag {
+	display: inline-flex;
+	align-items: center;
+	padding: 0 0.3rem;
+	border-radius: 0.25rem;
+	border: 1px solid transparent;
+	font-family: var(--viz-mono);
+	line-height: 1.3;
+	transition:
+		border-color 450ms ease-in-out,
+		background-color 450ms ease-in-out,
+		color 450ms ease-in-out;
+}
+.tagWait {
+	border: 1px dashed var(--viz-raw);
+	color: var(--viz-raw);
+	background: var(--viz-raw-bg);
+	font-weight: 700;
+}
+.tagReady {
+	color: var(--sl-color-text);
+}
+.plus {
+	margin-left: 0.1rem;
+	color: var(--viz-ok);
+	font-weight: 800;
+}
+
+/* ---- CDB ---- */
+.cdbBox {
+	display: inline-flex;
+	align-items: stretch;
+	justify-self: start;
+	border: 1px solid var(--viz-border);
+	border-radius: 0.4rem;
+	background: var(--sl-color-bg);
+	overflow: hidden;
+	transition:
+		border-color 400ms ease-in-out,
+		background-color 400ms ease-in-out;
+}
+.cdbLabel {
+	display: flex;
+	align-items: center;
+	padding: 0.2rem 0.5rem;
+	font-family: var(--__sl-font);
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	color: var(--sl-color-gray-2);
+	background: var(--sl-color-gray-6);
+	border-right: 1px solid var(--viz-border);
+}
+.cdbField {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	min-width: 4.6rem;
+	padding: 0.2rem 0.5rem;
+	font-weight: 700;
+}
+.cdbKey {
+	font-family: var(--__sl-font);
+	font-size: 0.66rem;
+	font-weight: 700;
+	color: var(--sl-color-gray-3);
+}
+.cdbOn {
+	border-color: var(--sl-color-accent);
+	background: var(--sl-color-accent-low);
+}
+.cdbOn .cdbField {
+	color: var(--sl-color-accent-high);
+}
+
+/* ---- Free list: every register is always rendered; free ones sit in queue order. ---- */
+.freePool {
+	position: relative;
+	width: calc(4 * 50px + 6px);
+	height: calc(var(--free-rows) * 26px + 8px);
+}
+.chip {
+	position: absolute;
+	left: 5px;
+	top: 5px;
+	width: 46px;
+	height: 22px;
+	display: grid;
+	place-items: center;
+	border-radius: 0.3rem;
+	border: 1px solid var(--viz-ok);
+	background: var(--viz-ok-bg);
+	color: var(--viz-ok);
+	font-weight: 700;
+	font-size: 0.7rem;
+	transition:
+		transform 600ms ease-in-out,
+		opacity 500ms ease-in-out,
+		background-color 400ms,
+		border-color 400ms;
+}
+.chipOn {
+	opacity: 1;
+	transform: translate(calc(var(--i) * 50px), calc(var(--j) * 26px));
+}
+.chipOff {
+	opacity: 0;
+	transform: translate(calc(var(--i) * 50px), calc(var(--j) * 26px + 14px)) scale(0.8);
+	pointer-events: none;
+}
+.chipFresh {
+	border-color: var(--sl-color-accent);
+	background: var(--sl-color-accent-low);
+	color: var(--sl-color-accent-high);
+}
+.empty {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	color: var(--sl-color-gray-4);
+	font-family: var(--__sl-font);
+	font-size: 0.75rem;
+}
+
+/* ---- Lines drawn over the board ---- */
+.overlay {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	overflow: visible;
+}
+.line {
+	fill: none;
+	stroke-width: 2;
+	stroke-dasharray: 1;
+	stroke-dashoffset: 1;
+	opacity: 0.85;
+	animation: draw 550ms ease-in-out forwards;
+}
+.line_cdb {
+	stroke: var(--sl-color-accent);
+}
+.line_alloc,
+.line_free {
+	stroke: var(--viz-ok);
+}
+.head_cdb {
+	fill: var(--sl-color-accent);
+}
+.head_alloc,
+.head_free {
+	fill: var(--viz-ok);
+}
+@keyframes draw {
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+/* ---- Legend ---- */
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.35rem 1rem;
+	margin-top: 0.6rem;
+	font-size: 0.78rem;
+	color: var(--sl-color-gray-3);
+}
+.legend > span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+.legend .tag {
+	font-size: 0.7rem;
+}
+.swatch {
+	display: inline-block;
+	width: 1.1rem;
+	height: 0.8rem;
+	border-radius: 0.2rem;
+}
+.swatchChg {
+	background: var(--sl-color-accent-low);
+	box-shadow: inset 0 0 0 1px var(--sl-color-accent);
+}
+.swatchLine {
+	display: inline-block;
+	width: 1.4rem;
+	border-top: 2px solid var(--sl-color-accent);
+}
+.swatchFree {
+	border-color: var(--viz-ok);
+}
+.swatchRetired {
+	background: var(--sl-color-gray-5);
+	opacity: 0.7;
+}
+.swatchFault {
+	background: var(--viz-fault-bg);
+	box-shadow: inset 0 0 0 1px var(--viz-fault);
+}
+.undoSample {
+	font-family: var(--viz-mono);
+	font-size: 0.7rem;
+	color: var(--sl-color-gray-4);
+	text-decoration: line-through;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.line {
+		animation: none;
+		stroke-dashoffset: 0;
+	}
+	.ptr,
+	.chip,
+	.td {
+		transition: none;
+	}
+}

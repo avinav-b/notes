@@ -1,14 +1,25 @@
 ---
 title: Dynamic Scheduling
 description: Static vs. dynamic instruction scheduling, the instruction buffer, Tomasulo, and register renaming.
-lastUpdated: 2026-10-01
+lastUpdated: 2026-11-05
 sidebar:
-  order: 2
+  order: 4
 ---
 
 import InsnBufferPipeline from '../../../components/InsnBufferPipeline.tsx';
 import RenameDemo from '../../../components/RenameDemo.tsx';
-import { insnBuffer, registerRenaming } from '../../../embeds/ece552/dynamic-scheduling';
+import TomasuloSim from '../../../components/TomasuloSim.tsx';
+import TomasuloOrg from '../../../components/TomasuloOrg.tsx';
+import CompletionOrder from '../../../components/CompletionOrder.tsx';
+import {
+	insnBuffer,
+	registerRenaming,
+	valueRenaming,
+	tomasuloExample,
+	tomasuloLoop,
+	tomasuloOrganization,
+	storePageFault,
+} from '../../../embeds/ece552/dynamic-scheduling';
 
 ## Static Instruction Scheduling
 
@@ -123,3 +134,206 @@ Renaming:
 - **removes** WAW and WAR dependences
 - **leaves RAW dependences intact**
 :::
+
+## Tomasulo Organization
+
+The machine splits into an in-order **front end** (fetch, decode/dispatch, register files) and an out-of-order **back end** (reservation stations, functional units, load/store queues). The instruction buffer is implemented by the reservation stations: one set per kind of functional unit (integer, memory, floating point), each with its own issue logic.
+
+<TomasuloOrg {...tomasuloOrganization.props} />
+
+### Data Structures
+
+**Reservation stations (RS#)**
+- **FU**, **busy**, **op**
+- **Qj, Qk**: source register tags (the RS# of the RS that will produce the input value)
+- **Vj, Vk**: source register values
+
+**Map table**
+- **T**: tag (RS#) that will write this register
+
+**Common data bus (CDB)**
+- Broadcasts `<RS#, value>` of completed instructions
+
+Tags are interpreted as **ready-bits++**:
+
+| Tag | Meaning |
+| --- | --- |
+| `T == 0` | Value is ready |
+| `T != 0` | Value is not ready: watch for the CDB broadcast of `T` |
+
+## New Pipeline Structure
+
+The pipeline is now **F, D, S, X, W**.
+
+| Stage | What happens |
+| --- | --- |
+| **F** (fetch) | Same as before |
+| **D** (dispatch) | **Stall** for a structural hazard (RS full).<br />Input register ready? Read its value into the RS. If not, read its tag into the RS.<br />Set the register status (map table): rename the output register to the allocated RS#. |
+| **S** (issue) | **Wait** for RAW hazards and structural hazards (FU busy).<br />Otherwise, read the register values from the RS and send them to execute. |
+| **X** (execute) | Same as before. Memory (M) is folded into execute. |
+| **W** (writeback) | **Wait** for structural hazards (the CDB).<br />Output register status still matches? Clear the tag and write the result register.<br />The CDB broadcasts to the RS: tag match? Clear the tag, copy the value.<br />Free the RS entry. |
+
+:::note[Stall vs. wait]
+A **stall** propagates to younger instructions: nothing behind it can dispatch. A **wait** only holds up that one instruction.
+:::
+
+## Value/Copy-Based Register Renaming
+
+Tomasulo-style renaming is called **value-based** or **copy-based**.
+
+- **Names**: architectural registers
+- **Storage locations**: the **register file** and the **reservation stations**
+  - values can and do exist in both
+  - the register file holds the most recent value
+  - the RS versions eliminate WAR hazards
+
+Storage locations are referred to internally by **RS# tags**:
+- the map table translates names to tags
+- tag `0`: the value is in the register file
+- tag not `0`: the value is not ready, and is being computed by that RS# (e.g. 4)
+
+The CDB broadcasts values with their tags attached, so instructions know which value they are looking for.
+
+### Value-Based Renaming Example
+
+```
+L.S   [r1+0] -> f1
+MUL.S f0,f1  -> f2
+ADD.S f7,f8  -> f0
+L.S   [r1+4] -> f1
+```
+
+At dispatch, each instruction allocates an RS. For each input: if it's ready (map tag `0`), **copy the value** into the RS; otherwise **copy the RS#** (tag) into the RS. Then set the map table entry for the output register to the allocated RS#.
+
+<TomasuloSim client:visible {...valueRenaming.props} />
+
+:::tip[What the copies buy]
+- `ADD.S` can write `regfile[f0]` before `MUL.S` executes: `MUL.S` already holds its own copy of the old `f0` (no WAR hazard).
+- The second `L.S` can write `regfile[f1]` before `MUL.S` executes, and even before the first `L.S` finishes: when the first load broadcasts, `f1` no longer maps to `RS#2`, so the register file isn't touched (no WAW hazard).
+:::
+
+## New Pipeline Diagram
+
+Instructions run down the rows and pipeline stages along the columns; each box holds the cycle number the instruction did that stage. This is convenient for out-of-order execution, where a row's cycles no longer line up with its neighbours'. The **Instruction status** tables in the simulators below use it.
+
+## Tomasulo Example
+
+Six instructions on a machine with 3 load buffers, 3 add RS (`Add1` to `Add3`) and 2 multiply/divide RS (`Mult1`, `Mult2`).
+
+| Op | Execute latency (cycles) |
+| --- | --- |
+| `ADD` (and `SUB`) | 2 |
+| `L.S` | 2 |
+| `MUL` | 10 |
+| `DIV` | 40 |
+
+<TomasuloSim client:visible {...tomasuloExample.props} />
+
+Timing rules the example follows:
+
+- **D**: one instruction per cycle, in program order.
+- **S**: as soon as the last operand arrives, even in the same cycle as its CDB broadcast; execution starts the next cycle. In cycle 6, `MUL.S` and `SUB.S` both issue on `Load2`'s broadcast. This assumes their functional units are free.
+- **X**: the box holds the cycle execution *finishes*; **W** is the cycle after (if the CDB is free).
+- **The register file is written in the first half of the cycle**: `DIV.S` dispatches in cycle 5, the cycle `Load1` writes `f6`, and reads the new value directly.
+- An RS entry is freed at W and can be reused from the next cycle.
+
+:::tip[Cycle 58]
+**In-order dispatch, out-of-order execution, out-of-order completion.**
+:::
+
+## Tomasulo Summary
+
+| Hazard | Tomasulo |
+| --- | --- |
+| Insn buffer / RS full | **Stall in D** (structural) |
+| FU busy | **Wait in S** (structural) |
+| RAW | **Wait in S** |
+| WAR | None: renaming |
+| WAW | None: renaming |
+
+## Dynamic Scheduling as Loop Unrolling
+
+Dynamic scheduling does the three steps of loop unrolling in hardware:
+
+| Step | Effect |
+| --- | --- |
+| I. Combine iterations | Increases the scheduling scope, for more flexibility |
+| II. Pipeline schedule | Reduces the impact of RAW hazards |
+| III. Rename registers | Removes the WAR and WAW violations that come from scheduling |
+
+### Loop Example: SAX
+
+SAX (Single-precision A X) is SAXPY without the "PY", only so it fits in the diagrams.
+
+```c
+for (i = N; i > 0; i--)
+    Z[i] = A * X[i];
+```
+
+```
+0: L.S   X(r1),f0     // Loop
+1: MUL.S f0,f2,f4     // A in f2
+2: S.S   f4,Z(r1)
+3: SUBI  r1,4,r1      // i in r1
+4: BNEZ  r1,Loop
+```
+
+Consider two iterations: `L.S, MUL.S, S.S, SUBI, L.S, MUL.S, S.S`. Within an iteration, `L.S -> MUL.S -> S.S` is a RAW chain. Across iterations, the second `L.S` can be hoisted above the first `S.S`, and the two writes of `f0` (and of `f4`) are a WAW that renaming removes.
+
+**Assumptions**
+- Multiply takes 4 cycles; `SUBI`, `BNEZ`, a load hit and a store each take 1.
+- The 1st load takes 8 cycles (cache miss); the 2nd takes 1 cycle (hit), after the 1st load executes.
+- `r1` initially holds 80.
+- `&Z[0] == &X[0]`, so each iteration stores to the address it loaded from.
+- No speculation: nothing after a branch issues until the branch executes.
+
+<TomasuloSim client:visible {...tomasuloLoop.props} />
+
+:::note
+The slides stop at cycle 19 and don't give the 3rd load's latency; the simulator treats it as another miss, so it's still executing at cycle 19 as on the slides. `BNEZ` waits in its own station, `Br1`, which the slides don't draw.
+:::
+
+Things to notice:
+
+- **Renaming sets up a dataflow graph.** `MUL.S` waits on `Ld1`, `St1` waits on `Mult1`, regardless of register names.
+- **`f0` never gets `Ld1`'s result**, and that's fine: `MUL.S` gets the value directly from `Ld1` over the CDB.
+- **The register file is decoupled from computation**, so the 1st and 2nd iterations overlap.
+- **Branches** have two options:
+  1. No speculation: the branch must resolve before younger instructions can execute. `L.S #2` has its address in cycle 7 but issues in cycle 8, when `BNEZ` executes.
+  2. [Speculation](/ece552/speculation/): must have a way to undo [mis-speculation](/ece552/branch-prediction/#speculation) (coming next).
+- **Structural hazard, no RS**: in cycle 12, `MUL.S #3` has no free `Mult` station, so it must **stall** in D, which propagates to younger instructions. It dispatches in cycle 17, once `Mult1` is freed.
+- **Structural hazard, CDB**: `SUBI #2` finishes in cycle 11 but loses the CDB to the older `L.S #2` in cycle 12, and writes back in cycle 13.
+- `S.S` doesn't use the CDB (it has no register result).
+
+### Why can Tomasulo overlap loop iterations?
+
+- **Register renaming**: multiple iterations use different physical destinations for the same registers, i.e. **dynamic loop unrolling**.
+- **Reservation stations**: buffer old values of registers, which avoids WAR hazards, and permit out-of-order issue of independent instructions.
+- **Other perspective**: Tomasulo builds a **dataflow dependency graph on the fly**.
+
+## Advantages of Tomasulo
+
+1. **Distributed hazard detection logic**: distributed reservation stations and the CDB. If multiple instructions are waiting on a single result, and each has its other operand, they can all issue simultaneously with the broadcast on the CDB.
+2. **No stalls for WAW and WAR hazards.**
+
+## The Catch: Precise State
+
+What if the 1st store has a page fault?
+
+<CompletionOrder {...storePageFault.props} />
+
+:::danger[Out-of-order completion]
+By the time `S.S #1` would write back (cycle 18), younger instructions have already written back (cycles 7 to 17) and updated values. How do we recover precise state?
+:::
+
+This is the motivation for [precise state and speculation](/ece552/speculation/#the-problem-with-precise-state), next.
+
+## Summary
+
+- **Dynamic scheduling** = out-of-order execution
+  - higher pipeline/FU utilization, improved performance
+  - easier and more effective in hardware than in software: more storage locations than architectural registers, and dynamic handling of cache misses
+- **Instruction buffer**: multiple F/D latches
+  - implements a large scheduling scope plus "passing"
+  - splits decode into in-order **dispatch** and out-of-order **issue** (stall vs. wait)
+- **Tomasulo**: copy-based register renaming, fully out of order
